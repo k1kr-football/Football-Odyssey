@@ -1,0 +1,8 @@
+{
+  "name": "Football Career RPG",
+  "description": "An immersive text-based soccer biography and career RPG where your custom player navigates managers, media, contracts, daily routines, training, and tactical matches.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-team-primary: var(--team-primary, #0d9488);
+  --color-team-secondary: var(--team-secondary, #115e59);
+  --color-team-accent: var(--team-accent, #14b8a6);
+  --color-team-text: var(--team-text-on-primary, #ffffff);
+  
+  --font-sans: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --animate-marquee: marquee 30s linear infinite;
+  
+  @keyframes marquee {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #080A09;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), var(--font-sans);
+}
+
+.font-mono, .code, .stats-value {
+  font-family: var(--font-mono), monospace;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.glass-panel {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.premium-card {
+  background: linear-gradient(145deg, rgba(30,30,30,0.8) 0%, rgba(15,15,15,0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.neon-text {
+  text-shadow: 0 0 10px #00FF88, 0 0 20px #00FF88;
+}
+
+/* Premium Button Outlines and Focus Rings */
+button {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+/* Base outline effect for solid primary and secondary actions */
+button:focus-visible {
+  outline: 2px solid var(--color-team-accent, #14b8a6);
+  outline-offset: 3px;
+}
+
+/* Apply clear, sharp outlines to different button variants */
+button.bg-team-primary,
+button.bg-team-accent,
+button[class*="bg-team-"] {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+button.bg-team-primary:hover,
+button.bg-team-accent:hover,
+button[class*="bg-team-"]:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.3);
+}
+
+button.bg-emerald-500,
+button[class*="bg-emerald-"] {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+button.bg-emerald-500:hover,
+button[class*="bg-emerald-"]:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+}
+
+button.bg-red-500,
+button[class*="bg-red-"] {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+button.bg-red-500:hover,
+button[class*="bg-red-"]:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+}
+
+button.bg-amber-500,
+button[class*="bg-amber-"] {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+button.bg-amber-500:hover,
+button[class*="bg-amber-"]:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+}
+
+button.bg-blue-500,
+button[class*="bg-blue-"],
+button[class*="bg-[#38bdf8]"] {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+button.bg-blue-500:hover,
+button[class*="bg-blue-"]:hover,
+button[class*="bg-[#38bdf8]"]:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+}
+
+/* Semi-transparent and dark buttons get high-definition outlines */
+button.glass-panel,
+button[class*="glass-panel"] {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+button.glass-panel:hover,
+button[class*="glass-panel"]:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
