@@ -19,7 +19,12 @@ export function MatchEngine() {
 
  if (!state.player) return null;
 
- const [isBenched, setIsBenched] = useState(state.nextMatch?.playerStatus === 'SUBSTITUTE');
+ const [isBenched, setIsBenched] = useState(
+   state.nextMatch?.playerStatus === 'SUBSTITUTE' || 
+   state.nextMatch?.playerStatus === 'UNUSED' ||
+   state.player.contract?.status === 'Backup' ||
+   state.player.contract?.status === 'Exile'
+ );
  const [hasBeenSubbedOn, setHasBeenSubbedOn] = useState(false);
  const [warmupLevel, setWarmupLevel] = useState(0);
  
@@ -32,7 +37,7 @@ export function MatchEngine() {
  const [awayScore, setAwayScore] = useState(0);
  const [teamMomentum, setTeamMomentum] = useState(50);
  const [playerMomentum, setPlayerMomentum] = useState(50);
-  const [matchPressure, setMatchPressure] = useState(3);
+ const [matchPressure, setMatchPressure] = useState(3);
  
  const [isDecisionFrame, setIsDecisionFrame] = useState(false);
  const [decisionOptions, setDecisionOptions] = useState<any[]>([]);
@@ -47,6 +52,37 @@ export function MatchEngine() {
  const [dribblesAttempted, setDribblesAttempted] = useState(0);
  const [tacklesAttempted, setTacklesAttempted] = useState(0);
  
+ // Heat Map Touch Points & Situation Rotation Buffer
+ const [touchPoints, setTouchPoints] = useState<{ x: number, y: number, eventType: string }[]>([]);
+ const recentSituationIdsRef = useRef<string[]>([]);
+ 
+ // Helper to record pitch touch points
+ const recordTouchPoint = (eventType: string) => {
+   const isGK = state.player?.position === 'GK';
+   const pos = state.player?.position || 'ST';
+   let x = 50;
+   let y = 50;
+
+   if (isGK) {
+     x = Math.floor(Math.random() * 15) + 5;
+     y = Math.floor(Math.random() * 40) + 30;
+   } else if (eventType === 'SHOT') {
+     x = Math.floor(Math.random() * 20) + 75;
+     y = Math.floor(Math.random() * 50) + 25;
+   } else if (eventType === 'DRIBBLE' || eventType === 'CROSS') {
+     x = Math.floor(Math.random() * 30) + 55;
+     y = pos.includes('L') ? Math.floor(Math.random() * 25) + 10 : pos.includes('R') ? Math.floor(Math.random() * 25) + 65 : Math.floor(Math.random() * 40) + 30;
+   } else if (eventType === 'TACKLE') {
+     x = Math.floor(Math.random() * 40) + 25;
+     y = Math.floor(Math.random() * 60) + 20;
+   } else {
+     x = Math.floor(Math.random() * 40) + 35;
+     y = Math.floor(Math.random() * 60) + 20;
+   }
+
+   setTouchPoints(prev => [...prev.slice(-15), { x, y, eventType }]);
+ };
+
  // Buffs from Pre-match
  const [activeBuff, setActiveBuff] = useState<string>('NONE');
  const [talkResponse, setTalkResponse] = useState<'POSITIVE' | 'MUTED' | 'FRUSTRATED' | null>(null);
@@ -158,16 +194,28 @@ export function MatchEngine() {
  }, [minute, matchPhase]);
 
  const pickRandomEvent = (): import('../types').MatchEventType => {
-  const weights = [
-  { type: 'GENERAL_PLAY', w: 30 }, { type: 'SHOT', w: 15 }, 
-  { type: 'DRIBBLE', w: 20 }, { type: 'PASS', w: 15 },
-  { type: 'TACKLE', w: 10 }, { type: 'CROSS', w: 5 }, { type: 'SET_PIECE', w: 5 }
+  const tactic = state.player?.tacticalInstruction?.current?.instruction;
+  let weights = [
+   { type: 'GENERAL_PLAY', w: 30 }, { type: 'SHOT', w: 15 }, 
+   { type: 'DRIBBLE', w: 20 }, { type: 'PASS', w: 15 },
+   { type: 'TACKLE', w: 10 }, { type: 'CROSS', w: 5 }, { type: 'SET_PIECE', w: 5 }
   ];
+
+  if (tactic === 'PRESS HIGH' || tactic === 'TRACK BACK') {
+   weights = weights.map(item => item.type === 'TACKLE' ? { ...item, w: 25 } : item);
+  } else if (tactic === 'CUT INSIDE') {
+   weights = weights.map(item => item.type === 'DRIBBLE' || item.type === 'SHOT' ? { ...item, w: item.w + 10 } : item);
+  } else if (tactic === 'STAY WIDE' || tactic === 'OVERLAP') {
+   weights = weights.map(item => item.type === 'CROSS' || item.type === 'DRIBBLE' ? { ...item, w: item.w + 10 } : item);
+  } else if (tactic === 'DROP DEEP' || tactic === 'HOLD POSITION') {
+   weights = weights.map(item => item.type === 'PASS' || item.type === 'GENERAL_PLAY' ? { ...item, w: item.w + 10 } : item);
+  }
+
   const total = weights.reduce((acc, curr) => acc + curr.w, 0);
   let roll = Math.random() * total;
   for (const item of weights) {
-  if (roll < item.w) return item.type as any;
-  roll -= item.w;
+   if (roll < item.w) return item.type as any;
+   roll -= item.w;
   }
   return 'GENERAL_PLAY';
  };
@@ -266,15 +314,28 @@ export function MatchEngine() {
     if (nextMinute > 85 && closeness === 0) currentPressure += 2;
     setMatchPressure(currentPressure);
 
-    // Filter valid situations
-    const validSits = MATCH_SITUATIONS.filter(s => s.validPositions.includes('ALL') || s.validPositions.includes(state.player?.position || 'ST'));
-    
-    // Determine event
+    // Filter valid situations with GK isolation & No-repeat buffer
+    const isGK = state.player?.position === 'GK';
+    const validSits = MATCH_SITUATIONS.filter(s => {
+       if (isGK) {
+          return s.category === 'GOALKEEPER' || s.validPositions.includes('GK');
+       } else {
+          if (s.category === 'GOALKEEPER') return false;
+          return s.validPositions.includes('ALL') || s.validPositions.includes(state.player?.position || 'ST');
+       }
+    });
+
+    // Determine event & record touch point
     const eventType = pickRandomEvent();
+    recordTouchPoint(eventType);
     
     // 15% chance to trigger a formal decision situation
     if (Math.random() < 0.15 && validSits.length > 0 && !isDecisionFrame) {
-        const sit = validSits[Math.floor(Math.random() * validSits.length)];
+        const unplayedSits = validSits.filter(s => !recentSituationIdsRef.current.includes(s.id));
+        const pool = unplayedSits.length > 0 ? unplayedSits : validSits;
+        const sit = pool[Math.floor(Math.random() * pool.length)];
+        recentSituationIdsRef.current = [sit.id, ...recentSituationIdsRef.current].slice(0, 10);
+
         setIsDecisionFrame(true);
         setDecisionOptions(sit.choices.map(c => ({
             text: c.text,
@@ -326,6 +387,10 @@ export function MatchEngine() {
     if (eventType === 'SHOT') setShotsAttempted(s => s + 1);
     if (eventType === 'DRIBBLE') setDribblesAttempted(s => s + 1);
     if (eventType === 'TACKLE') setTacklesAttempted(s => s + 1);
+    if (eventType === 'PASS') {
+       setPassesMade(p => p + 1);
+       if (!isFail) setPassesCompleted(p => p + 1);
+    }
     
     setLogs(prev => [...prev, { m: nextMinute, text: comment, isPlayerFeature: true, isOpp: false, fail: isFail }]);
 
@@ -2211,31 +2276,48 @@ export function MatchEngine() {
 
     {!isBenched && (
     <div className="col-span-2 glass-panel p-6 text-left flex flex-col items-center">
-     <div className="text-white/50 text-[10px] uppercase tracking-widest mb-4 font-bold w-full text-center">🔥 Heat Map – Your Positioning</div>
-     <div className="w-full max-w-sm aspect-[4/3] bg-emerald-900 border border-emerald-700 relative overflow-hidden flex flex-col mb-4">
+     <div className="text-white/50 text-[10px] uppercase tracking-widest mb-4 font-bold w-full text-center">🔥 Heat Map – Real Touch Positioning ({touchPoints.length} Touches)</div>
+     <div className="w-full max-w-sm aspect-[4/3] bg-emerald-950 border border-emerald-700/60 relative overflow-hidden flex flex-col mb-4 rounded-lg shadow-inner">
       {/* Pitch markings */}
       <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/30 z-10"></div>
       <div className="absolute top-1/2 left-1/2 w-16 h-16 rounded-full border border-white/30 -translate-x-1/2 -translate-y-1/2 z-10"></div>
-      {/* Fake Heat Map Blobs based on position */}
-      {state.player?.position.includes('W') || state.player?.position.includes('M') ? (
-      <>
-       <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500/50 blur-xl rounded-full"></div>
-       <div className="absolute top-1/2 left-1/3 w-40 h-24 bg-orange-500/40 blur-xl rounded-full"></div>
-      </>
-      ) : state.player?.position === 'ST' || state.player?.position === 'AM' ? (
-      <>
-       <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-red-500/60 blur-2xl rounded-full"></div>
-       <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-yellow-500/50 blur-xl rounded-full"></div>
-      </>
+      <div className="absolute top-1/4 bottom-1/4 left-0 w-12 border-r border-t border-b border-white/30 z-10"></div>
+      <div className="absolute top-1/4 bottom-1/4 right-0 w-12 border-l border-t border-b border-white/30 z-10"></div>
+
+      {/* Touch Point Heat Blobs */}
+      {touchPoints.length > 0 ? (
+       touchPoints.map((tp, idx) => (
+        <div 
+         key={idx}
+         className="absolute w-8 h-8 rounded-full bg-red-500/60 blur-md -translate-x-1/2 -translate-y-1/2 animate-pulse pointer-events-none"
+         style={{ left: `${tp.x}%`, top: `${tp.y}%` }}
+        />
+       ))
       ) : (
-      <>
-       <div className="absolute bottom-1/4 left-1/4 w-40 h-32 bg-red-500/50 blur-xl rounded-full"></div>
-       <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-orange-500/40 blur-xl rounded-full"></div>
-      </>
+       state.player?.position.includes('W') || state.player?.position.includes('M') ? (
+        <>
+         <div className="absolute top-1/4 left-1/4 w-28 h-28 bg-red-500/50 blur-xl rounded-full"></div>
+         <div className="absolute top-1/2 left-1/3 w-32 h-20 bg-orange-500/40 blur-xl rounded-full"></div>
+        </>
+       ) : state.player?.position === 'ST' || state.player?.position === 'AM' ? (
+        <>
+         <div className="absolute top-1/4 right-1/4 w-28 h-28 bg-red-500/60 blur-2xl rounded-full"></div>
+         <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-yellow-500/50 blur-xl rounded-full"></div>
+        </>
+       ) : (
+        <>
+         <div className="absolute bottom-1/4 left-1/4 w-32 h-28 bg-red-500/50 blur-xl rounded-full"></div>
+         <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-orange-500/40 blur-xl rounded-full"></div>
+        </>
+       )
       )}
      </div>
-         <div className="flex flex-col gap-2 w-full mt-4">
-      <div className="text-white text-[10px] font-bold uppercase tracking-widest text-left border-b border-white/10 pb-1">Comprehensive Match Analysis</div>
+
+     <div className="flex flex-col gap-2 w-full mt-4">
+      <div className="text-white text-[10px] font-bold uppercase tracking-widest text-left border-b border-white/10 pb-1 flex justify-between">
+       <span>Comprehensive Match Analysis</span>
+       <span className="text-[#00FF88]">Pass Acc: {passesMade > 0 ? Math.round((passesCompleted / passesMade) * 100) : 100}%</span>
+      </div>
       
       <div className="flex items-start gap-3 mt-2">
       <div className="w-1.5 h-1.5 rounded-full bg-[#00FF88] mt-1.5"></div>
@@ -2260,13 +2342,30 @@ export function MatchEngine() {
        </div>
       </div>
       </div>
-      
+
+      <div className="flex items-start gap-3 mt-2">
+      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5"></div>
+      <div className="text-left flex-1">
+       <div className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Targeted Training Recommendation</div>
+       <div className="text-white/90 text-xs font-mono font-semibold">
+        💡 {
+         passesMade >= 2 && passesCompleted / passesMade < 0.65 ? 'One-Touch Passing Triangles (Target: Vision & Passing)' :
+         shotsAttempted >= 2 && homeScore === 0 ? 'Finishing from Crosses (Target: Finishing & Composure)' :
+         tacklesAttempted >= 2 ? 'Defensive Stance & Sliding Tackles (Target: Tackling & Strength)' :
+         distanceCovered > 10.5 || state.player?.fatigue > 60 ? 'High-Intensity Shuttle Runs (Target: Stamina & Conditioning)' :
+         'Tactical Positioning Walkthrough (Target: Decision Making)'
+        }
+       </div>
+      </div>
+      </div>
+
       <div className="flex items-start gap-3 mt-2">
       <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5"></div>
       <div className="text-left flex-1">
        <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Positional Analysis</div>
        <div className="text-white/50 text-xs font-mono">
-        {state.player?.position === 'ST' ? "Most active in the attacking third, seeking out spaces." :
+        {state.player?.position === 'GK' ? "Guarded the goalmouth, commanded six-yard box effectively." :
+        state.player?.position === 'ST' ? "Most active in the attacking third, seeking out spaces." :
         state.player?.position.includes('W') ? "Maintained width and isolated fullbacks." :
         "Controlled central areas, acting as a pivot."}
        </div>
