@@ -13,8 +13,6 @@ export function Transfers() {
  const { state, setPlayer, setInbox } = useGame();
  const player = state.player;
 
- if (!player) return null;
-
  const [activeTab, setActiveTab] = useState<'OFFERS' | 'INTEREST'>('OFFERS');
  const [negotiatingOffer, setNegotiatingOffer] = useState<string | null>(null);
  
@@ -34,7 +32,7 @@ export function Transfers() {
  const [deadlineInitialized, setDeadlineInitialized] = useState(false);
 
  React.useEffect(() => {
-  if (isDeadlineDay && !deadlineInitialized) {
+  if (isDeadlineDay && !deadlineInitialized && player) {
    const currentOffers = [...(player.transferOffers || [])];
    if (currentOffers.length === 0) {
     const panicBids = generateDeadlineDayOffers(player);
@@ -50,6 +48,8 @@ export function Transfers() {
    setDeadlineInitialized(true);
   }
  }, [isDeadlineDay, deadlineInitialized, player, setPlayer]);
+
+ if (!player) return null;
 
  const tickDeadlineHour = () => {
   if (deadlineHours <= 1) {

@@ -17,13 +17,11 @@ import { initializeActiveRehab } from '../utils/wellbeingEngine';
 export function MatchEngine() {
  const { state, advanceDay, setScreen, setPlayer, setInbox } = useGame();
 
- if (!state.player) return null;
-
  const [isBenched, setIsBenched] = useState(
    state.nextMatch?.playerStatus === 'SUBSTITUTE' || 
    state.nextMatch?.playerStatus === 'UNUSED' ||
-   state.player.contract?.status === 'Backup' ||
-   state.player.contract?.status === 'Exile'
+   state.player?.contract?.status === 'Backup' ||
+   state.player?.contract?.status === 'Exile'
  );
  const [hasBeenSubbedOn, setHasBeenSubbedOn] = useState(false);
  const [warmupLevel, setWarmupLevel] = useState(0);
@@ -96,6 +94,8 @@ export function MatchEngine() {
  const [halfTimeMessage, setHalfTimeMessage] = useState<string>('');
 
  const logsEndRef = useRef<HTMLDivElement>(null);
+
+ if (!state.player) return null;
  
  useEffect(() => {
  logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1970,7 +1970,7 @@ export function MatchEngine() {
 
 
   // Organic Reputation Growth
-  const clubTier = CLUBS.find(c => c.symbol === state.player?.currentClubSymbol).tier || 'Lower';
+  const clubTier = CLUBS.find(c => c.symbol === state.player?.currentClubSymbol)?.tier || 'Lower';
   const tierMultiplier = clubTier === 'Elite' ? 1.5 : clubTier === 'Strong' ? 1.2 : clubTier === 'Mid' ? 1.0 : clubTier === 'Lower' ? 0.8 : 0.6;
   
   let worldDelta = 0;

@@ -101,7 +101,7 @@ export function PlayerCreation() {
   dominantFoot: originDetails.weakFoot > 3 ? 'Both' : 'Right', // Simple default
   weakFoot: originDetails.weakFoot,
   startingClubSymbol: clubSymbol,
-  currentClubSymbol: clubSymbol, // Start at trial host club
+  currentClubSymbol: pathwayChoice === 'LOAN' ? (getClubsByTier('Lower')[0]?.symbol || clubSymbol) : clubSymbol,
   hometownClubSymbol: (() => {
     const potential = CLUBS.filter(c => c.symbol !== clubSymbol);
     const startClub = CLUBS.find(c => c.symbol === clubSymbol);

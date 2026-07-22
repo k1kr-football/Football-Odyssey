@@ -358,8 +358,6 @@ const TRAINING_INCIDENTS = [
 export function Training() {
  const { state, setPlayer, advanceDay, setScreen } = useGame();
 
- if (!state.player) return null;
-
  const [selectedCategory, setSelectedCategory] = useState<
  "UNIVERSAL" | "POSITION" | "MENTAL"
  >("UNIVERSAL");
@@ -502,6 +500,8 @@ export function Training() {
  // Injury and fatigue check logic
  const isOvertrained = currentFatigue > 70;
  const isSpent = currentFatigue > 90;
+
+ if (!state.player) return null;
 
  // Filter positional games
  const posGames = POSITION_MINIGAMES.filter((g) => {

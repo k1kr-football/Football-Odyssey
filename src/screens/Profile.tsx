@@ -16,13 +16,11 @@ import { getRoleById } from '../data/roles';
 export function Profile() {
  const { state, setScreen, setPlayer, startLegacyContinuation } = useGame();
  
- if (!state.player) return null;
-
  const player = state.player;
  const isMatchDay = state.currentDay === 'FRI';
 
  const [activeTab, setActiveTab] = useState<'ATTRIBUTES' | 'TIMELINE' | 'RIVALS' | 'TROPHIES' | 'RETIREMENT' | 'STORY' | 'MEDICAL'>('ATTRIBUTES');
- const [isRetired, setIsRetired] = useState(!!player.stateFlags?.retired);
+ const [isRetired, setIsRetired] = useState(!!player?.stateFlags?.retired);
  const [retirementStep, setRetirementStep] = useState<'MENU' | 'GRACEFUL' | 'COACHING' | 'RECORDS' | 'HOMECOMING' | 'CONFIRMED'>('MENU');
  const [selectedCoachingStyle, setSelectedCoachingStyle] = useState<'TACTICAL' | 'MAN_MANAGER' | 'YOUTH'>('TACTICAL');
  const [selectedRecordQuest, setSelectedRecordQuest] = useState<'CAPS' | 'GOALS' | 'TRUST'>('CAPS');
@@ -30,7 +28,8 @@ export function Profile() {
  const [timelineSearch, setTimelineSearch] = useState('');
 
  const fullTimeline = useMemo(() => {
- const historicalBiographies = {
+  if (!player) return [];
+  const historicalBiographies = {
   STREET_PRODIGY: [
   {
    id: 'hist_1',

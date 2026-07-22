@@ -23,14 +23,14 @@ import { processInboxMessages } from "../utils/notifications";
 export function Inbox() {
  const { state, setPlayer, setInbox, updateCalendar, setScreen } = useGame();
 
- if (!state.player) return null;
-
  const [selectedMsg, setSelectedMsg] = useState<any>(null);
  const [notification, setNotification] = useState<string | null>(null);
  const [digestEnabled, setDigestEnabled] = useState(true);
  const [verbosity, setVerbosity] = useState<'ALL' | 'IMPORTANT_AND_CRITICAL' | 'CRITICAL_ONLY'>(
    state.player?.stateFlags?.notificationVerbosity || 'ALL'
  );
+
+ if (!state.player) return null;
 
  const handleVerbosityChange = (val: 'ALL' | 'IMPORTANT_AND_CRITICAL' | 'CRITICAL_ONLY') => {
    setVerbosity(val);
@@ -372,11 +372,14 @@ export function Inbox() {
   rels.manager = Math.max(0, rels.manager - 5);
   newPlayer.morale = Math.min(100, newPlayer.morale + 5);
  } else if (choice.type === "loan_recall_accept") {
-  newPlayer.currentClubSymbol = newPlayer.contract.parentClub || "DEF";
-  newPlayer.contract.parentClub = undefined;
+  const parentClubSymbol = newPlayer.contract?.parentClub || newPlayer.startingClubSymbol || CLUBS[0].symbol;
+  const parentClubObj = CLUBS.find(c => c.symbol === parentClubSymbol) || CLUBS[0];
+  newPlayer.currentClubSymbol = parentClubObj.symbol;
+  if (newPlayer.contract) {
+   newPlayer.contract.parentClub = undefined;
+  }
   newPlayer.loanInfo = undefined;
 
-  const parentClubObj = CLUBS.find(c => c.symbol === newPlayer.currentClubSymbol) || CLUBS[0];
   newPlayer.seasonObjective = generateSeasonObjective(parentClubObj, newPlayer.ovr);
   newPlayer.managerInfo = generateRandomNewManager(newPlayer.currentClubSymbol);
 
