@@ -354,7 +354,7 @@ export function PressConference() {
 
    setPlayer(updatedPlayer);
    setInbox(updatedInbox);
-   advanceDay();
+   advanceDay(true);
    setScreen('HUB');
   }
  };
@@ -368,7 +368,7 @@ export function PressConference() {
     <p className="text-white/60 text-sm mb-6 max-w-md">The media session has finished and all questions have been answered.</p>
     <button
      onClick={() => {
-      advanceDay();
+      advanceDay(true);
       setScreen('HUB');
      }}
      className="px-6 py-3 bg-[#00FF88] text-black font-bold uppercase tracking-wider rounded hover:brightness-110 transition-all cursor-pointer"

@@ -1313,7 +1313,11 @@ export function Inbox() {
   <div className="p-6 border-b border-white/10 text-white/50 text-xs tracking-widest uppercase flex justify-between font-bold bg-[#151515] font-display">
    <span>{category} MESSAGES</span>
    <span className="text-[#00FF88] font-mono">
-   {filteredMessages.filter((m: any) => !m.read).length} Unread
+   {(() => {
+    const unread = filteredMessages.filter((m: any) => !m.read);
+    const mandatory = unread.filter((m: any) => m.priority === 'CRITICAL').length;
+    return `${unread.length} Unread (${mandatory} Mandatory)`;
+   })()}
    </span>
   </div>
   <div className="flex-1 overflow-y-auto hide-scrollbar">
@@ -1352,7 +1356,7 @@ export function Inbox() {
            key={msg.id}
            onClick={() => {
              setSelectedMsg(msg);
-             if (!msg.read && msg.sender !== 'WEEKLY CORRESPONDENCE DIGEST') {
+             if (!msg.read && msg.sender !== 'WEEKLY CORRESPONDENCE DIGEST' && (!msg.choices || msg.choices.length === 0)) {
                const updatedInbox = messages.map((m) =>
                  m.id === msg.id ? { ...m, read: true } : m
                );
@@ -1372,7 +1376,7 @@ export function Inbox() {
              </div>
              <div className="flex items-center gap-1.5">
                <span className={`text-[8px] font-mono font-black uppercase px-1.5 py-0.5 border rounded ${badgeColor}`}>
-                 {msg.priority || 'ROUTINE'}
+                 {msg.priority === 'CRITICAL' ? 'MANDATORY' : 'OPTIONAL'}
                </span>
                <span className="text-[#555] text-[10px] uppercase font-bold tracking-widest font-mono">
                  {msg.read ? "Opened" : "New"}
@@ -1395,7 +1399,7 @@ export function Inbox() {
            <div className="bg-red-950/5 border-b border-red-900/20">
              <div className="px-5 py-2 text-[9px] font-mono font-black text-red-400 bg-red-950/20 uppercase tracking-widest border-b border-red-950 flex items-center gap-2">
                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-               🚨 Critical Actions Required ({criticalUnread.length})
+               🚨 Mandatory Actions Required ({criticalUnread.length})
              </div>
              {[...criticalUnread].reverse().map(renderCard)}
            </div>
@@ -1405,7 +1409,7 @@ export function Inbox() {
            <div>
              {criticalUnread.length > 0 && (
                <div className="px-5 py-2 text-[9px] font-mono font-black text-white/40 uppercase tracking-widest border-b border-white/5 bg-black/40">
-                 📁 General Correspondence ({standardMsgs.length})
+                 📁 Optional Correspondence ({standardMsgs.length})
                </div>
              )}
              {[...standardMsgs].reverse().map(renderCard)}

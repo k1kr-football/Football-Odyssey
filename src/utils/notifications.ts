@@ -18,7 +18,7 @@ export function tagInboxMessagePriority(msg: any): InboxMessage {
   const sender = (msg.sender || '').toUpperCase();
   const type = msg.type || 'NEWS';
 
-  // 1. CRITICAL PRIORITY: Needs immediate action or has major consequences
+  // 1. CRITICAL PRIORITY (Mandatory): Player career decisions (own contract renewal, transfer request response, contract dispute resolution, agent meeting, board-level matter directly involving player, dynamic calendar event with stat consequences)
   if (
     subject.includes('CONTRACT DISPUTE') ||
     subject.includes('RELEASE CLAUSE') ||
@@ -28,9 +28,12 @@ export function tagInboxMessagePriority(msg: any): InboxMessage {
     subject.includes('FINANCIAL EMBARGO') ||
     subject.includes('CRITICAL') ||
     subject.includes('SACK') ||
+    subject.includes('TESTIMONIAL') ||
     subject.includes('ASSESSMENT PERIOD CONCLUSION') ||
-    type === 'CONTRACT' ||
-    (type === 'OFFER' && subject.includes('BID'))
+    subject.includes('YOUR CONTRACT') ||
+    subject.includes('CONTRACT OFFER') ||
+    (type === 'CONTRACT' && !subject.includes('MANAGER EXTENDS SQUAD') && !subject.includes('TEAMMATE CONTRACT')) ||
+    (type === 'OFFER' && (subject.includes('BID') || subject.includes('TRANSFER REQUEST')))
   ) {
     priority = 'CRITICAL';
   }

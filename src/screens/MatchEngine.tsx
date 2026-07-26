@@ -1,4 +1,4 @@
-import { getFlavorText } from "../utils/commentaryGenerator";
+import { getFlavorText } from "../utils/matchEngineUtils";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { Player } from '../types';
@@ -602,7 +602,7 @@ export function MatchEngine() {
 
     // Return to Hub and advance calendar day
     setScreen('HUB');
-    advanceDay();
+    advanceDay(true);
   };
 
   // ==================== RENDERING PHASES ====================

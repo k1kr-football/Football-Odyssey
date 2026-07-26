@@ -1,4 +1,4 @@
-export type MatchEventCategory = 'goal_user' | 'goal_opp' | 'assist' | 'key_pass' | 'tackle' | 'skill' | 'miss' | 'chance_opp' | 'chance_user';
+export type MatchEventCategory = 'goal_user' | 'goal_opp' | 'assist' | 'key_pass' | 'tackle' | 'skill' | 'miss' | 'chance_opp' | 'chance_user' | 'foul' | 'shot';
 
 const commentaryPools: Record<MatchEventCategory, string[]> = {
   goal_user: [
@@ -72,6 +72,22 @@ const commentaryPools: Record<MatchEventCategory, string[]> = {
     `The post is rattled! {team} comes agonizingly close.`,
     `Scramble in the box! {team} applies massive pressure.`,
     `A brilliant save keeps {team} from taking the lead!`
+  ],
+  foul: [
+    `FOUL! {player} goes in too hard and the referee blows the whistle.`,
+    `A cynical foul by {player} to stop the counter attack.`,
+    `Clumsy challenge from {player}, that's a clear free kick.`,
+    `The referee didn't like that tackle by {player}. Foul given.`,
+    `{player} catches the opponent late. Deserved foul.`,
+    `Reckless from {player}! That could have been a booking.`
+  ],
+  shot: [
+    `SHOT! {player} unleashes a strike from distance!`,
+    `{player} decides to have a go!`,
+    `A stinging shot from {player} tests the keeper.`,
+    `{player} creates space and fires a shot!`,
+    `Ambitious effort by {player}!`,
+    `{player} pulls the trigger!`
   ]
 };
 

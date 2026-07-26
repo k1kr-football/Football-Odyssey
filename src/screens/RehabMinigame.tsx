@@ -116,7 +116,7 @@ export function RehabMinigame() {
  };
 
  const handleFinish = () => {
- advanceDay();
+ advanceDay(true);
  setScreen('HUB');
  };
 

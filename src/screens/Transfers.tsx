@@ -13,7 +13,7 @@ export function Transfers() {
  const { state, setPlayer, setInbox } = useGame();
  const player = state.player;
 
- const [activeTab, setActiveTab] = useState<'OFFERS' | 'INTEREST'>('OFFERS');
+ const [activeTab, setActiveTab] = useState<'OFFERS' | 'INTEREST' | 'WORLD_ACTIVITY'>('OFFERS');
  const [negotiatingOffer, setNegotiatingOffer] = useState<string | null>(null);
  
  // Custom inquiry states
@@ -720,6 +720,13 @@ export function Transfers() {
    <Globe size={14} />
    Market Interest & Inquiries
   </button>
+   <button 
+    onClick={() => { setActiveTab('WORLD_ACTIVITY'); setInquiryStatus('IDLE'); }}
+    className={`text-xs font-bold tracking-widest uppercase px-6 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'WORLD_ACTIVITY' ? 'border-[#00FF88] text-white premium-card' : 'border-transparent text-white/50 hover:text-white'}`}
+   >
+    <ArrowLeftRight size={14} />
+    World Transfer Feed & Rumours
+   </button>
   </div>
 
   {/* Tab Contents */}

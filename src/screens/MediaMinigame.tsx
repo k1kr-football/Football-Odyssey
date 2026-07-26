@@ -110,7 +110,7 @@ export function MediaMinigame() {
   setStep(s => s + 1);
  } else {
   setTimeout(() => {
-  advanceDay();
+  advanceDay(true);
   setScreen('HUB');
   }, 2000);
  }
@@ -125,7 +125,7 @@ export function MediaMinigame() {
     <p className="text-white/60 text-sm mb-6 max-w-md">You've completed all media scenarios for today.</p>
     <button
      onClick={() => {
-      advanceDay();
+      advanceDay(true);
       setScreen('HUB');
      }}
      className="px-6 py-3 bg-[#00FF88] text-black font-bold uppercase tracking-wider rounded hover:brightness-110 transition-all cursor-pointer"

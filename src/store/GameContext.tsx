@@ -84,7 +84,7 @@ interface GameContextType {
   setScreen: (screen: Screen) => void;
   setPlayer: (player: Player) => void;
   startCareer: (player: Player, difficulty: 'CASUAL' | 'STANDARD' | 'REALISTIC') => void;
-  advanceDay: () => void;
+  advanceDay: (force?: boolean) => void;
   resolveCutscene: (choiceIndex: number) => void;
   checkCutscenes: () => void;
   resolveEvent: (choiceType: string) => void;
@@ -873,12 +873,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const advanceDay = () => {
+  const advanceDay = (force: boolean = false) => {
     // Basic day advancement logic
     const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     setState(s => {
       // Don't advance if there is an active event waiting to be resolved
       if (s.activeEvent) return s;
+      
+      const hasCriticalItem = s.inbox.some(msg => msg.priority === "CRITICAL" && !msg.read);
+      if (hasCriticalItem && !force) return s;
 
       const idx = days.indexOf(s.currentDay);
       

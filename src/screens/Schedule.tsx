@@ -334,7 +334,6 @@ export function Schedule() {
      <div className="mt-1 text-white/40">Note: European spots may shift based on domestic cup winners or UEFA performance coefficients.</div>
     )}
     </div>
-
     <div className="overflow-y-auto hide-scrollbar flex-1 pr-1 rounded bg-[#0a0a0a]">
     <table className="w-full text-left border-collapse">
      <thead className="sticky top-0 bg-[#0a0a0a] z-10 shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
@@ -342,8 +341,12 @@ export function Schedule() {
       <th className="py-2 px-2 w-10 text-center">Pos</th>
       <th className="py-2 px-2">Club</th>
       <th className="py-2 px-2 text-center w-8">P</th>
+      <th className="py-2 px-2 text-center w-8">W</th>
+      <th className="py-2 px-2 text-center w-8">D</th>
+      <th className="py-2 px-2 text-center w-8">L</th>
       <th className="py-2 px-2 text-center w-10">GD</th>
       <th className="py-2 px-2 text-right w-10">Pts</th>
+      <th className="py-2 px-2 text-center w-28">Form (Last 5)</th>
      </tr>
      </thead>
      <tbody>
@@ -366,8 +369,27 @@ export function Schedule() {
        <span className="truncate">{r.name}</span>
       </td>
       <td className="py-2 px-2 text-center text-white/40 text-xs tabular-nums">{r.p}</td>
+      <td className="py-2 px-2 text-center text-white/40 text-xs tabular-nums">{r.w}</td>
+      <td className="py-2 px-2 text-center text-white/40 text-xs tabular-nums">{r.d}</td>
+      <td className="py-2 px-2 text-center text-white/40 text-xs tabular-nums">{r.l}</td>
       <td className="py-2 px-2 text-center text-white/40 text-xs font-mono tabular-nums">{r.gd > 0 ? `+${r.gd}` : r.gd}</td>
       <td className={`py-2 px-2 text-right text-xs font-bold tabular-nums ${r.isPlayer ? 'text-[#00FF88]' : 'text-white'}`}>{r.pts}</td>
+      <td className="py-2 px-2 text-center">
+       <div className="flex items-center gap-1 justify-center">
+        {(r.form || []).map((f: number, idx: number) => (
+         <span
+          key={idx}
+          className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center ${
+           f === 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+           f === 0 ? 'bg-zinc-500/20 text-zinc-400 border border-zinc-500/40' :
+           'bg-red-500/20 text-red-400 border border-red-500/40'
+          }`}
+         >
+          {f === 1 ? 'W' : f === 0 ? 'D' : 'L'}
+         </span>
+        ))}
+       </div>
+      </td>
       </tr>
      )})}
      </tbody>

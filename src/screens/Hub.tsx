@@ -8,11 +8,30 @@ import { CharacterPortrait } from '../components/CharacterPortrait';
 import { getClubSquad } from '../data/sheetSquads';
 import { GlossaryTooltip, FirstEncounterCallout } from '../components/GlossaryTooltip';
 import { getRoleById, getManagerTacticalFit } from '../data/roles';
+import { DayOfWeek } from "../types";
+import { getFormattedCalendarDate } from "../utils/careerSystems";
 import { getTransferWindowPacingState, getClubTier, getGatingStatus } from '../utils/transfers';
 
 export function Hub() {
  const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing } = useGame();
  const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING'>('MANAGER');
+ const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+ const currentDayIdx = days.indexOf(state.currentDay);
+ let nextDay = state.currentDay;
+ let nextWeek = state.currentWeek;
+
+ if (currentDayIdx < days.length - 1) {
+   nextDay = days[currentDayIdx + 1];
+ } else {
+   nextDay = 'MON';
+   nextWeek = state.currentWeek >= 52 ? 1 : state.currentWeek + 1;
+ }
+ const nextDateStr = getFormattedCalendarDate(nextWeek, nextDay);
+
+ const outstandingCriticalItems = state.inbox.filter((msg: any) => msg.priority === 'CRITICAL' && !msg.read);
+ const criticalCount = outstandingCriticalItems.length;
+ const isAdvanceBlocked = criticalCount > 0;
+
  const [deadlineSeconds, setDeadlineSeconds] = useState(43200); // 12 hours mock countdown
 
  useEffect(() => {
@@ -443,24 +462,7 @@ export function Hub() {
     );
   })()}
 
-  {/* Active Transfer Rumour Banner */}
-  <div id="active_transfer_rumour" className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
-  <div className="flex items-center gap-3">
-   <span className="text-xl">🚨</span>
-   <div>
-   <span className="text-amber-400 text-xs font-mono font-bold uppercase tracking-widest block">Active Transfer Rumour</span>
-   <p className="text-white text-xs font-mono mt-0.5">
-    {getActiveRumourText()}
-   </p>
-   </div>
-  </div>
-  <button 
-   onClick={() => setActiveFeedTab('SPECULATION')}
-   className="bg-amber-500 text-black px-4 py-1.5 rounded font-mono text-xs font-bold uppercase hover:bg-amber-400 transition-colors shrink-0"
-  >
-   View Rumours
-  </button>
-  </div>
+
 
   {/* 2. Bento Grid Dashboard */}
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -658,7 +660,7 @@ export function Hub() {
            choices: []
           };
           setInbox([notification, ...state.inbox]);
-         advanceDay();
+         advanceDay(true);
         }}
         className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-8 py-3 rounded-lg font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all text-xs"
        >
@@ -705,7 +707,7 @@ export function Hub() {
         choices: []
        };
        setInbox([notification, ...state.inbox]);
-      advanceDay();
+      advanceDay(true);
      }} 
      className="bg-red-500 hover:bg-red-600 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest flex items-center gap-3 relative z-10 transition-colors shadow-lg shadow-red-500/10 text-xs"
      >
@@ -854,12 +856,45 @@ export function Hub() {
      <h3 className="text-white font-black text-lg uppercase tracking-wider mb-2">Schedule Flow</h3>
      <p className="text-white/50 text-[11px] max-w-sm mb-0 font-mono uppercase tracking-wider leading-relaxed">No scheduled club matches today. Use the time to progress your calendar, participate in training drills, or check inbox communications.</p>
     </div>
+    <div className="relative group">
     <button 
-     onClick={() => advanceDay()}
-     className="bg-transparent hover:border-[#00FF88] hover:text-[#00FF88] px-12 py-4 font-black text-white uppercase tracking-widest transition-colors text-xs flex items-center gap-3 rounded-lg shadow-md"
+     onClick={() => !isAdvanceBlocked && advanceDay()}
+     disabled={isAdvanceBlocked}
+     className={`relative px-12 py-4 font-black uppercase tracking-widest text-xs flex flex-col items-center gap-1.5 rounded-lg transition-all duration-300
+      ${isAdvanceBlocked 
+        ? "bg-transparent border-2 border-white/10 text-white/30 cursor-not-allowed" 
+        : "bg-transparent border-2 border-[#00FF88] text-[#00FF88] hover:bg-[#00FF88]/10 hover:shadow-[0_0_20px_rgba(0,255,136,0.25)]"}
+     `}
     >
-     Advance Calendar <ArrowRight size={14}/>
+     <div className="flex items-center gap-3">
+      Advance Calendar <ArrowRight size={14} className={isAdvanceBlocked ? 'opacity-50' : 'opacity-100'}/>
+     </div>
+     <div className={`text-[10px] font-mono tracking-wider ${isAdvanceBlocked ? 'text-white/20' : 'text-[#00FF88]/70'} transition-colors`}>
+      Next: {nextDay}, {nextDateStr}
+     </div>
     </button>
+    
+    {isAdvanceBlocked && (
+     <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+      <span className="relative flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-20"></span>
+       <span className="relative inline-flex rounded-full bg-[#1a0a0a] border border-red-500 text-red-400 text-[9px] font-bold px-2.5 py-0.5 uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+        <AlertTriangle size={10} /> ⚠ {criticalCount} pending
+       </span>
+      </span>
+     </div>
+    )}
+
+    {isAdvanceBlocked && (
+     <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 flex flex-col items-center">
+      <div className="w-2 h-2 border-t border-l border-white/10 bg-[#111] rotate-45 -mb-1"></div>
+      <div className="bg-[#111] border border-white/10 text-white/70 text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg flex flex-col items-center gap-1 shadow-2xl backdrop-blur-md">
+       <span className="text-red-400 font-bold">Action Required</span>
+       <span className="text-white/50 text-[9px]">Check your inbox to resolve critical items.</span>
+      </div>
+     </div>
+    )}
+   </div>
     </div>
    )}
    </div>
