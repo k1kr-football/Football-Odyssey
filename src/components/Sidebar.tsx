@@ -7,6 +7,7 @@ import { CLUBS } from '../data/teams';
 
 const navItems: { id: Screen; label: string; icon: React.ReactNode; requiresPattern?: 'matchday' }[] = [
  { id: 'HUB', label: 'HOME', icon: <Home size={18} /> },
+ { id: 'MATCH', label: 'MATCHDAY FIXTURE', icon: <Trophy size={18} />, requiresPattern: 'matchday' },
  { id: 'INBOX', label: 'INBOX', icon: <Mail size={18} /> },
  { id: 'TEAM', label: 'SQUAD', icon: <Users size={18} /> },
  { id: 'TRAINING', label: 'TRAINING', icon: <Dumbbell size={18} /> },
@@ -25,7 +26,17 @@ export function Sidebar() {
  if (state.screen === 'CREATION') return null;
 
  const unreadCount = state.inbox ? state.inbox.filter((m: any) => !m.read).length : 0;
- const isMatchday = state.currentDay === 'SAT';
+ const todaysCalendarEntry = state.seasonCalendar?.find(
+  e => e.week === state.currentWeek && e.day === state.currentDay
+ );
+ const isMatchday = todaysCalendarEntry?.type === 'MATCH' || Boolean(state.nextMatch && state.currentDay === 'SAT');
+
+ const visibleNavItems = navItems.filter(item => {
+  if (item.requiresPattern === 'matchday') {
+   return isMatchday;
+  }
+  return true;
+ });
 
  return (
   <aside className="w-16 sm:w-20 premium-card border-r border-white/10 flex flex-col items-center h-full font-mono shrink-0 bg-[#070707] py-4 select-none">
@@ -54,10 +65,20 @@ export function Sidebar() {
 
    {/* Navigation Items (Scrollable Column) */}
    <div className="flex-1 w-full overflow-y-auto hide-scrollbar flex flex-col items-center gap-3 px-2">
-    {navItems.map((item) => {
+    {visibleNavItems.map((item) => {
      const isActive = state.screen === item.id;
+     const isMatchItem = item.id === 'MATCH';
      const isDisabled = item.requiresPattern === 'matchday' && !isMatchday;
      
+     let customStyle = 'border-transparent text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95';
+     if (isDisabled) {
+      customStyle = 'opacity-25 cursor-not-allowed border-transparent text-white/20';
+     } else if (isActive) {
+      customStyle = 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88] shadow-lg shadow-[#00FF88]/5 scale-105';
+     } else if (isMatchItem && isMatchday) {
+      customStyle = 'bg-[#00FF88]/20 border-[#00FF88] text-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.3)] animate-pulse scale-105 cursor-pointer';
+     }
+
      return (
       <button
        key={item.id}
@@ -65,14 +86,8 @@ export function Sidebar() {
         if (!isDisabled) setScreen(item.id);
        }}
        disabled={isDisabled}
-       title={item.label}
-       className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer shrink-0 border
-       ${isDisabled 
-        ? 'opacity-20 cursor-not-allowed border-transparent text-white/30' 
-        : isActive 
-        ? 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88] shadow-lg shadow-[#00FF88]/5 scale-105' 
-        : 'border-transparent text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95'
-       }`}
+       title={isMatchItem ? (isMatchday ? 'PLAY MATCHDAY FIXTURE' : 'MATCHDAY (SAT ONLY)') : item.label}
+       className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer shrink-0 border ${customStyle}`}
       >
        {/* Icon wrapper to ensure 20px size */}
        <div className="transform transition-transform scale-110">
@@ -83,6 +98,13 @@ export function Sidebar() {
        {item.id === 'INBOX' && unreadCount > 0 && (
         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-black animate-pulse">
          {unreadCount}
+        </span>
+       )}
+
+       {/* Matchday pulse badge */}
+       {isMatchItem && isMatchday && (
+        <span className="absolute -top-1 -right-1 bg-[#00FF88] text-black text-[7px] font-black px-1 rounded-full uppercase tracking-tighter border border-black animate-pulse shadow">
+         LIVE
         </span>
        )}
       </button>

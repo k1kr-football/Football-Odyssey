@@ -128,7 +128,40 @@ export type BackstoryType =
   | 'EXILE'
   | 'FROM_SCRATCH'
   | 'NON_LEAGUE'
-  | 'ACADEMY_PRODIGY';
+  | 'ACADEMY_PRODIGY'
+  | 'WONDERKID'
+  | 'NEPOTISM_CASE'
+  | 'THE_REFUGEE'
+  | 'LATE_REPLACEMENT'
+  | 'SECOND_SPORT_CONVERT';
+
+export interface BackstoryDetails {
+  region?: string;
+  formativeFrame?: string;
+  dualNationality?: string;
+  originatingSport?: string;
+  reputationTag?: string;
+  familySituation?: {
+    optionId: string;
+    title: string;
+    description: string;
+    npcName: string;
+    startingRelationship: number;
+  };
+  rivalOrMentor?: {
+    choiceType: 'RIVAL' | 'MENTOR';
+    name: string;
+    roleOrPosition: string;
+    title: string;
+    description: string;
+  };
+  coreWound?: {
+    id: string;
+    tag: string;
+    drivingQuestion: string;
+    description: string;
+  };
+}
 
 export interface StoryBeat {
   act: number;
@@ -256,6 +289,8 @@ export interface PlayerRoleSpecialization {
   recentMatchesInRole: number;
 }
 
+export type PlayerPersonality = 'Professional' | 'Ambitious' | 'Temperamental' | 'Loyal' | 'Media-Friendly' | 'Introvert' | 'Party Animal' | 'Model Citizen';
+
 export interface Player {
   hierarchyRole?: 'Youth' | 'Fringe' | 'Core' | 'Vice-Captain' | 'Captain';
   squadChemistry?: number;
@@ -264,6 +299,7 @@ export interface Player {
   agentName?: string;
   nationality: string;
   backstory: BackstoryType;
+  backstoryDetails?: BackstoryDetails;
   position: Position;
   subPosition: SubPosition;
   roleSpecialization?: PlayerRoleSpecialization;
@@ -378,7 +414,7 @@ export interface Player {
   sponsors: number;
   playstyleIdentity: string;
   characterType: string;
-  personality: 'Professional' | 'Ambitious' | 'Temperamental' | 'Loyal' | 'Media-Friendly' | 'Introvert' | 'Party Animal' | 'Model Citizen';
+  personality: PlayerPersonality;
   traits: string[];
   timeline: TimelineEvent[];
   mentalFatigue?: number; // 0-100 mental burnout meter

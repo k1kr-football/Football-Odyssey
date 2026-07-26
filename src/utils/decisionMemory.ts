@@ -131,12 +131,12 @@ export function queryDecisionMemory(
     }
 
     // 2. Filter by involved NPC name
-    if (filters.npc && !entry.npcsInvolved.some(name => name.toLowerCase().includes(filters.npc!.toLowerCase()))) {
+    if (filters.npc && !(entry.npcsInvolved || []).some(name => name.toLowerCase().includes(filters.npc!.toLowerCase()))) {
       return false;
     }
 
     // 3. Filter by involved entity (club or sponsor)
-    if (filters.entity && !entry.entitiesInvolved.some(ent => ent.toLowerCase() === filters.entity!.toLowerCase())) {
+    if (filters.entity && !(entry.entitiesInvolved || []).some(ent => ent.toLowerCase() === filters.entity!.toLowerCase())) {
       return false;
     }
 
@@ -169,7 +169,7 @@ export function deriveRelationshipSummary(
   count: number;
 } {
   const log: DecisionMemoryLog = (state.player?.stateFlags as any)?.decisionMemory || [];
-  const relevant = log.filter(d => d.npcsInvolved.some(name => name.toLowerCase().includes(npcName.toLowerCase())));
+  const relevant = log.filter(d => (d.npcsInvolved || []).some(name => name.toLowerCase().includes(npcName.toLowerCase())));
 
   if (relevant.length === 0) {
     return {
@@ -182,23 +182,25 @@ export function deriveRelationshipSummary(
   const definingDef = relevant.find(d => d.significance === 'DEFINING');
   const majorDef = relevant.filter(d => d.significance === 'MAJOR');
 
-  const hasConflict = relevant.some(d => 
-    d.choiceText.toLowerCase().includes('dispute') || 
-    d.choiceText.toLowerCase().includes('angry') || 
-    d.choiceText.toLowerCase().includes('argue') || 
-    d.choiceText.toLowerCase().includes('refuse') || 
-    d.choiceText.toLowerCase().includes('skip') ||
-    d.choiceText.toLowerCase().includes('leak')
-  );
+  const hasConflict = relevant.some(d => {
+    const text = (d.choiceText || '').toLowerCase();
+    return text.includes('dispute') || 
+      text.includes('angry') || 
+      text.includes('argue') || 
+      text.includes('refuse') || 
+      text.includes('skip') ||
+      text.includes('leak');
+  });
 
-  const hasWarmth = relevant.some(d => 
-    d.choiceText.toLowerCase().includes('back') || 
-    d.choiceText.toLowerCase().includes('defend') || 
-    d.choiceText.toLowerCase().includes('support') || 
-    d.choiceText.toLowerCase().includes('agree') || 
-    d.choiceText.toLowerCase().includes('mingle') ||
-    d.choiceText.toLowerCase().includes('loyalty')
-  );
+  const hasWarmth = relevant.some(d => {
+    const text = (d.choiceText || '').toLowerCase();
+    return text.includes('back') || 
+      text.includes('defend') || 
+      text.includes('support') || 
+      text.includes('agree') || 
+      text.includes('mingle') ||
+      text.includes('loyalty');
+  });
 
   let summary = "";
   let tone: 'WARM' | 'CORDIAL' | 'SKEPTICAL' | 'CONFLICT' = 'CORDIAL';

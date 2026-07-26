@@ -271,11 +271,11 @@ export function getTrialHostClubByOrigin(backstory: string): Club {
   let filtered = CLUBS;
   if (backstory === 'LATE_BLOOMER') {
     filtered = CLUBS.filter(c => ['Lower', 'Foundation'].includes(c.tier));
-  } else if (backstory === 'FROM_SCRATCH') {
+  } else if (backstory === 'FROM_SCRATCH' || backstory === 'THE_REFUGEE' || backstory === 'LATE_REPLACEMENT') {
     filtered = CLUBS.filter(c => c.tier === 'Foundation');
-  } else if (backstory === 'STREET_PRODIGY') {
+  } else if (backstory === 'STREET_PRODIGY' || backstory === 'SECOND_SPORT_CONVERT') {
     filtered = CLUBS.filter(c => ['Mid', 'Lower'].includes(c.tier));
-  } else if (backstory === 'FALLEN_PRODIGY') {
+  } else if (backstory === 'FALLEN_PRODIGY' || backstory === 'NEPOTISM_CASE') {
     filtered = CLUBS.filter(c => ['Mid', 'Strong'].includes(c.tier));
   } else if (backstory === 'EXILE' || backstory === 'ACADEMY_GRADUATE') {
     filtered = CLUBS.filter(c => ['Strong', 'Elite'].includes(c.tier));
@@ -300,6 +300,14 @@ export function getTrialNarrativeIntro(backstory: string, hostClubName: string):
       return `Your viral freestyle video clips got you invited to this 45-minute developmental showcase with ${hostClubName}. The coaches are highly skeptical—they know you have trick reels, but they want to see if you have match-ready tactical awareness, defensive discipline, and decision-making.`;
     case 'EXILE':
       return `Having walked away from the high wages of foreign leagues, you are back in Europe, fighting for contract relevance. You have been granted a trial showcase against ${hostClubName}'s reserves. The European scouts want to see if you still have the hunger and speed to survive at this level.`;
+    case 'NEPOTISM_CASE':
+      return `A closed-door showcase at ${hostClubName} has been arranged—everyone knows your uncle made the call. The coaches are watching with crossed arms, looking for any excuse to dismiss you as a pampered legacy pick. You must prove your technical ability is entirely your own.`;
+    case 'THE_REFUGEE':
+      return `You arrived in this country with nothing but resilience. Now, you stand on the training ground of ${hostClubName}. The local boys look at you sideways, but you've played on dust fields with higher stakes. The scouts want to see if your composure holds up on manicured grass.`;
+    case 'LATE_REPLACEMENT':
+      return `You weren't even supposed to be in this showcase for ${hostClubName}. A starter tweaked their hamstring in warmups, and the coach pointed at you. Expectations are rock bottom—you're just making up the numbers. But that means you have absolutely nothing to lose.`;
+    case 'SECOND_SPORT_CONVERT':
+      return `You shattered the athletic testing records this morning, but now it's time for the 11-a-side trial match for ${hostClubName}. The purists on the sideline are waiting to expose your lack of tactical awareness and raw first touch. You need to use your monstrous physical tools to mask your footballing gaps.`;
     case 'FROM_SCRATCH':
     default:
       return `You are one of 50 hopeful trialists at ${hostClubName}'s annual open scouting trial day. The odds are stacked heavily against you. This final 11-a-side training ground match is your single, fleeting opportunity to stand out from the pack and get offered a professional deal.`;
@@ -314,10 +322,12 @@ export function generateTrialContractOffers(backstory: string, rating: number, h
   
   // Find other potential clubs for offer pool
   let otherPool = CLUBS.filter(c => c.symbol !== hostClub.symbol);
-  if (backstory === 'LATE_BLOOMER' || backstory === 'FROM_SCRATCH') {
+  if (backstory === 'LATE_BLOOMER' || backstory === 'FROM_SCRATCH' || backstory === 'THE_REFUGEE' || backstory === 'LATE_REPLACEMENT') {
     otherPool = otherPool.filter(c => ['Lower', 'Foundation'].includes(c.tier));
-  } else if (backstory === 'STREET_PRODIGY') {
+  } else if (backstory === 'STREET_PRODIGY' || backstory === 'SECOND_SPORT_CONVERT') {
     otherPool = otherPool.filter(c => ['Mid', 'Lower'].includes(c.tier));
+  } else if (backstory === 'FALLEN_PRODIGY' || backstory === 'NEPOTISM_CASE') {
+    otherPool = otherPool.filter(c => ['Mid', 'Strong'].includes(c.tier));
   } else {
     otherPool = otherPool.filter(c => ['Strong', 'Elite'].includes(c.tier));
   }
@@ -470,7 +480,6 @@ export interface GeneratedClub {
   symbol: string;
   name: string;
   managerName: string;
-  managerArchetype: string;
   squad: {
     starters: GeneratedPlayer[];
     substitutes: GeneratedPlayer[];
@@ -665,14 +674,17 @@ export function generateAllClubsRosters(engine?: UnifiedNPCEngine): Record<strin
     }
 
     // Add manager
-    const mgr = e.generateManager(club.country, club.symbol);
-    const mName = `${mgr.firstName} ${mgr.lastName}`;
+    const sheetSquad = getClubSquad(club.name);
+    let mName = sheetSquad && sheetSquad.manager && sheetSquad.manager !== 'Gaffer' ? sheetSquad.manager : '';
+    if (!mName) {
+      const mgr = e.generateManager(club.country, club.symbol);
+      mName = `${mgr.firstName} ${mgr.lastName}`;
+    }
 
     result[club.symbol] = {
       symbol: club.symbol,
       name: club.name,
       managerName: mName,
-      managerArchetype: 'BALANCED',
       squad: {
         starters,
         substitutes,
@@ -947,6 +959,7 @@ export function initializePlayerCareer(
   const baseArc = STORY_ARCS[player.backstory];
   const storyArc: StoryArc = {
     ...baseArc,
+    drivingQuestion: player.backstoryDetails?.coreWound?.drivingQuestion || baseArc.drivingQuestion,
     currentAct: 1,
     currentBeat: 0, // 0 means no beats triggered yet
     progress: 0,
@@ -954,8 +967,14 @@ export function initializePlayerCareer(
     beats: baseArc.beats.map(b => ({ ...b, triggered: false }))
   };
 
+  const initialFamilyRel = player.backstoryDetails?.familySituation?.startingRelationship ?? player.relationships?.family ?? 75;
+
   return {
     ...player,
+    relationships: {
+      ...player.relationships,
+      family: initialFamilyRel
+    },
     mentalFatigue: 15,
     mentalFatigueDetails: getMentalFatigueLevel(15),
     difficulty,

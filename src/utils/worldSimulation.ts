@@ -1,7 +1,8 @@
 import { assignManagerPhilosophy } from "./managerPhilosophy";
-
 import { Club, Player } from '../types';
 import { ClubFinancesMap, verifyClubSigningCapability } from './clubFinances';
+import { getClubSquad } from '../data/sheetSquads';
+import { UnifiedNPCEngine } from './npcEngine';
 
 export type ManagerArchetype = 'LOYALIST' | 'PRAGMATIST' | 'PROJECT_BUILDER' | 'VOLATILE';
 
@@ -42,17 +43,33 @@ export interface WorldState {
 
 import { CLUBS } from '../data/teams';
 
-export function initializeWorldState(): WorldState {
+export function initializeWorldState(generatedClubs?: Record<string, import('./careerSystems').GeneratedClub>): WorldState {
     const worldClubs: Record<string, WorldClub> = {};
+    const archetypes: ManagerArchetype[] = ['LOYALIST', 'PRAGMATIST', 'PROJECT_BUILDER', 'VOLATILE'];
+    const npcEngine = new UnifiedNPCEngine();
     
     CLUBS.forEach(club => {
-        const archetypes: ManagerArchetype[] = ['LOYALIST', 'PRAGMATIST', 'PROJECT_BUILDER', 'VOLATILE'];
         const arch = archetypes[Math.floor(Math.random() * archetypes.length)];
         
+        // Populate manager name:
+        // 1. Check curated sheet squads
+        const sheetSquad = getClubSquad(club.name);
+        let managerName = sheetSquad && sheetSquad.manager && sheetSquad.manager !== 'Gaffer' ? sheetSquad.manager : '';
+        
+        // 2. Fall back to generatedClubs manager name if available
+        if (!managerName && generatedClubs && generatedClubs[club.symbol]?.managerName) {
+            managerName = generatedClubs[club.symbol].managerName;
+        }
+        
+        // 3. Last resort placeholder
+        if (!managerName) {
+            managerName = sheetSquad?.manager || `${club.symbol} Manager`;
+        }
+
         worldClubs[club.symbol] = {
             ...club,
             manager: {
-                name: `${club.symbol} Manager`,
+                name: managerName,
                 archetype: arch,
                 philosophy: assignManagerPhilosophy(),
                 trust: 50,
@@ -168,8 +185,11 @@ export function simulateWorldWeek(
         if (club.manager.jobSecurity <= 0 && clubId !== playerClubSymbol) {
             newWorld.newsItems.push({ week, type: 'MANAGER', text: `BREAKING: ${club.name} has sacked their manager after a poor run of form.` });
             const archetypes: ManagerArchetype[] = ['LOYALIST', 'PRAGMATIST', 'PROJECT_BUILDER', 'VOLATILE'];
+            const engine = new UnifiedNPCEngine();
+            const newMgr = engine.generateManager(club.country, club.symbol);
+            const newName = `${newMgr.firstName} ${newMgr.lastName}`;
             club.manager = {
-                name: `New Manager`,
+                name: newName,
                 archetype: archetypes[Math.floor(Math.random()*archetypes.length)],
                 philosophy: assignManagerPhilosophy(),
                 trust: 50,

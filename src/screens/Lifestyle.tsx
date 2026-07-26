@@ -473,7 +473,7 @@ export function Lifestyle() {
       </div>
       <div className="flex justify-between mt-1">
        <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Relationship</span>
-       <span className="text-white text-[10px] font-bold">{Math.round(p.relationships.agent)}/100</span>
+       <span className="text-white text-[10px] font-bold">{Math.round(p.relationships.agent || 0)}/100</span>
       </div>
 
       {(() => {

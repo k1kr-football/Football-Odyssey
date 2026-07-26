@@ -1,6 +1,8 @@
 import { CoreFormulas } from "./coreFormulas";
 import { Club, Player, TimelineEvent } from '../types';
 import { CLUBS } from '../data/teams';
+import { getClubSquad } from '../data/sheetSquads';
+import { UnifiedNPCEngine } from './npcEngine';
 
 export interface SeasonObjective {
   type: 'avoid_relegation' | 'mid_table' | 'top_half' | 'promotion' | 'playoffs' | 'europe' | 'silverware';
@@ -328,11 +330,20 @@ export function generateSeasonObjective(club: Club, playerOvr: number): SeasonOb
 }
 
 // Generate a random brand new manager with unique personality and preferences
-export function generateRandomNewManager(currentClubSymbol: string): ManagerInfo {
-  const firstNames = ['Marco', 'Roberto', 'Jurgen', 'Hansi', 'Graham', 'Shaun', 'Brendan', 'Carlo', 'Mauricio', 'Thomas', 'Ruben', 'Jose'];
-  const lastNames = ['Maloney', 'Silva', 'Clement', 'Postecoglou', 'Dyche', 'Cooper', 'Mckenna', 'Edwards', 'Carrick', 'Kovac', 'Rose'];
+export function generateRandomNewManager(currentClubSymbol: string, worldState?: any): ManagerInfo {
+  const clubObj = CLUBS.find(c => c.symbol === currentClubSymbol);
+  const clubName = clubObj?.name || '';
+  const sheetSquad = getClubSquad(clubName);
 
-  const chosenName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+  let chosenName = worldState?.clubs?.[currentClubSymbol]?.manager?.name;
+  if (!chosenName && sheetSquad && sheetSquad.manager && sheetSquad.manager !== 'Gaffer') {
+    chosenName = sheetSquad.manager;
+  }
+  if (!chosenName) {
+    const engine = new UnifiedNPCEngine();
+    const mgr = engine.generateManager(clubObj?.country || 'England', currentClubSymbol);
+    chosenName = `${mgr.firstName} ${mgr.lastName}`;
+  }
 
   const personalities: ('Demanding' | 'Nurturing' | 'Tactical' | 'Pragmatic')[] = ['Demanding', 'Nurturing', 'Tactical', 'Pragmatic'];
   const personality = personalities[Math.floor(Math.random() * personalities.length)];

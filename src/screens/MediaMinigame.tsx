@@ -118,6 +118,24 @@ export function MediaMinigame() {
 
  const currentScen = scenarios[step];
 
+ if (!currentScen) {
+  return (
+   <div className="flex flex-col h-full bg-[#080909] p-8 justify-center items-center text-center">
+    <h2 className="text-white text-xl font-bold uppercase mb-4 font-display">Media Briefing Completed</h2>
+    <p className="text-white/60 text-sm mb-6 max-w-md">You've completed all media scenarios for today.</p>
+    <button
+     onClick={() => {
+      advanceDay();
+      setScreen('HUB');
+     }}
+     className="px-6 py-3 bg-[#00FF88] text-black font-bold uppercase tracking-wider rounded hover:brightness-110 transition-all cursor-pointer"
+    >
+     Continue to Hub
+    </button>
+   </div>
+  );
+ }
+
  return (
  <div className="flex flex-col h-full bg-[#080909] p-8 select-none font-sans justify-center items-center">
   <div className="max-w-3xl w-full flex flex-col gap-6 animate-fade-in">

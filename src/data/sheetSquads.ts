@@ -1,3 +1,5 @@
+import { CLUBS } from './teams';
+
 export interface SheetPlayer {
   name: string;
   ovr: number;
@@ -2866,12 +2868,120 @@ export const SHEET_SQUADS: Record<string, ClubSquad> = {
     players: [
     ]
   },
+  "Preston North End": {
+    manager: "Paul Heckingbottom",
+    players: [
+      { name: "Freddie Woodman", ovr: 75 },
+      { name: "Liam Lindsay", ovr: 74 },
+      { name: "Jordan Storey", ovr: 73 },
+      { name: "Andrew Hughes", ovr: 73 },
+      { name: "Ben Whiteman", ovr: 75 },
+      { name: "Ali McCann", ovr: 73 },
+      { name: "Mads Frøkjær-Jensen", ovr: 74 },
+      { name: "Robbie Brady", ovr: 72 },
+      { name: "Will Keane", ovr: 74 },
+      { name: "Emil Riis", ovr: 74 },
+      { name: "Milutin Osmajić", ovr: 73 }
+    ]
+  },
+  "Bromley": {
+    manager: "Andy Woodman",
+    players: [
+      { name: "Grant Smith", ovr: 65 },
+      { name: "Byron Webster", ovr: 64 },
+      { name: "Omar Sowunmi", ovr: 64 },
+      { name: "Callum Reynolds", ovr: 63 },
+      { name: "Idris El Mizouni", ovr: 66 },
+      { name: "Jude Arthurs", ovr: 64 },
+      { name: "Corey Whitely", ovr: 65 },
+      { name: "Michael Cheek", ovr: 67 },
+      { name: "Olufela Olomola", ovr: 63 },
+      { name: "Levi Amantchi", ovr: 62 }
+    ]
+  },
+  "Carlisle United": {
+    manager: "Mike Williamson",
+    players: [
+      { name: "Harry Lewis", ovr: 66 },
+      { name: "Jon Mellish", ovr: 67 },
+      { name: "Aaron Hayden", ovr: 66 },
+      { name: "Terell Thomas", ovr: 65 },
+      { name: "Callum Guy", ovr: 66 },
+      { name: "Harrison Neal", ovr: 64 },
+      { name: "Josh Vela", ovr: 66 },
+      { name: "Daniel Adu-Adjei", ovr: 65 },
+      { name: "Charlie Wyke", ovr: 67 },
+      { name: "Luke Armstrong", ovr: 66 }
+    ]
+  },
+  "Deportivo La Coruña": {
+    manager: "Imanol Idiakez",
+    players: [
+      { name: "Germán Parreño", ovr: 73 },
+      { name: "Pablo Vázquez", ovr: 74 },
+      { name: "Dani Barcia", ovr: 72 },
+      { name: "Ximo Navarro", ovr: 73 },
+      { name: "Sergio Escudero", ovr: 74 },
+      { name: "José Ángel Jurado", ovr: 73 },
+      { name: "Diego Villares", ovr: 74 },
+      { name: "Lucas Pérez", ovr: 77 },
+      { name: "Yeremay Hernández", ovr: 76 },
+      { name: "David Mella", ovr: 75 },
+      { name: "Barbero", ovr: 72 }
+    ]
+  },
+  "Le Mans": {
+    manager: "Patrick Videira",
+    players: [
+      { name: "Nicolas Kocik", ovr: 68 },
+      { name: "Harold Voyer", ovr: 67 },
+      { name: "Samuel Yohou", ovr: 67 },
+      { name: "Anthony Ribelin", ovr: 68 },
+      { name: "Alexandre Lauray", ovr: 66 },
+      { name: "Edwin Quarshie", ovr: 67 },
+      { name: "Martin Rossignol", ovr: 66 },
+      { name: "Erwan Colas", ovr: 67 },
+      { name: "Dame Gueye", ovr: 69 },
+      { name: "Antoine Rabillard", ovr: 68 }
+    ]
+  }
 };
 
+function normalizeClubString(str: string): string {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^(afc|fc|cf|rcd|sd|ud|cd|rb|sc)\s+/, "")
+    .replace(/\s+(fc|cf|afc)$/, "")
+    .replace(/\bde\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function getClubSquad(clubName: string): ClubSquad {
-  const normalized = Object.keys(SHEET_SQUADS).find(k => k.toLowerCase() === clubName.toLowerCase());
-  if (normalized && SHEET_SQUADS[normalized]) {
-    return SHEET_SQUADS[normalized];
+  const keys = Object.keys(SHEET_SQUADS);
+
+  // 1. Direct exact case-insensitive match
+  let matchedKey = keys.find(k => k.toLowerCase() === clubName.toLowerCase());
+
+  // 2. Normalized string comparison (stripping accents, prefixes, etc.)
+  if (!matchedKey) {
+    const targetNorm = normalizeClubString(clubName);
+    matchedKey = keys.find(k => normalizeClubString(k) === targetNorm);
+  }
+
+  // 3. Fallback check looking up team by symbol or full name in CLUBS
+  if (!matchedKey) {
+    const teamObj = CLUBS.find(c => c.symbol.toLowerCase() === clubName.toLowerCase() || c.name.toLowerCase() === clubName.toLowerCase());
+    if (teamObj) {
+      const targetNorm = normalizeClubString(teamObj.name);
+      matchedKey = keys.find(k => normalizeClubString(k) === targetNorm);
+    }
+  }
+
+  if (matchedKey && SHEET_SQUADS[matchedKey]) {
+    return SHEET_SQUADS[matchedKey];
   }
 
   // Safe fallback if not found in dictionary

@@ -23,9 +23,17 @@
   }
 }
 
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #080A09;
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: #080A09;
 }
 
 h1, h2, h3, .font-display {
@@ -37,12 +45,12 @@ h1, h2, h3, .font-display {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0.9; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -78,10 +86,6 @@ h1, h2, h3, .font-display {
 }
 
 /* Premium Button Outlines and Focus Rings */
-button {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-}
 
 /* Base outline effect for solid primary and secondary actions */
 button:focus-visible {
@@ -153,5 +157,61 @@ button.glass-panel:hover,
 button[class*="glass-panel"]:hover {
   border-color: rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Pitch & Stadium Atmosphere Styles */
+.pitch-grass-stripes {
+  background-color: #064e3b;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.12) 0px,
+    rgba(16, 185, 129, 0.12) 30px,
+    transparent 30px,
+    transparent 60px
+  );
+}
+
+.stadium-glow-overlay {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(0, 255, 136, 0.15) 0%,
+    rgba(13, 148, 136, 0.08) 40%,
+    transparent 80%
+  );
+}
+
+.glow-card-emerald {
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.glow-card-gold {
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.12);
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(10, 10, 10, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.5);
 }
 

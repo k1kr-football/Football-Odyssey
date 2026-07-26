@@ -28,8 +28,71 @@ export function migrateSaveData(savedState: any): any {
   // Determine current version of loaded save. Missing version defaults to 0.
   const initialVersion = state.saveVersion || 0;
 
+  // =========================================================================
+  // ALWAYS-ON SANITIZATION & DEFAULTS FOR ALL SAVES
+  // Ensures missing properties are safely backfilled regardless of version
+  // =========================================================================
+  const player = state.player;
+
+  if (!player.stats) {
+    player.stats = { apps: 0, goals: 0, assists: 0, caps: 0, intlGoals: 0, cleanSheets: 0, yellowCards: 0, redCards: 0, derbyStats: { played: 0, totalRating: 0 } };
+  } else {
+    if (player.stats.apps === undefined) player.stats.apps = 0;
+    if (player.stats.goals === undefined) player.stats.goals = 0;
+    if (player.stats.assists === undefined) player.stats.assists = 0;
+    if (player.stats.caps === undefined) player.stats.caps = 0;
+    if (player.stats.intlGoals === undefined) player.stats.intlGoals = 0;
+    if (player.stats.cleanSheets === undefined) player.stats.cleanSheets = 0;
+    if (!player.stats.derbyStats) player.stats.derbyStats = { played: 0, totalRating: 0 };
+  }
+
+  if (!player.attributes) {
+    player.attributes = { pace: 60, finishing: 60, passing: 60, dribbling: 60, tackling: 50, stamina: 60, agility: 60, composure: 60, strength: 60, decisionMaking: 60, vision: 60, firstTouch: 60, tacticalAwareness: 50 };
+  } else {
+    const defaultAttrs: any = { pace: 60, finishing: 60, passing: 60, dribbling: 60, tackling: 50, stamina: 60, agility: 60, composure: 60, strength: 60, decisionMaking: 60, vision: 60, firstTouch: 60, tacticalAwareness: 50 };
+    for (const key in defaultAttrs) {
+      if (player.attributes[key] === undefined) {
+        player.attributes[key] = defaultAttrs[key];
+      }
+    }
+  }
+
+  if (!player.finances) {
+    player.finances = { balance: 10000, investments: [], property: [] };
+  }
+
+  if (!player.contract) {
+    player.contract = { wage: 1000, status: 'Starter', yearsRemaining: 3, appearanceBonus: 0, goalBonus: 0, bonuses: 0 };
+  } else {
+    if (player.contract.wage === undefined) player.contract.wage = 1000;
+    if (player.contract.status === undefined) player.contract.status = 'Starter';
+    if (player.contract.yearsRemaining === undefined) player.contract.yearsRemaining = 3;
+  }
+
+  if (!player.relationships) {
+    player.relationships = { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 60 };
+  }
+
+  if (!player.socialMedia) {
+    player.socialMedia = { followers: 1000, posts: [] };
+  }
+
+  if (!player.physicalCondition) {
+    player.physicalCondition = { value: 85, tier: 'PEAK', effects: { statPenalty: 0, injuryRisk: 5 }, matchFitness: 80, recoveryDebt: 0, injurySusceptibility: 5 };
+  }
+
+  if (!player.stateFlags) {
+    player.stateFlags = { openThreads: { formHistory: [] }, stadiumMilestones: {} };
+  } else if (!player.stateFlags.openThreads) {
+    player.stateFlags.openThreads = { formHistory: [] };
+  }
+
+  if (!state.inbox) state.inbox = [];
+  if (!state.storyFlags) state.storyFlags = {};
+  if (!state.unlockedCutscenes) state.unlockedCutscenes = [];
+
   if (initialVersion === CURRENT_SAVE_VERSION) {
-    return state; // No migration needed
+    return state; // No version migration needed
   }
 
   console.log(`[SAVE MIGRATION] Migrating save from v${initialVersion} to v${CURRENT_SAVE_VERSION}`);

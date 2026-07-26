@@ -322,19 +322,53 @@ export function Profile() {
    </div>
 
    <div className="mt-6 pt-6 border-t border-white/10">
-   <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Backstory</div>
-   <div className="text-white font-bold uppercase tracking-wider mb-2">{player.backstory.replace('_', ' ')}</div>
-   <div className="text-white/40 text-xs leading-relaxed italic">
-    "{player.backstory === 'STREET_PRODIGY' ? 'Concrete pitches. Bare feet. A viral clip changed everything.' :
-    player.backstory === 'FALLEN_PRODIGY' ? 'At 16 they called you the next big thing. At 17 your knee said no.' :
-    player.backstory === 'LATE_BLOOMER' ? 'Nobody found you. You found yourself.' :
-    player.backstory === 'ACADEMY_GRADUATE' ? 'Every meal counted. Every drill measured. Now the real game asks: can you?' :
-    'Comfortable life. Fat contract. You walked away to prove a point.'}"
-   </div>
+    <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Backstory</div>
+    <div className="text-white font-bold uppercase tracking-wider mb-2">{player.backstory.replace('_', ' ')}</div>
+    {player.backstoryDetails ? (
+      <div className="space-y-2 mt-3 text-xs">
+        {player.backstoryDetails.region && (
+          <div className="flex justify-between text-white/70">
+            <span className="text-white/40">Region:</span>
+            <span className="font-bold text-white">{player.backstoryDetails.region}</span>
+          </div>
+        )}
+        {player.backstoryDetails.formativeFrame && (
+          <div className="flex justify-between text-white/70">
+            <span className="text-white/40">Formative Style:</span>
+            <span className="font-bold text-[#00FF88]">{player.backstoryDetails.formativeFrame}</span>
+          </div>
+        )}
+        {player.backstoryDetails.familySituation && (
+          <div className="flex justify-between text-white/70">
+            <span className="text-white/40">Support Network:</span>
+            <span className="font-bold text-white">{player.backstoryDetails.familySituation.title}</span>
+          </div>
+        )}
+        {player.backstoryDetails.rivalOrMentor && (
+          <div className="flex justify-between text-white/70">
+            <span className="text-white/40">Key Figure:</span>
+            <span className="font-bold text-white">{player.backstoryDetails.rivalOrMentor.name}</span>
+          </div>
+        )}
+        {player.backstoryDetails.coreWound && (
+          <div className="pt-2 border-t border-white/5 text-white/60 italic text-[11px]">
+            "{player.backstoryDetails.coreWound.drivingQuestion}"
+          </div>
+        )}
+      </div>
+    ) : (
+      <div className="text-white/40 text-xs leading-relaxed italic">
+       "{player.backstory === 'STREET_PRODIGY' ? 'Concrete pitches. Bare feet. A viral clip changed everything.' :
+       player.backstory === 'FALLEN_PRODIGY' ? 'At 16 they called you the next big thing. At 17 your knee said no.' :
+       player.backstory === 'LATE_BLOOMER' ? 'Nobody found you. You found yourself.' :
+       player.backstory === 'ACADEMY_GRADUATE' ? 'Every meal counted. Every drill measured. Now the real game asks: can you?' :
+       'Comfortable life. Fat contract. You walked away to prove a point.'}"
+      </div>
+    )}
    </div>
 
    <div className="mt-6 pt-6 border-t border-white/10">
-   <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Personality</div>
+    <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Personality</div>
    <div className="text-[#00FF88] font-bold text-xs tracking-wider uppercase bg-[#181818] px-3 py-2 w-fit rounded flex items-center gap-1.5">
     👤 {player.personality || 'Professional'}
    </div>
@@ -541,9 +575,6 @@ export function Profile() {
       })()}
      </div>
 
-     <div className="bg-[#0b0b0b] border border-white/5 p-3 rounded-lg text-[9px] text-white/40 font-mono uppercase tracking-wide leading-relaxed mt-4">
-      💡 <span className="text-white font-bold">DEVELOPMENT TIP:</span> Older players (30+) experience passive physical decline. Protect metrics by investing in luxury lifestyle tiers and maintaining peak sharpness.
-     </div>
     </div>
    </div>
 
@@ -589,15 +620,15 @@ export function Profile() {
     <div className="grid grid-cols-3 gap-8 text-center divide-x divide-[#222222]">
     <div>
      <div className="text-white/50 text-xs tracking-widest uppercase mb-1">Apps</div>
-     <div className="text-white text-3xl font-black">{player.stats.apps}</div>
+     <div className="text-white text-3xl font-black">{player.stats?.apps || 0}</div>
     </div>
     <div>
      <div className="text-white/50 text-xs tracking-widest uppercase mb-1">Goals</div>
-     <div className="text-white text-3xl font-black">{player.stats.goals}</div>
+     <div className="text-white text-3xl font-black">{player.stats?.goals || 0}</div>
     </div>
     <div>
      <div className="text-white/50 text-xs tracking-widest uppercase mb-1">Assists</div>
-     <div className="text-white text-3xl font-black">{player.stats.assists}</div>
+     <div className="text-white text-3xl font-black">{player.stats?.assists || 0}</div>
     </div>
     </div>
    </div>
@@ -927,11 +958,11 @@ export function Profile() {
      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 divide-x divide-[#222] font-mono text-xs">
      <div>
       <span className="text-white/40 block uppercase tracking-widest text-[9px]">Appearances</span>
-      <span className="text-white text-lg font-bold">{player.stats.apps}</span>
+      <span className="text-white text-lg font-bold">{player.stats?.apps || 0}</span>
      </div>
      <div>
       <span className="text-white/40 block uppercase tracking-widest text-[9px]">Career Goals</span>
-      <span className="text-white text-lg font-bold">{player.stats.goals}</span>
+      <span className="text-white text-lg font-bold">{player.stats?.goals || 0}</span>
      </div>
      <div>
       <span className="text-white/40 block uppercase tracking-widest text-[9px]">Trophies</span>
@@ -965,7 +996,7 @@ export function Profile() {
      <div className="space-y-2 font-mono text-xs">
      <div className="flex justify-between"><span className="text-white/40">Trophies Won Weight (x250):</span><span className="text-white">+{(player.trophies?.length || 0) * 250}</span></div>
      <div className="flex justify-between"><span className="text-white/40">World Reputation Power (x20):</span><span className="text-white">+{player.reputation.world * 20}</span></div>
-     <div className="flex justify-between"><span className="text-white/40">Longevity appearances (x15):</span><span className="text-white">+{player.stats.apps * 15}</span></div>
+     <div className="flex justify-between"><span className="text-white/40">Longevity appearances (x15):</span><span className="text-white">+{(player.stats?.apps || 0) * 15}</span></div>
      <div className="flex justify-between"><span className="text-white/40">One-Club Loyalty Bonus:</span><span className="text-white">+{player.currentClubSymbol === player.startingClubSymbol ? 500 : 100}</span></div>
      <div className="border-t border-white/10 pt-2 flex justify-between font-black"><span className="text-white uppercase tracking-wider">GRAND LEGACY SCORE:</span><span className="text-amber-500">{calculateLegacyScore(player).legacyScore} PTS</span></div>
      </div>
@@ -1062,7 +1093,7 @@ export function Profile() {
           <div className="bg-amber-500/5 border border-amber-500/20 p-3 rounded-sm">
            <span className="text-amber-400 text-[9px] font-mono font-bold block uppercase tracking-wider">Chased Milestone:</span>
            <span className="text-white text-xs font-bold uppercase">
-            {player.stateFlags.openThreads.activeRetirementQuest === 'CAPS' && `CENTURY CHASER (Reach 100 Caps. Progress: ${player.stats.caps} / 100)`}
+            {player.stateFlags.openThreads.activeRetirementQuest === 'CAPS' && `CENTURY CHASER (Reach 100 Caps. Progress: ${player.stats?.caps || 0} / 100)`}
             {player.stateFlags.openThreads.activeRetirementQuest === 'GOALS' && `AGELESS STRIKER (Score 15 more career club goals)`}
             {player.stateFlags.openThreads.activeRetirementQuest === 'TRUST' && `BOARDROOM INFLUENCER (Maintain 95% Manager Trust)`}
            </span>
@@ -1191,7 +1222,7 @@ export function Profile() {
            className={`p-4 border text-left rounded-sm transition-all ${selectedRecordQuest === 'CAPS' ? 'border-amber-500 bg-amber-500/5' : 'border-[#333] bg-transparent'}`}
           >
            <div className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">🎖️ Century Chaser</div>
-           <p className="text-[#888] text-[10px] leading-relaxed">Target: Achieve 100 senior international caps. Currently: {player.stats.caps} Caps.</p>
+           <p className="text-[#888] text-[10px] leading-relaxed">Target: Achieve 100 senior international caps. Currently: {player.stats?.caps || 0} Caps.</p>
           </button>
 
           <button
@@ -1396,7 +1427,7 @@ export function Profile() {
      <div className="bg-[#101010] p-4 border border-white/5 rounded-sm">
       <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest font-mono">Injury Risk Coefficient</div>
       <div className="text-white text-lg font-bold font-mono mt-1">
-       {Math.max(5, 100 - Math.floor((player.attributes.stamina * 0.5) + (player.attributes.strength * 0.3) + (100 - player.fatigue) * 0.2))}%
+       {Math.max(5, 100 - Math.floor((player.attributes.stamina * 0.5) + (player.attributes.strength * 0.3) + (100 - (player.fatigue || 0)) * 0.2))}%
       </div>
       <div className="text-[10px] text-white/50 mt-1">Based on Stamina, Strength & Fatigue.</div>
      </div>

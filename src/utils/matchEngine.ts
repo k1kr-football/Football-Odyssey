@@ -30,13 +30,13 @@ export function calculateContextModifier(p: Player, ctx: ActionContext) {
     else if (ctx.fatigue > 60) modifier -= 0.05;
 
     // Reputation / Tier modifier
-    if (p.reputation.world > 80) {
+    if ((p.reputation?.world || 50) > 80) {
         modifier += 0.05; // Tier 5 Legend (+5% to all stats)
     }
     
     // Match Pressure & Composure mechanic
     const pressure = ctx.pressure || 0;
-    const composure = p.attributes.composure || 50;
+    const composure = p.attributes?.composure || 50;
     
     if (pressure > 7) {
         if (composure < 40) {

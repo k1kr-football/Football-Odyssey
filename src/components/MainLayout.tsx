@@ -13,54 +13,39 @@ import { getFormattedCalendarDate } from '../utils/careerSystems';
 import { Calendar as CalendarIcon, Award, Coins, ChevronDown, ChevronUp, RefreshCw, Star, Info, Landmark } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
- const { state, setPlayer } = useGame();
+ const { state, setScreen } = useGame();
  const { checkCutscenes } = useGame();
  
- const [isPortrait, setIsPortrait] = useState(false);
  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
  useEffect(() => {
   checkCutscenes();
  }, [state.currentDay, state.player?.stats, state.screen, state.activeEvent]);
 
- // Detect and lock viewport orientation at the app shell level
- useEffect(() => {
-  const checkOrientation = () => {
-   // Mark as portrait if screen height exceeds width
-   setIsPortrait(window.innerHeight > window.innerWidth);
-  };
-  
-  checkOrientation();
-  window.addEventListener('resize', checkOrientation);
-  window.addEventListener('orientationchange', checkOrientation);
-  return () => {
-   window.removeEventListener('resize', checkOrientation);
-   window.removeEventListener('orientationchange', checkOrientation);
-  };
- }, []);
+ if (state.screen === 'CREATION' || state.screen === 'TRIAL_MATCH') {
+  return <div className="h-full bg-[#0E0E0E] text-white flex flex-col font-mono">{children}</div>;
+ }
 
-
- // 1. Portrait Rotation Block Screen
- if (isPortrait) {
+ if (!state.player) {
   return (
-   <div  className="fixed inset-0 z-[9999] bg-[#070707] text-[#cccccc] flex flex-col items-center justify-center p-6 text-center select-none font-mono">
-    <div className="w-20 h-20 rounded-full bg-[#00FF88]/10 border border-[#00FF88]/20 flex items-center justify-center mb-6 animate-bounce">
-     <RefreshCw className="text-[#00FF88] w-10 h-10 animate-spin" style={{ animationDuration: '3s' }} />
-    </div>
-    <h1 className="text-white text-lg font-black uppercase tracking-[0.2em] mb-2">Rotate Your Device</h1>
-    <p className="text-white/60 text-xs max-w-sm leading-relaxed mb-6">
-     Football Odyssey is locked to <strong className="text-[#00FF88] uppercase">Landscape Orientation</strong> to ensure comfortable thumb reach and tactical depth.
-    </p>
-    <div className="border border-white/10 rounded-lg p-3 bg-white/5 text-[10px] uppercase tracking-wider text-white/40 flex items-center gap-2">
-     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-     Landscape Mode Enforced
+   <div className="h-screen w-screen flex bg-[#080A09] text-white font-mono items-center justify-center p-6 select-none">
+    <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl">
+     <div className="w-16 h-16 rounded-full bg-[#00FF88]/10 text-[#00FF88] border border-[#00FF88]/20 flex items-center justify-center mx-auto text-2xl font-black">
+      ⚽
+     </div>
+     <h2 className="text-2xl font-black uppercase tracking-tight text-white">No Active Career</h2>
+     <p className="text-xs text-white/60 leading-relaxed">
+      No player career session is currently loaded. Return to the main menu to begin a new pro career or restore your save state.
+     </p>
+     <button
+      onClick={() => setScreen('MAIN_MENU')}
+      className="w-full py-3.5 bg-[#00FF88] hover:bg-white text-black font-black uppercase text-xs rounded-xl tracking-widest transition-all cursor-pointer shadow-lg shadow-[#00FF88]/10 active:scale-98"
+     >
+      Return to Main Menu
+     </button>
     </div>
    </div>
   );
- }
-
- if (state.screen === 'CREATION' || state.screen === 'TRIAL_MATCH') {
-  return <div  className="h-full bg-[#0E0E0E] text-white flex flex-col font-mono">{children}</div>;
  }
 
  const balance = state.player?.finances.balance || 0;
@@ -68,10 +53,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
  const isTransferWindow = [1,2,3,4,25,26,27,28].includes(state.currentWeek);
 
  return (
-  <div  className="h-full w-full flex bg-[#0E0E0E] text-[#cccccc] font-mono overflow-hidden select-none">
+  <div className="h-full w-full flex bg-[#0E0E0E] text-[#cccccc] font-mono overflow-hidden select-none">
    <Sidebar />
    
-   <main className="flex-1 flex flex-col h-full bg-[#0E0E0E] relative">
+   <main className="flex-1 flex flex-col h-full bg-[#0E0E0E] relative stadium-glow-overlay min-w-0 overflow-hidden">
     
     {/* Landscape Compact Status Bar */}
     <header className="h-12 bg-[#0a0a0a] border-b border-white/10 flex items-center justify-between px-4 sm:px-6 shrink-0 relative z-30">
@@ -211,8 +196,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     )}
 
     {/* Scrollable Content Area with comfortable padding */}
-    <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 relative" onClick={() => isDrawerOpen && setIsDrawerOpen(false)}>
-     <div className="max-w-[1200px] mx-auto w-full">
+    <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 relative flex flex-col min-h-0 w-full" onClick={() => isDrawerOpen && setIsDrawerOpen(false)}>
+     <div className="max-w-[1200px] mx-auto w-full flex-1 flex flex-col min-h-0">
       {children}
      </div>
     </div>

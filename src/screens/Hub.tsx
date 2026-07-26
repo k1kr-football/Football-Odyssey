@@ -292,7 +292,8 @@ export function Hub() {
  };
 
  const squad = getClubSquad(club.name);
- const managerName = squad.manager || "Tom Foden";
+ const worldClub = state.worldState?.clubs?.[clubSymbol];
+ const managerName = worldClub?.manager?.name || player.managerInfo?.name || squad.manager || "The Manager";
 
  const unreadMessages = state.inbox.filter(m => !m.read);
 
@@ -309,7 +310,7 @@ export function Hub() {
  const formHistory = player.stateFlags?.openThreads?.formHistory || ['W', 'W', 'D', 'L', 'W'];
 
  return (
- <div className="flex flex-col gap-6 h-full font-sans text-sm animate-fade-in pb-12">
+ <div className="flex flex-col gap-6 w-full font-sans text-sm pb-12">
   {isDeadlineDay && (
      <div className="bg-red-900/40 border border-red-500/50 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -370,7 +371,7 @@ export function Hub() {
    <div className="flex flex-col gap-1 w-full md:w-48 glass-panel px-4 py-3 rounded-lg justify-center">
     <div className="text-[9px] font-bold text-white/50 uppercase tracking-widest flex justify-between">
     <span>Fan Status: {fanTier.title}</span>
-    <span className="text-white">{Math.floor(player.fans)}/100</span>
+    <span className="text-white">{Math.floor(player.fans || 0)}/100</span>
     </div>
     <div className="w-full h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
     <div className="h-full bg-[#00FF88] transition-all" style={{ width: `${fanTier.progress}%` }} />
@@ -598,7 +599,7 @@ export function Hub() {
          className="p-3.5 rounded-lg border border-[#38bdf8]/40 hover:border-[#38bdf8] bg-[#38bdf8]/10 text-left transition-all group"
         >
          <div className="text-[#38bdf8] font-bold text-xs uppercase tracking-wider flex items-center justify-between mb-1">
-          <span>⚕️ Recommended Protocol</span>
+          <span>⚕️ Standard Protocol</span>
           <span className="text-[9px] font-mono text-emerald-400">Low Risk</span>
          </div>
          <p className="text-white/60 text-[10px] leading-snug">
@@ -738,9 +739,9 @@ export function Hub() {
        
        <button 
         onClick={() => setScreen('MATCH')} 
-        className="w-full sm:w-auto bg-[#00FF88] hover:bg-[#00FF88]/90 text-black px-12 py-4 rounded-lg font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-lg shadow-[#00FF88]/10 text-xs"
+        className="w-full sm:w-auto bg-[#00FF88] hover:bg-[#00FF88]/90 text-black px-12 py-4 rounded-lg font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-lg shadow-[#00FF88]/10 text-xs border-2 border-black ring-4 ring-[#00FF88]/20"
        >
-        Enter Match Engine <ArrowRight size={18} />
+        PLAY MATCHDAY FIXTURE <ArrowRight size={18} />
        </button>
       </div>
 
@@ -1239,9 +1240,6 @@ export function Hub() {
     </div>
     </div>
     
-    <div className="bg-[#0e0e0e] p-3 rounded-lg text-[10px] text-white/50 font-mono uppercase tracking-wide leading-relaxed mt-4">
-    💡 <span className="text-white font-bold">TACTICAL NOTE:</span> Keep Match Sharpness high via training centers to automatically gain a +10% coefficient in Match performance rolls.
-    </div>
    </div>
    </div>
   ) : activeFeedTab === 'SPECULATION' ? (
@@ -1492,11 +1490,11 @@ export function Hub() {
 
            <div className="bg-[#0e0e0e] p-3 rounded text-[10px] text-white/50 leading-relaxed border border-white/5">
             {currentStrategy === 'BALANCED' ? (
-             <span>💡 Issuing a specific directive leverages {oppName}'s structural flaw, but issuing a mismatched strategy only yields minor boosts.</span>
+             <span>Balanced tactical approach.</span>
             ) : hasPerfectCounter ? (
-             <span className="text-emerald-400">⚡ PERFECT MATCH! Studying this report and executing the correct tactical plan lowers opponent goal odds and boosts your specific action success by +12%!</span>
+             <span className="text-emerald-400">Tactical Advantage Active (+12%)</span>
             ) : (
-             <span className="text-amber-400">⚠ WARNING: This tactical focus does not directly exploit {oppName}'s tactical vulnerabilities. You only receive a minor +2% action check bonus.</span>
+             <span className="text-amber-400">Sub-optimal tactical alignment (+2%)</span>
             )}
            </div>
           </div>

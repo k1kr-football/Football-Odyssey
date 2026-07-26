@@ -6,7 +6,7 @@ export const mediaEvents: EventDefinition[] = [
     title: "Milestone Watch",
     category: "PRESS",
     description: (s) => "You're nearing a major statistically milestone. The press are asking how much it weighs on your mind.",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['nearing_milestone'] && !s.player.stateFlags.eventCooldowns['med_milestone_watch'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['nearing_milestone'] && !s.player.stateFlags?.eventCooldowns?.['med_milestone_watch'],
     choices: [
       {
         text: "Engage warmly with the milestone talk.",
@@ -42,7 +42,7 @@ export const mediaEvents: EventDefinition[] = [
     title: "The Old Headlines",
     category: "PRESS",
     description: (s) => "A long-form journalist implies you're just a shadow of your pre-injury youthful self. This touches on your history.",
-    isEligible: (s) => !!s.player && s.player.backstory === 'FALLEN_PRODIGY' && s.currentWeek >= 8 && !s.player.stateFlags.historyFlags['redemption_arc_started'],
+    isEligible: (s) => !!s.player && s.player.backstory === 'FALLEN_PRODIGY' && s.currentWeek >= 8 && !s.player.stateFlags?.historyFlags?.['redemption_arc_started'],
     choices: [
       {
         text: "Address the past directly.",

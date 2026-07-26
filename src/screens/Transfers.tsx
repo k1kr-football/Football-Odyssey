@@ -116,7 +116,7 @@ export function Transfers() {
   const offer = player.transferOffers.find(o => o.id === offerId);
   if (!offer) return;
 
-  const agentRel = player.relationships?.agent || 50;
+  const agentRel = player.relationships.agent || 50;
   const walkAwayChance = agentRel >= 75 ? 0.15 : 0.35;
 
   if (Math.random() < walkAwayChance) {

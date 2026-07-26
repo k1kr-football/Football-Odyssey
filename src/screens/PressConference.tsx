@@ -104,7 +104,7 @@ export function PressConference() {
  }
 
  // Question 2: Teammates / Manager
- if (p.relationships.teammates < 40) {
+ if ((p.relationships.teammates ?? 50) < 40) {
   questions.push({
   journalist: "Tom Scolder", journalistType: "Aggressive Tabloid",
   text: "There seem to be some visible frustrations between you and your teammates. Is the dressing room divided right now?",
@@ -128,7 +128,7 @@ export function PressConference() {
 
  // Question 3: Transfer / Future
  const isTransferWindow = [1, 2, 3, 4, 25, 26, 27, 28, 29, 30, 31, 32].includes(state.currentWeek);
- if (isTransferWindow && p.reputation.world > 60) {
+ if (isTransferWindow && (p.reputation?.world ?? 50) > 60) {
   questions.push({
   journalist: "Tom Scolder", journalistType: "Aggressive Tabloid",
   text: "There are heavy rumours linking you with a move away before the window shuts. Can you commit your future to the club?",
@@ -360,6 +360,24 @@ export function PressConference() {
  };
 
  const currentQ = questions[questionIndex];
+
+ if (!currentQ) {
+  return (
+   <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-[#0d0d0d]">
+    <h1 className="text-white text-2xl font-bold uppercase mb-4 font-display">Press Briefing Concluded</h1>
+    <p className="text-white/60 text-sm mb-6 max-w-md">The media session has finished and all questions have been answered.</p>
+    <button
+     onClick={() => {
+      advanceDay();
+      setScreen('HUB');
+     }}
+     className="px-6 py-3 bg-[#00FF88] text-black font-bold uppercase tracking-wider rounded hover:brightness-110 transition-all cursor-pointer"
+    >
+     Return to Hub
+    </button>
+   </div>
+  );
+ }
 
  return (
  <div className="flex flex-col md:flex-row h-full premium-card overflow-hidden relative">

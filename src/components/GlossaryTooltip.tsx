@@ -56,7 +56,7 @@ export function GlossaryTooltip({ term, children, className = '' }: GlossaryTool
   };
 
   return (
-    <div 
+    <span 
       ref={containerRef}
       className="relative inline-block"
     >
@@ -108,7 +108,7 @@ export function GlossaryTooltip({ term, children, className = '' }: GlossaryTool
           )}
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -118,55 +118,5 @@ interface FirstEncounterCalloutProps {
 }
 
 export function FirstEncounterCallout({ term, className = '' }: FirstEncounterCalloutProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const entry = GLOSSARY_ENTRIES.find(
-    e => e.term.toLowerCase() === term.toLowerCase()
-  );
-
-  useEffect(() => {
-    if (!entry) return;
-    const storageKey = `encounter_${entry.term.replace(/\s+/g, '_').toLowerCase()}`;
-    const dismissed = localStorage.getItem(storageKey);
-    if (!dismissed) {
-      setIsVisible(true);
-    }
-  }, [entry]);
-
-  const handleDismiss = () => {
-    if (!entry) return;
-    const storageKey = `encounter_${entry.term.replace(/\s+/g, '_').toLowerCase()}`;
-    localStorage.setItem(storageKey, 'true');
-    setIsVisible(false);
-  };
-
-  if (!isVisible || !entry) return null;
-
-  return (
-    <div className={`bg-gradient-to-r from-[#00FF88]/20 to-black/40 border border-[#00FF88]/40 rounded-lg p-3.5 flex items-start gap-3 relative overflow-hidden ${className}`}>
-      <div className="bg-[#00FF88]/10 p-1.5 rounded text-[#00FF88] shrink-0 mt-0.5">
-        <Info size={14} />
-      </div>
-      <div className="flex-1 min-w-0 font-mono">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-white font-bold text-xs uppercase tracking-wider">NEW MECHANIC: {entry.term}</span>
-          <span className="text-[8px] text-[#00FF88] uppercase tracking-widest font-black px-1.5 py-0.2 border border-[#00FF88]/20 bg-[#00FF88]/5 rounded animate-pulse">
-            TUTORIAL
-          </span>
-        </div>
-        <p className="text-[#ccc] text-[11px] leading-relaxed mb-1.5">
-          {entry.definition} <span className="text-white/60 font-medium">{entry.raisesLoweres}</span>
-        </p>
-        <div className="text-[10px] text-[#00FF88] font-bold uppercase tracking-wider">
-          💡 Impact: {entry.unlocksGates}
-        </div>
-      </div>
-      <button 
-        onClick={handleDismiss}
-        className="text-white/40 hover:text-white p-1 rounded transition-colors shrink-0"
-        title="Dismiss Tutorial"
-      >
-        <X size={14} />
-      </button>
-    </div>
-  );
+  return null;
 }

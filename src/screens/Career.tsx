@@ -509,22 +509,22 @@ export function Career() {
    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
     <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Apps</div>
-    <div className="text-white text-4xl font-black z-10">{player.stats.apps}</div>
+    <div className="text-white text-4xl font-black z-10">{player.stats?.apps || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.apps}</div>
     </div>
     <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Goals</div>
-    <div className="text-white text-4xl font-black z-10">{player.stats.goals}</div>
+    <div className="text-white text-4xl font-black z-10">{player.stats?.goals || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.goals}</div>
     </div>
     <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Assists</div>
-    <div className="text-white text-4xl font-black z-10">{player.stats.assists}</div>
+    <div className="text-white text-4xl font-black z-10">{player.stats?.assists || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.assists}</div>
     </div>
     <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Caps</div>
-    <div className="text-white text-4xl font-black z-10">{player.stats.caps}</div>
+    <div className="text-white text-4xl font-black z-10">{player.stats?.caps || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.caps}</div>
     </div>
     <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
@@ -706,10 +706,10 @@ export function Career() {
        <div className="text-white font-bold uppercase tracking-wider text-xs mb-0.5">All-Time Appearances Record</div>
        <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Target: 300 Apps</div>
        </div>
-       <div className="text-white font-mono font-bold text-xs">{player.stats.apps} / 300</div>
+       <div className="text-white font-mono font-bold text-xs">{(player.stats?.apps || 0)} / 300</div>
       </div>
       <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (player.stats.apps / 300) * 100)}%`}}></div>
+       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (((player.stats?.apps || 0) / 300) * 100))}%`}}></div>
       </div>
      </div>
 
@@ -719,10 +719,10 @@ export function Career() {
        <div className="text-white font-bold uppercase tracking-wider text-xs mb-0.5">All-Time Club Goalscorer</div>
        <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Target: 150 Goals</div>
        </div>
-       <div className="text-white font-mono font-bold text-xs">{player.stats.goals} / 150</div>
+       <div className="text-white font-mono font-bold text-xs">{(player.stats?.goals || 0)} / 150</div>
       </div>
       <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (player.stats.goals / 150) * 100)}%`}}></div>
+       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (((player.stats?.goals || 0) / 150) * 100))}%`}}></div>
       </div>
      </div>
      
@@ -732,10 +732,10 @@ export function Career() {
        <div className="text-white font-bold uppercase tracking-wider text-xs mb-0.5">All-Time Club Assists</div>
        <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Target: 100 Assists</div>
        </div>
-       <div className="text-white font-mono font-bold text-xs">{player.stats.assists} / 100</div>
+       <div className="text-white font-mono font-bold text-xs">{(player.stats?.assists || 0)} / 100</div>
       </div>
       <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (player.stats.assists / 100) * 100)}%`}}></div>
+       <div className="h-full bg-[#00FF88] transition-all duration-1000" style={{ width: `${Math.min(100, (((player.stats?.assists || 0) / 100) * 100))}%`}}></div>
       </div>
      </div>
     </div>

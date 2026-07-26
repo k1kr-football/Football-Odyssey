@@ -38,7 +38,7 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
 
   // We'll track busy days to avoid conflicts
   const isBusy = (week: number, day: DayOfWeek) => {
-    return entries.some(e => e.week === week && e.day === day && e.type !== 'REST' && e.type !== 'TRAINING');
+    return (entries || []).some(e => e.week === week && e.day === day && e.type !== 'REST' && e.type !== 'TRAINING');
   };
 
   // 0. Preseason Friendlies (Weeks 1-4)

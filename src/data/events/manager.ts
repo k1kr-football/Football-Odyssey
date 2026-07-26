@@ -21,7 +21,7 @@ export const managerEvents: EventDefinition[] = [
     title: "Tactical Debrief",
     category: "MANAGER",
     description: (s) => "The gaffer calls you in following your Man of the Match performance. \"Brilliant out there. You read the system perfectly.\"",
-    isEligible: (s) => !!s.player && (s.player.form > 85) && (s.player.relationships.manager >= 60) && (!s.player.stateFlags.eventCooldowns['mgr_tactical_debrief']),
+    isEligible: (s) => !!s.player && ((s.player.form || 0) > 85) && ((s.player.relationships?.manager ?? 50) >= 60) && (!s.player.stateFlags?.eventCooldowns?.['mgr_tactical_debrief']),
     choices: [
       {
         text: "Credit the system and teammates.",
@@ -57,7 +57,7 @@ export const managerEvents: EventDefinition[] = [
     title: "Missed Session Fallout",
     category: "MANAGER",
     description: (s) => "You missed a mandatory team meeting. The manager is waiting in his office, looking extremely disappointed.",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['missed_training_flag'] && !s.player.stateFlags.historyFlags['missed_training_resolved'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['missed_training_flag'] && !s.player.stateFlags?.historyFlags?.['missed_training_resolved'],
     choices: [
       {
         text: "Apologize, cite a genuine reason.",
@@ -93,7 +93,7 @@ export const managerEvents: EventDefinition[] = [
     title: "Where Do I Stand?",
     category: "MANAGER",
     description: (s) => "Your perceived standing in the squad has recently dropped. The uncertainty is bothering you.",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['hierarchy_dropped_recently'] && !s.player.stateFlags.eventCooldowns['mgr_where_do_i_stand'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['hierarchy_dropped_recently'] && !s.player.stateFlags?.eventCooldowns?.['mgr_where_do_i_stand'],
     choices: [
       {
         text: "Request a direct explanation.",
@@ -129,7 +129,7 @@ export const managerEvents: EventDefinition[] = [
     title: "Captaincy Approach",
     category: "MANAGER",
     description: (s) => "\"I want you to take the armband,\" the manager says, sliding it across the desk.",
-    isEligible: (s) => !!s.player && (s.player.contract.status === 'Key Player' || s.player.contract.status === 'Star Player' || s.player.contract.status === 'Club Legend') && s.player.relationships.manager_discipline >= 75 && !s.player.stateFlags.historyFlags['captaincy_offered'],
+    isEligible: (s) => !!s.player && (s.player.contract?.status === 'Key Player' || s.player.contract?.status === 'Star Player' || s.player.contract?.status === 'Club Legend') && (s.player.relationships?.manager_discipline ?? 50) >= 75 && !s.player.stateFlags?.historyFlags?.['captaincy_offered'],
     choices: [
       {
         text: "Accept enthusiastically.",

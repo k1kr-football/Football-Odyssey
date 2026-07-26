@@ -23,12 +23,14 @@ export function Team() {
  };
 
  const squad = getClubSquad(club.name);
- const managerName = squad.manager || "The Manager";
+ const clubSymbol = state.player?.currentClubSymbol || club.symbol;
+ const worldClub = state.worldState?.clubs?.[clubSymbol];
+ const managerName = worldClub?.manager?.name || state.player?.managerInfo?.name || squad.manager || "The Manager";
  
  // Squad Dynamics values
  const squadChemistry = state.player?.squadChemistry || 50;
  const playerRole = state.player?.hierarchyRole || 'Fringe';
- const teammateRelation = state.player?.relationships.teammates || 50;
+ const teammateRelation = state.player?.relationships?.teammates || 50;
  
  return (
  <div className="min-h-screen bg-black text-white p-6 pb-24 overflow-y-auto" style={{
@@ -52,7 +54,7 @@ export function Team() {
    <div className="premium-card p-6 border-l-4 border-l-emerald-500">
     <div className="flex items-center gap-3 mb-4">
      <Users className="text-emerald-400 w-6 h-6" />
-     <h2 className="text-xl font-bold tracking-tight"><GlossaryTooltip term="Squad Chemistry">Squad Chemistry</GlossaryTooltip></h2>
+     <div className="text-xl font-bold tracking-tight"><GlossaryTooltip term="Squad Chemistry">Squad Chemistry</GlossaryTooltip></div>
     </div>
     
     <div className="space-y-4">
@@ -104,7 +106,7 @@ export function Team() {
       </p>
      </div>
      <div className="text-right border-l border-white/10 pl-4">
-      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1"><GlossaryTooltip term="Peer Respect">Peer Respect</GlossaryTooltip></p>
+      <div className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1"><GlossaryTooltip term="Peer Respect">Peer Respect</GlossaryTooltip></div>
       <p className="text-xl font-black">{teammateRelation}%</p>
      </div>
     </div>

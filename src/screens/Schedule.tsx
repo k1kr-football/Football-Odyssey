@@ -67,7 +67,7 @@ export function Schedule() {
    });
   }
 
-  const hasIntlBreak = entriesThisWeek.some(e => e.type === 'INTERNATIONAL_BREAK');
+  const hasIntlBreak = (entriesThisWeek || []).some(e => e.type === 'INTERNATIONAL_BREAK');
   if (hasIntlBreak) {
    return [{ w, day: 'SAT', type: 'INTL', compName: 'International', opp: '-', loc: '-', isCurrent: w === state.currentWeek, isPast: w < state.currentWeek }];
   }
@@ -330,7 +330,7 @@ export function Schedule() {
       </span>
      ))}
     </div>
-    {rules.zones.some(z => z.label.includes('Cascade') || z.label.includes('Coefficient')) && (
+    {(rules.zones || []).some(z => z.label.includes('Cascade') || z.label.includes('Coefficient')) && (
      <div className="mt-1 text-white/40">Note: European spots may shift based on domestic cup winners or UEFA performance coefficients.</div>
     )}
     </div>
@@ -470,7 +470,7 @@ export function Schedule() {
       <span className="text-[#00FF88] font-mono text-[9px]">11 Players</span>
       </div>
       <div className="space-y-1.5 overflow-y-auto hide-scrollbar flex-1">
-      {state.nextMatch.squadList.startingXI.map((player: string, idx: number) => {
+      {state.nextMatch?.squadList?.startingXI?.map((player: string, idx: number) => {
        const isUser = state.player && player.toLowerCase().includes(state.player.lastName.toLowerCase());
        return (
        <div
@@ -496,7 +496,7 @@ export function Schedule() {
       <span className="text-amber-400 font-mono text-[9px]">7 Players</span>
       </div>
       <div className="space-y-1.5 overflow-y-auto hide-scrollbar flex-1">
-      {state.nextMatch.squadList.substitutes.map((player: string, idx: number) => {
+      {state.nextMatch?.squadList?.substitutes?.map((player: string, idx: number) => {
        const isUser = state.player && player.toLowerCase().includes(state.player.lastName.toLowerCase());
        return (
        <div
@@ -522,7 +522,7 @@ export function Schedule() {
       <span className="text-red-400 font-mono text-[9px]">Reserves</span>
       </div>
       <div className="space-y-1.5 overflow-y-auto hide-scrollbar flex-1">
-      {state.nextMatch.squadList.unused.map((player: string, idx: number) => {
+      {state.nextMatch?.squadList?.unused?.map((player: string, idx: number) => {
        const isUser = state.player && player.toLowerCase().includes(state.player.lastName.toLowerCase());
        return (
        <div

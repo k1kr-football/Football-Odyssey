@@ -32,15 +32,15 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-white bg-[#0a0a0a]">
-          <div className="w-16 h-16 rounded-full glass-panel flex items-center justify-center mb-4 text-red-500 text-3xl">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-white bg-red-900 w-full h-full absolute inset-0 z-50">
+          <div className="w-24 h-24 rounded-full bg-black/50 flex items-center justify-center mb-4 text-red-500 text-5xl">
             ⚠️
           </div>
-          <h2 className="text-xl font-bold font-display uppercase tracking-wider mb-2">Something went wrong</h2>
-          <p className="text-[#888] text-sm mb-6 max-w-md">
-            An unexpected error occurred while rendering this screen.
+          <h2 className="text-4xl font-black uppercase tracking-wider mb-2 text-white">FATAL CRASH</h2>
+          <p className="text-white/80 text-lg mb-6 max-w-2xl font-bold">
+            THE GAME CRASHED. PLEASE TELL THE AI THIS EXACT MESSAGE:
             <br/><br/>
-            <span className="font-mono text-xs text-red-400">{this.state.error?.message}</span>
+            <span className="font-mono text-xl bg-black p-4 rounded block whitespace-pre-wrap text-[#00FF88]">{this.state.error?.message}</span>
           </p>
           <button
             onClick={() => {
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.props.onReset();
               }
             }}
-            className="px-6 py-3 bg-white text-black font-bold uppercase tracking-widest text-xs font-mono rounded hover:bg-gray-200 transition-colors"
+            className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-lg rounded shadow-xl hover:bg-gray-200 transition-colors"
           >
             Return to Home
           </button>

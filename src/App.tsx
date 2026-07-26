@@ -33,7 +33,7 @@ function GameRouter() {
 
   if (state.screen === 'MAIN_MENU') {
     return (
-      <div className="h-full w-full">
+      <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
         <MainMenu />
       </div>
     );
@@ -43,28 +43,54 @@ function GameRouter() {
     setScreen('HUB');
   };
 
+  const renderActiveScreen = () => {
+    switch (state.screen) {
+      case 'CREATION':
+        return <PlayerCreation />;
+      case 'TRIAL_MATCH':
+        return <TrialMatch />;
+      case 'HUB':
+        return <Hub />;
+      case 'PROFILE':
+        return <Profile />;
+      case 'INBOX':
+        return <Inbox />;
+      case 'TRAINING':
+        return <Training />;
+      case 'TEAM':
+        return <Team />;
+      case 'SCHEDULE':
+        return <Schedule />;
+      case 'CAREER':
+        return <Career />;
+      case 'TRANSFERS':
+        return <Transfers />;
+      case 'MATCH':
+        return <MatchEngine />;
+      case 'PRESS':
+        return <PressConference />;
+      case 'MEDIA_MINIGAME':
+        return <MediaMinigame />;
+      case 'REHAB_MINIGAME':
+        return <RehabMinigame />;
+      case 'LIFESTYLE':
+        return <Lifestyle />;
+      case 'SOCIAL':
+        return <Social />;
+      case 'FINANCES':
+        return <Finances />;
+      case 'GLOSSARY':
+        return <Glossary />;
+      default:
+        return <Hub />;
+    }
+  };
+
   return (
-    <div className="h-full w-full">
+    <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
       <MainLayout>
         <ErrorBoundary onReset={handleReset}>
-          {state.screen === 'CREATION' && <PlayerCreation />}
-          {state.screen === 'TRIAL_MATCH' && <TrialMatch />}
-          {state.screen === 'HUB' && <Hub />}
-          {state.screen === 'PROFILE' && <Profile />}
-          {state.screen === 'INBOX' && <Inbox />}
-          {state.screen === 'TRAINING' && <Training />}
-          {state.screen === 'TEAM' && <Team />}
-          {state.screen === 'SCHEDULE' && <Schedule />}
-          {state.screen === 'CAREER' && <Career />}
-          {state.screen === 'TRANSFERS' && <Transfers />}
-          {state.screen === 'MATCH' && <MatchEngine />}
-          {state.screen === 'PRESS' && <PressConference />}
-          {state.screen === 'MEDIA_MINIGAME' && <MediaMinigame />}
-          {state.screen === 'REHAB_MINIGAME' && <RehabMinigame />}
-          {state.screen === 'LIFESTYLE' && <Lifestyle />}
-          {state.screen === 'SOCIAL' && <Social />}
-          {state.screen === 'FINANCES' && <Finances />}
-          {state.screen === 'GLOSSARY' && <Glossary />}
+          {renderActiveScreen()}
         </ErrorBoundary>
       </MainLayout>
     </div>

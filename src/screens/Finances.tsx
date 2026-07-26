@@ -310,7 +310,7 @@ export function Finances() {
   showNotification("Insufficient balance to complete the angel round.");
   return;
  }
- const currentStartups = investments.startups || [];
+ const currentStartups = investments?.startups || [];
  if (currentStartups.some((s: any) => s.id === id)) {
   showNotification("You have already invested in this seed round.");
   return;

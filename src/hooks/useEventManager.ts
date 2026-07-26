@@ -12,10 +12,10 @@ export function useEventManager() {
   const isEligibleForTransferRumor = useCallback((player: Player, state: GameState): boolean => {
     if (!player) return false;
     
-    const performanceCheck = player.form >= 70 || player.ovr >= 70;
-    const tenureCheck = state.currentWeek >= 4 || player.stats.apps >= 2;
+    const performanceCheck = (player.form || 0) >= 70 || (player.ovr || 0) >= 70;
+    const tenureCheck = state.currentWeek >= 4 || (player.stats?.apps || 0) >= 2;
     const contractCheck = !player.loanInfo; // Not on loan
-    const listingCheck = player.transferListed;
+    const listingCheck = !!player.transferListed;
 
     return (performanceCheck && tenureCheck && contractCheck) || listingCheck;
   }, []);
@@ -28,10 +28,10 @@ export function useEventManager() {
   const isEligibleForManagerPromise = useCallback((player: Player, state: GameState): boolean => {
     if (!player) return false;
 
-    const trustLimit = player.relationships.manager < 60;
-    const risingForm = player.form >= 65;
-    const isRegular = player.contract.status === 'First Teamer' || player.contract.status === 'Star Player';
-    const lowPromiseCount = player.promises.length < 3;
+    const trustLimit = (player.relationships?.manager ?? 50) < 60;
+    const risingForm = (player.form || 0) >= 65;
+    const isRegular = player.contract?.status === 'First Teamer' || player.contract?.status === 'Star Player';
+    const lowPromiseCount = (player.promises?.length || 0) < 3;
 
     return ((trustLimit && risingForm) || isRegular) && lowPromiseCount;
   }, []);
@@ -42,13 +42,18 @@ export function useEventManager() {
    */
   const isEligibleForSponsorshipOpportunity = useCallback((player: Player, state: GameState): boolean => {
     if (!player) return false;
-    return player.fans >= 30 || player.mediaPerception >= 60 || state.currentWeek > 3;
+    return (player.fans || 0) >= 30 || (player.mediaPerception || 0) >= 60 || state.currentWeek > 3;
   }, []);
 
   const checkPreconditions = useCallback((state: GameState, eventId: string): boolean => {
     const eventDef = ALL_EVENTS.find(e => e.id === eventId);
     if (!eventDef) return false;
-    return eventDef.isEligible(state);
+    try {
+      return eventDef.isEligible(state);
+    } catch (err) {
+      console.error('Error checking precondition for event:', eventId, err);
+      return false;
+    }
   }, []);
 
   const generateEvent = useCallback((state: GameState, isTransferWindow: boolean): DailyEvent | null => {
@@ -56,20 +61,27 @@ export function useEventManager() {
     
     // Evaluate contextual pre-conditions here generally
     const player = state.player;
-    const isNewSigning = state.currentWeek < 10 && player.contract.wage > 0;
+    const isNewSigning = state.currentWeek < 10 && (player.contract?.wage || 0) > 0;
 
     const rand = Math.random();
     let chance = 0.35; 
     
     if (isTransferWindow) chance += 0.1;
-    if (player.form <= 3) chance += 0.15; 
+    if ((player.form || 0) <= 3) chance += 0.15; 
     
     // Gating contextual modifier
     if (isNewSigning) chance += 0.05; // New signings get slightly more events initially
 
     if (rand > chance) return null;
 
-    const eligibleEvents = ALL_EVENTS.filter(e => e.isEligible(state));
+    const eligibleEvents = ALL_EVENTS.filter(e => {
+      try {
+        return e.isEligible(state);
+      } catch (err) {
+        console.error('Error checking eligibility for event:', e.id, err);
+        return false;
+      }
+    });
     
     if (eligibleEvents.length === 0) return null;
     

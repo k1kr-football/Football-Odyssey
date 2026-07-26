@@ -1,4 +1,6 @@
 import { Player, ScoutReport, DressingRoomEvent, Rival, Trophy, FinancialEmpire, InvestmentAsset, PreconditionsMet, RetirementData } from '../types';
+import { UnifiedNPCEngine, NPCRegistry } from './npcEngine';
+import { CLUBS } from '../data/teams';
 
 // ==========================================
 // SYSTEM 1: SCOUT REPORT GENERATOR
@@ -270,45 +272,76 @@ export function checkAndTriggerDressingRoomRumble(player: Player, week: number):
 // ==========================================
 // SYSTEM 4: RIVALS SYSTEM
 // ==========================================
-const RIVAL_NAMES = [
-  { name: 'Kylian Hazard', position: 'LW', club: 'FCB', type: 'POSITIONAL_RIVAL' as const },
-  { name: 'Erling Haalandsson', position: 'ST', club: 'RMD', type: 'POSITIONAL_RIVAL' as const },
-  { name: 'Jude Bellingham Jr', position: 'AM', club: 'BAY', type: 'AWARD_RIVAL' as const },
-  { name: 'Virgil van Dijk II', position: 'CB', club: 'MUN', type: 'GRUDGE_RIVAL' as const },
-  { name: 'Gianluigi Buffonnet', position: 'GK', club: 'JUV', type: 'POSITIONAL_RIVAL' as const }
-];
+export function generateRival(player: Player, registry?: NPCRegistry): { rival: Rival; registry: NPCRegistry } {
+  const engine = new UnifiedNPCEngine(registry);
+  const nationality = player.nationality || 'England';
+  const targetOVR = Math.max(50, Math.min(99, (player.ovr || 65) + (Math.floor(Math.random() * 5) - 2)));
+  const age = player.age || 18;
+  const position = player.position || 'ST';
 
-export function generateRival(player: Player): Rival {
-  const matchingRival = RIVAL_NAMES.find(r => r.position === player.position) || RIVAL_NAMES[2];
-  
-  return {
-    name: matchingRival.name,
-    club: matchingRival.club,
-    position: matchingRival.position,
-    type: matchingRival.type,
+  // Find player's club or starting club to assign a realistic rival club in same league or comparable tier
+  const playerClubSymbol = player.currentClubSymbol || player.startingClubSymbol || 'FA';
+  const playerClub = CLUBS.find(c => c.symbol === playerClubSymbol);
+
+  let candidateClubs = playerClub
+    ? CLUBS.filter(c => c.league === playerClub.league && c.symbol !== playerClubSymbol)
+    : CLUBS.filter(c => c.symbol !== playerClubSymbol);
+
+  if (candidateClubs.length === 0) {
+    candidateClubs = CLUBS.filter(c => c.symbol !== playerClubSymbol);
+  }
+
+  const rivalClub = candidateClubs[Math.floor(Math.random() * candidateClubs.length)] || CLUBS[0];
+
+  const npc = engine.generatePlayer('RIVAL', nationality, targetOVR, age, position, rivalClub.symbol);
+  const rivalName = `${npc.firstName} ${npc.lastName}`;
+
+  const types: ('POSITIONAL_RIVAL' | 'AWARD_RIVAL' | 'GRUDGE_RIVAL')[] = ['POSITIONAL_RIVAL', 'AWARD_RIVAL', 'GRUDGE_RIVAL'];
+  const rivalType = types[Math.floor(Math.random() * types.length)];
+
+  const rivalGoals = Math.max(0, Math.floor(((player.stats?.goals) || 0) * 0.9) + Math.floor(Math.random() * 4));
+  const playerForm = player.form || 70;
+  const playerRating = playerForm / 10;
+  const rivalRating = parseFloat((6.8 + Math.random() * 1.4).toFixed(1));
+
+  const rival: Rival = {
+    name: rivalName,
+    club: rivalClub.symbol,
+    position: npc.position,
+    type: rivalType,
     escalatedTypes: [],
     headToHead: [],
     seasonComparison: {
-      yourGoals: player.stats.goals || 0,
-      theirGoals: Math.floor(player.stats.goals * 0.9) + Math.floor(Math.random() * 4),
-      yourRating: player.form / 10,
-      theirRating: 6.8 + (Math.random() * 1.4)
+      yourGoals: player.stats?.goals || 0,
+      theirGoals: rivalGoals,
+      yourRating: Math.floor(playerRating * 10) / 10,
+      theirRating: rivalRating
     },
-    mediaNarrative: `The press are drawing intense head-to-head comparisons between you and ${matchingRival.name}. This is a defining rivalry.`
+    mediaNarrative: `The press are drawing intense head-to-head comparisons between you and ${rivalName} of ${rivalClub.name}. This is a defining rivalry.`
+  };
+
+  return {
+    rival,
+    registry: engine.getRegistry()
   };
 }
 
-export function progressRivals(player: Player, week: number): { player: Player; rivalMessage?: string } {
+export function progressRivals(
+  player: Player, 
+  week: number, 
+  registry?: NPCRegistry
+): { player: Player; rivalMessage?: string; registry?: NPCRegistry } {
   if (!player.rivals || player.rivals.length === 0) {
-    // Generate their first rival!
-    const newR = generateRival(player);
+    // Generate their first rival through UnifiedNPCEngine!
+    const { rival: newR, registry: updatedRegistry } = generateRival(player, registry);
     const updated = {
       ...player,
       rivals: [newR]
     };
     return {
       player: updated,
-      rivalMessage: `MEDIA ALERT: Factional battle lines are being drawn. ${newR.name} (${newR.club}) has been singled out as your arch-rival. Keep an eye on his stats weekly!`
+      rivalMessage: `MEDIA ALERT: Factional battle lines are being drawn. ${newR.name} (${newR.club}) has been singled out as your arch-rival. Keep an eye on his stats weekly!`,
+      registry: updatedRegistry
     };
   }
 
@@ -334,9 +367,9 @@ export function progressRivals(player: Player, week: number): { player: Player; 
     }
 
     const nextComparison = {
-      yourGoals: player.stats.goals || 0,
+      yourGoals: player.stats?.goals || 0,
       theirGoals: r.seasonComparison.theirGoals + goalsRoll,
-      yourRating: Math.floor(player.form / 10 * 10) / 10,
+      yourRating: Math.floor((player.form || 70) / 10 * 10) / 10,
       theirRating: Math.floor(((r.seasonComparison.theirRating * (week - 1) + ratingRoll) / week) * 10) / 10
     };
 
@@ -359,7 +392,8 @@ export function progressRivals(player: Player, week: number): { player: Player; 
 
   return {
     player: { ...player, rivals },
-    rivalMessage: undefined
+    rivalMessage: undefined,
+    registry
   };
 }
 

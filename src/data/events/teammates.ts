@@ -6,7 +6,7 @@ export const teammateEvents: EventDefinition[] = [
     title: "The Welcome",
     category: "TEAMMATE",
     description: (s) => "A senior professional in the squad pulls you aside after training. \"Here's how things work around here.\"",
-    isEligible: (s) => !!s.player && s.currentWeek < 4 && !s.player.stateFlags.historyFlags['welcome_done'] && s.player.relationships.teammates > 30,
+    isEligible: (s) => !!s.player && s.currentWeek < 4 && !s.player.stateFlags?.historyFlags?.['welcome_done'] && (s.player.relationships?.teammates ?? 50) > 30,
     choices: [
       {
         text: "Accept guidance openly.",
@@ -42,7 +42,7 @@ export const teammateEvents: EventDefinition[] = [
     title: "Clique Invitation",
     category: "TEAMMATE",
     description: (s) => "You're invited to a private dinner by one specific group in the dressing room. You know this might alienate the others.",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['politics_revealed'] && !s.player.stateFlags.historyFlags['clique_choice_made'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['politics_revealed'] && !s.player.stateFlags?.historyFlags?.['clique_choice_made'],
     choices: [
       {
         text: "Join this group.",
@@ -78,7 +78,7 @@ export const teammateEvents: EventDefinition[] = [
     title: "Falling Out",
     category: "TEAMMATE",
     description: (s) => "Tensions boiled over after a recent mistake. A teammate is actively blanking you.",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['dressing_room_tension'] && !s.player.stateFlags.openThreads['reconciliation'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['dressing_room_tension'] && !s.player.stateFlags?.openThreads?.['reconciliation'],
     choices: [
       {
         text: "Address it directly, privately.",

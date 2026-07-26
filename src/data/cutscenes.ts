@@ -29,7 +29,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'origin_academy_graduate',
     title: 'The Weight of the Shirt',
     category: 'ORIGIN',
-    checkTrigger: (state) => (state.player?.stats.apps || 0) >= 1 && state.player?.backstory === 'ACADEMY_GRADUATE' && !state.unlockedCutscenes.some(c => c.id === 'origin_academy_graduate'),
+    checkTrigger: (state) => (state.player?.stats?.apps || 0) >= 1 && state.player?.backstory === 'ACADEMY_GRADUATE' && !(state.unlockedCutscenes || []).some(c => c.id === 'origin_academy_graduate'),
     getLines: (state) => {
       const p = state.player!;
       const pos = p.position;
@@ -66,7 +66,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'origin_street_prodigy',
     title: 'Tarmac to Turf',
     category: 'ORIGIN',
-    checkTrigger: (state) => (state.player?.stats.apps || 0) >= 1 && state.player?.backstory === 'STREET_PRODIGY' && !state.unlockedCutscenes.some(c => c.id === 'origin_street_prodigy'),
+    checkTrigger: (state) => (state.player?.stats?.apps || 0) >= 1 && state.player?.backstory === 'STREET_PRODIGY' && !(state.unlockedCutscenes || []).some(c => c.id === 'origin_street_prodigy'),
     getLines: (state) => {
       const p = state.player!;
       return [
@@ -107,7 +107,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'origin_fallen_prodigy',
     title: 'The Ghost of Sixteen',
     category: 'ORIGIN',
-    checkTrigger: (state) => (state.player?.stats.apps || 0) >= 1 && state.player?.backstory === 'FALLEN_PRODIGY' && !state.unlockedCutscenes.some(c => c.id === 'origin_fallen_prodigy'),
+    checkTrigger: (state) => (state.player?.stats?.apps || 0) >= 1 && state.player?.backstory === 'FALLEN_PRODIGY' && !(state.unlockedCutscenes || []).some(c => c.id === 'origin_fallen_prodigy'),
     getLines: (state) => {
       const p = state.player!;
       return [
@@ -148,7 +148,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'origin_late_bloomer',
     title: 'Hammer and Tongs',
     category: 'ORIGIN',
-    checkTrigger: (state) => (state.player?.stats.apps || 0) >= 1 && state.player?.backstory === 'LATE_BLOOMER' && !state.unlockedCutscenes.some(c => c.id === 'origin_late_bloomer'),
+    checkTrigger: (state) => (state.player?.stats?.apps || 0) >= 1 && state.player?.backstory === 'LATE_BLOOMER' && !(state.unlockedCutscenes || []).some(c => c.id === 'origin_late_bloomer'),
     getLines: (state) => {
       const p = state.player!;
       return [
@@ -188,7 +188,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'milestone_first_goal',
     title: 'Off the Mark',
     category: 'MILESTONE',
-    checkTrigger: (state) => (state.player?.stats.goals || 0) > 0 && !state.unlockedCutscenes.some(c => c.id === 'milestone_first_goal'),
+    checkTrigger: (state) => (state.player?.stats?.goals || 0) > 0 && !(state.unlockedCutscenes || []).some(c => c.id === 'milestone_first_goal'),
     getLines: (state) => {
       const p = state.player!;
       const isAttacker = ['ST', 'LW', 'RW', 'CAM'].includes(p.position);
@@ -245,7 +245,7 @@ export const CUTSCENES: CutsceneDef[] = [
     id: 'arc_fallen_prodigy_ch1',
     title: 'Ghosts of the Past',
     category: 'ARC',
-    checkTrigger: (state) => state.player?.backstory === 'FALLEN_PRODIGY' && state.currentWeek > 2 && !state.unlockedCutscenes.some(c => c.id === 'arc_fallen_prodigy_ch1'),
+    checkTrigger: (state) => state.player?.backstory === 'FALLEN_PRODIGY' && state.currentWeek > 2 && !(state.unlockedCutscenes || []).some(c => c.id === 'arc_fallen_prodigy_ch1'),
     getLines: (state) => {
       return [
         { text: `The training ground is quiet. You are out doing extra drills after the rest of the squad has headed in.` },
@@ -271,8 +271,8 @@ export const CUTSCENES: CutsceneDef[] = [
           updatePlayer({ 
               reputation: {
                 ...(state.player?.reputation || { club: 50, league: 50, world: 50, peerRespect: 50, skill: 50, attitude: 50, media: 50, fans: 50, global: 50, legacy: 50 }),
-                world: Math.min(100, (state.player?.reputation.world || 50) + 15),
-                club: Math.min(100, (state.player?.reputation.club || 50) + 15)
+                world: Math.min(100, (state.player?.reputation?.world || 50) + 15),
+                club: Math.min(100, (state.player?.reputation?.club || 50) + 15)
               }, 
               trust: Math.max(0, (state.player?.trust || 50) - 20)
           });

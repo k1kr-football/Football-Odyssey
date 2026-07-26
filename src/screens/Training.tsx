@@ -2830,16 +2830,16 @@ export function Training() {
     </span>
     <div className="grid grid-cols-2 gap-3 mb-6">
     <div className="text-center p-3 glass-panel rounded-xl ">
-     <span className="text-[9px] uppercase tracking-widest text-white/50 block mb-1"><GlossaryTooltip term="Fatigue">Fatigue</GlossaryTooltip></span>
-     <span className={`text-xl font-black font-mono ${currentFatigue > 80 ? "text-red-500" : currentFatigue > 50 ? "text-amber-500" : "text-emerald-500"}`}>
+     <div className="text-[9px] uppercase tracking-widest text-white/50 block mb-1"><GlossaryTooltip term="Fatigue">Fatigue</GlossaryTooltip></div>
+     <div className={`text-xl font-black font-mono ${currentFatigue > 80 ? "text-red-500" : currentFatigue > 50 ? "text-amber-500" : "text-emerald-500"}`}>
      {currentFatigue}%
-     </span>
+     </div>
     </div>
     <div className="text-center p-3 glass-panel rounded-xl ">
-     <span className="text-[9px] uppercase tracking-widest text-white/50 block mb-1"><GlossaryTooltip term="Match Sharpness">Sharpness</GlossaryTooltip></span>
-     <span className="text-xl font-black font-mono text-emerald-400">
+     <div className="text-[9px] uppercase tracking-widest text-white/50 block mb-1"><GlossaryTooltip term="Match Sharpness">Sharpness</GlossaryTooltip></div>
+     <div className="text-xl font-black font-mono text-emerald-400">
      {currentSharpness}%
-     </span>
+     </div>
     </div>
     </div>
     

@@ -6,7 +6,7 @@ export const agentEvents: EventDefinition[] = [
     title: "Renewal Approach",
     category: "AGENT",
     description: (s) => "Your agent calls. \"Your form is great. We need to talk about your contract before the window opens.\"",
-    isEligible: (s) => !!s.player && s.player.form > 80 && !s.player.stateFlags.openThreads['contract_renewal'],
+    isEligible: (s) => !!s.player && (s.player.form || 0) > 80 && !s.player.stateFlags?.openThreads?.['contract_renewal'],
     choices: [
       {
         text: "Express interest in staying, ask for fair terms.",
@@ -42,7 +42,7 @@ export const agentEvents: EventDefinition[] = [
     title: "Rumor Relay",
     category: "AGENT",
     description: (s) => "I'm hearing whispers a big club is preparing a bid. How do you want to handle this?",
-    isEligible: (s) => !!s.player && s.player.stateFlags.historyFlags['transfer_rumor_active'] && !s.player.stateFlags.eventCooldowns['ag_rumor_relay'],
+    isEligible: (s) => !!s.player && !!s.player.stateFlags?.historyFlags?.['transfer_rumor_active'] && !s.player.stateFlags?.eventCooldowns?.['ag_rumor_relay'],
     choices: [
       {
         text: "Ask agent to explore it.",

@@ -19,7 +19,7 @@ export const dynamicEvents: EventDefinition[] = [
     title: 'Supporters Club Meet & Greet ✍️',
     description: (state: GameState) => `The club has scheduled you for a fan signing session downtown. Hundreds of supporters have queued up.`,
     category: 'MEDIA',
-    isEligible: (state: GameState) => Math.random() < 0.10 && state.player!.fans > 100,
+    isEligible: (state: GameState) => Math.random() < 0.10 && (state.player?.fans || 0) > 100,
     choices: [
       { text: 'Stay late to sign everything (+15 Fans, -5 Fatigue)', effect: (s) => ({ player: { ...s.player, fans: Math.min(100, s.player.fans + 15), fatigue: Math.min(100, s.player.fatigue + 5) } }) },
       { text: 'Do the minimum required time (+5 Fans)', effect: (s) => ({ player: { ...s.player, fans: Math.min(100, s.player.fans + 5) } }) }
@@ -41,7 +41,7 @@ export const dynamicEvents: EventDefinition[] = [
     title: 'Team Bonding Dinner 🍕',
     description: (state: GameState) => `The captain has organized a team dinner at a local Italian restaurant to boost squad morale.`,
     category: 'TEAM',
-    isEligible: (state: GameState) => Math.random() < 0.10 && state.player!.relationships.teammates < 60,
+    isEligible: (state: GameState) => Math.random() < 0.10 && (state.player?.relationships?.teammates ?? 50) < 60,
     choices: [
       { text: 'Go and pay the bill for everyone (+15 Teammates, -Wages)', effect: (s) => ({ player: { ...s.player, relationships: { ...s.player.relationships, teammates: Math.min(100, s.player.relationships.teammates + 15) }, finances: { ...s.player.finances, balance: s.player.finances.balance - 2000 } } }) },
       { text: 'Go and mingle (+5 Teammates)', effect: (s) => ({ player: { ...s.player, relationships: { ...s.player.relationships, teammates: Math.min(100, s.player.relationships.teammates + 5) } } }) },
@@ -53,7 +53,7 @@ export const dynamicEvents: EventDefinition[] = [
     title: 'Sponsor Ad Shoot 📸',
     description: (state: GameState) => `Your agent has booked a lucrative commercial shoot for a new boot sponsor on your day off.`,
     category: 'AGENT',
-    isEligible: (state: GameState) => Math.random() < 0.08 && state.player!.reputation.world > 50,
+    isEligible: (state: GameState) => Math.random() < 0.08 && (state.player?.reputation?.world ?? 50) > 50,
     choices: [
       { text: 'Do the shoot (+Money, +10 Fatigue)', effect: (s) => ({ player: { ...s.player, fatigue: Math.min(100, s.player.fatigue + 10), finances: { ...s.player.finances, balance: s.player.finances.balance + 5000 } } }) },
       { text: 'Cancel it. Football comes first. (-2 Rep, -5 Fatigue)', effect: (s) => ({ player: { ...s.player, fatigue: Math.max(0, s.player.fatigue - 5), reputation: { ...s.player.reputation, world: Math.max(0, s.player.reputation.world - 2) } } }) }
@@ -76,7 +76,7 @@ export const dynamicEvents: EventDefinition[] = [
     title: 'Tactical Workshop 🧠',
     description: (state: GameState) => `The manager has called you in for a one-on-one video analysis session to go over your recent positioning.`,
     category: 'MANAGER',
-    isEligible: (state: GameState) => Math.random() < 0.10 && state.player!.form < 60,
+    isEligible: (state: GameState) => Math.random() < 0.10 && (state.player?.form || 0) < 60,
     choices: [
       { text: 'Pay close attention (+5 Trust)', effect: (s) => ({ player: { ...s.player, trust: Math.min(100, s.player.trust + 5) } }) }, // Ideally gives tactical awareness, but trust is good
       { text: 'Nod along but zone out (No effect)', effect: (s) => ({}) }

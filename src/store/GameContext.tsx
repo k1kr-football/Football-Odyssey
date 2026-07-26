@@ -1,4 +1,5 @@
 import { NPCRegistry, UnifiedNPCEngine } from "../utils/npcEngine";
+import { assignManagerPhilosophy } from "../utils/managerPhilosophy";
 import { CUTSCENES } from '../data/cutscenes';
 import { decayReputationAndPerception, updateReputationAndPerception } from '../utils/reputation';
 /**
@@ -148,7 +149,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const engine = new UnifiedNPCEngine();
     const npcs = generateSaveNPCs(engine);
     const rosters = generateAllClubsRosters(engine);
+    const world = initializeWorldState(rosters);
     
+    // Sync player managerInfo with unified WorldState manager
+    if (initializedPlayer.currentClubSymbol && world.clubs[initializedPlayer.currentClubSymbol]?.manager?.name) {
+      initializedPlayer.managerInfo = {
+        ...initializedPlayer.managerInfo,
+        name: world.clubs[initializedPlayer.currentClubSymbol].manager.name
+      };
+    }
+
     // Find host club calendar
     const hostClub = CLUBS.find(c => c.symbol.toUpperCase() === initializedPlayer.startingClubSymbol.toUpperCase()) || CLUBS[0];
     const seasonCalendar = generateSeasonCalendar(hostClub);
@@ -160,7 +170,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       npcGeneration: npcs,
       generatedClubs: rosters,
       seasonCalendar: seasonCalendar,
-      worldState: initializeWorldState(),
+      worldState: world,
       screen: 'TRIAL_MATCH'
     }));
   };
@@ -644,7 +654,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                   if (impact.relationships) {
                      if (impact.relationships.manager) p.relationships.manager = Math.max(0, Math.min(100, p.relationships.manager + impact.relationships.manager));
                      if (impact.relationships.teammates) p.relationships.teammates = Math.max(0, Math.min(100, p.relationships.teammates + impact.relationships.teammates));
-                     if (impact.relationships.agent) p.relationships.agent = Math.max(0, Math.min(100, p.relationships.agent + impact.relationships.agent));
+                     if (impact.relationships.agent) p.relationships.agent = Math.max(0, Math.min(100, (p.relationships.agent || 50) + impact.relationships.agent));
                      if (impact.relationships.family) p.relationships.family = Math.max(0, Math.min(100, p.relationships.family + impact.relationships.family));
                   }
 
@@ -731,10 +741,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
           break;
         case 'AGENT_LOYAL':
           p.relationships.manager = Math.min(100, p.relationships.manager + 5);
-          p.relationships.agent = Math.max(0, p.relationships.agent - 5);
+          p.relationships.agent = Math.max(0, (p.relationships.agent || 50) - 5);
           break;
         case 'AGENT_LOOKING':
-          p.relationships.agent = Math.min(100, p.relationships.agent + 5);
+          p.relationships.agent = Math.min(100, (p.relationships.agent || 50) + 5);
           break;
         case 'SPONSOR_ATTEND':
           p.finances.balance += 2000;
@@ -743,7 +753,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           break;
         case 'SPONSOR_SKIP':
           p.finances.balance -= 5000;
-          p.relationships.agent = Math.max(0, p.relationships.agent - 10);
+          p.relationships.agent = Math.max(0, (p.relationships.agent || 50) - 10);
           break;
         case 'PHYSIO_REST':
           p.fatigue = Math.max(0, p.fatigue - 20);
@@ -1029,11 +1039,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
             category: 'TRAINING',
             choices: [
                {
-                  text: 'Attend training and work hard (-10 fatigue, +5 trust, +3 manager relationship)',
+                  text: 'Attend training session',
                   actionType: 'ENGINE_CHOICE_CLUB_TRAINING_ATTEND_FULL'
                },
                {
-                  text: 'Skip training to rest (Consequences: -15 trust, -10 manager relationship, -5 teammates)',
+                  text: 'Skip training session',
                   actionType: 'ENGINE_CHOICE_CLUB_TRAINING_SKIP'
                }
             ]
@@ -1108,7 +1118,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
          
          squadList = { startingXI, substitutes, unused };
          
-         const managerName = clubSquadObj.manager || "The Boss";
+         const managerName = s.worldState?.clubs?.[s.player.currentClubSymbol]?.manager?.name || clubSquadObj.manager || "The Boss";
          let selectionDialogue = `You have been selected to start tomorrow against ${tomorrowCalendarEntry.match.opponentSymbol}. Your training performance and form have earned you this spot. I need 100% focus and intensity out there.`;
          
          if (playerStatus === 'SUBSTITUTE') {
@@ -1658,6 +1668,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         let newFamilyRel = (s.player?.relationships?.family || 60);
 
         let updatedPlayer: Player | null = null;
+        let updatedNpcRegistry = s.npcRegistry;
 
         if (updatedPlayerTemp) {
            // Family relationship naturally decays unless maintained. Reduced decay if high family expense.
@@ -1785,8 +1796,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
            }
 
            // Rivals Weekly Progression (System 4)
-           const rivalResult = progressRivals(updatedPlayerTemp, nextWeek);
+           const rivalResult = progressRivals(updatedPlayerTemp, nextWeek, updatedNpcRegistry);
            updatedPlayerTemp = rivalResult.player;
+           if (rivalResult.registry) {
+             updatedNpcRegistry = rivalResult.registry;
+           }
            if (rivalResult.rivalMessage) {
               newInbox.push({
                  id: `rival_alert_${Date.now()}`,
@@ -2042,8 +2056,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                // Periodic coaching notification of aging / decay to keep the player informed!
                if (Math.random() < 0.1 && decayLog.length > 0) {
                  let alertMessage = `The medical team has completed your weekly physical assessment.\n\nAt age ${s.player.age}, maintaining peak physical attributes requires intense work. We have noted minor age-related fatigue and physical decay across your physical metrics:\n` +
-                   decayLog.map(log => `• ${log}`).join('\n') +
-                   `\n\n💡 TACTICAL ADVICE: Combat career-decline by maintaining high Match Sharpness (regular game time) and investing in advanced lifestyle tiers (Elite Gyms, Mansion recovery pools, Private Chefs).`;
+                   decayLog.map(log => `• ${log}`).join('\n');
                  
                  newInbox.push({
                    id: `aging_report_${Date.now()}`,
@@ -2108,15 +2121,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
            // Transfer Market Offers
            let baseTransferChance = 0.3;
-           if (s.player.relationships.agent < 30) baseTransferChance = 0.1;
-           else if (s.player.relationships.agent > 80) baseTransferChance = 0.5;
+           if ((s.player.relationships?.agent ?? 50) < 30) baseTransferChance = 0.1;
+           else if ((s.player.relationships?.agent ?? 50) > 80) baseTransferChance = 0.5;
 
-           if ((s.player.transferListed && Math.random() < baseTransferChance) || (isTransferWindow && s.player.contract.releaseClause && Math.random() < 0.05)) {
+           if ((s.player.transferListed && Math.random() < baseTransferChance) || (isTransferWindow && s.player.contract?.releaseClause && Math.random() < 0.05)) {
               
-              const isReleaseClauseTriggered = !s.player.transferListed && s.player.contract.releaseClause;
+              const isReleaseClauseTriggered = !s.player.transferListed && s.player.contract?.releaseClause;
               
-              const wageModifier = (s.player.relationships.agent / 100); 
-              const offerWage = Math.floor(s.player.contract.wage * (1 + (Math.random() * 0.5 * wageModifier) + (isReleaseClauseTriggered ? 0.3 : 0)));
+              const wageModifier = ((s.player.relationships?.agent ?? 50) / 100); 
+              const offerWage = Math.floor((s.player.contract?.wage || 1000) * (1 + (Math.random() * 0.5 * wageModifier) + (isReleaseClauseTriggered ? 0.3 : 0)));
               const targetClub = ['RMD', 'FCB', 'MUN', 'CHE', 'ARS', 'TOT', 'JUV', 'BAY', 'PSG'][Math.floor(Math.random() * 9)];
               
               let mailSubject = `Formal Bid from ${targetClub}`;
@@ -2220,9 +2233,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
            }
 
            // Contract Extensions
-           if (!isTransferWindow && Math.random() < 0.05 && s.player.relationships.manager > 60 && !s.player.transferListed && !s.player.loanInfo) {
-              const offerWage = Math.floor(s.player.contract.wage * 1.5);
-              const offerBonus = Math.floor(s.player.contract.bonuses * 1.5);
+           if (!isTransferWindow && Math.random() < 0.05 && (s.player.relationships?.manager ?? 50) > 60 && !s.player.transferListed && !s.player.loanInfo) {
+              const offerWage = Math.floor((s.player.contract?.wage || 1000) * 1.5);
+              const offerBonus = Math.floor((s.player.contract?.bonuses || 500) * 1.5);
               
               newInbox.push({
                  id: `extension_${Date.now()}`,
@@ -2244,7 +2257,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
            let newCancelRisk = s.player.socialMedia?.cancelRisk || 0;
            
            // Organic baseline growth based on reputation
-           newFollowers += Math.floor(Math.random() * (s.player.reputation.world * 100));
+           newFollowers += Math.floor(Math.random() * ((s.player.reputation?.world ?? 50) * 100));
 
            if (Math.random() < 0.3) {
              const isJournalist = Math.random() > 0.5;
@@ -2281,7 +2294,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
            if (Math.random() < 0.15) {
                // Generate dynamic rumor
                const isTransferWindowSoon = nextWeek === 50 || nextWeek === 24 || isTransferWindow;
-               const unhappy = currentMorale < 40 || s.player.relationships.manager < 40;
+               const unhappy = currentMorale < 40 || (s.player.relationships?.manager ?? 50) < 40;
                let rumorSubject = 'Training Incident?';
                let rumorText = `Reports suggest a bust-up in training involving you. Care to comment?`;
                
@@ -2541,8 +2554,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
            if (newManagerInfo.pressure >= 100) {
               // Sack manager - Generate a completely random manager with personality/preferences!
-              newManagerInfo = generateRandomNewManager(s.player.currentClubSymbol);
+              newManagerInfo = generateRandomNewManager(s.player.currentClubSymbol, s.worldState);
               isNewManager = true;
+
+              if (newWorldState?.clubs?.[s.player.currentClubSymbol]) {
+                const archetypes: import('../utils/worldSimulation').ManagerArchetype[] = ['LOYALIST', 'PRAGMATIST', 'PROJECT_BUILDER', 'VOLATILE'];
+                newWorldState.clubs[s.player.currentClubSymbol].manager = {
+                  name: newManagerInfo.name,
+                  archetype: archetypes[Math.floor(Math.random() * archetypes.length)],
+                  philosophy: assignManagerPhilosophy(),
+                  trust: 50,
+                  jobSecurity: 100,
+                  tenureWeeks: 0
+                };
+              }
               
               // Reset player's standing and trust to neutral starting point
               nextManagerTrust = 45; // reset trust to neutral
@@ -2873,7 +2898,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           nextMatch: nextMatch,
           seasonCalendar: newSeasonCalendar,
           season: newSeason,
-          worldState: newWorldState
+          worldState: newWorldState,
+          npcRegistry: updatedNpcRegistry
         };
       }
     });

@@ -64,5 +64,45 @@ export const STORY_ARCS: Record<BackstoryType, Omit<StoryArc, 'progress' | 'curr
       { act: 2, beat: 1, name: "Breakthrough Statement", description: "A decisive match-winning contribution.", triggered: false, narrative: "You proved you're not just a name; you belong on this stage." },
       { act: 3, beat: 1, name: "Dynasty Unlocked", description: "Lifting major silverware.", triggered: false, narrative: "You've written your own chapter in club history." }
     ]
+  },
+  WONDERKID: {
+    drivingQuestion: "Can you survive the crushing weight of generational hype?",
+    beats: [
+      { act: 1, beat: 1, name: "The Next Big Thing", description: "Your highly anticipated debut.", triggered: false, narrative: "Every camera in the stadium was pointed at you. The pressure is already immense." },
+      { act: 2, beat: 1, name: "First True Test", description: "Facing adversity against elite opposition.", triggered: false, narrative: "They tried to kick you off the park, but you showed you have the grit to match the talent." },
+      { act: 3, beat: 1, name: "The Crown Attained", description: "Delivering on the impossible promise.", triggered: false, narrative: "The hype was real. You have arrived at the summit of world football." }
+    ]
+  },
+  NEPOTISM_CASE: {
+    drivingQuestion: "Can you become your own name, not just a shadow of someone else's?",
+    beats: [
+      { act: 1, beat: 1, name: "In the Shadow", description: "First televised appearance under intense scrutiny.", triggered: false, narrative: "Every mistake is met with murmurs of nepotism in the stands." },
+      { act: 2, beat: 1, name: "The Statement Goal", description: "Scoring a decisive match-winner.", triggered: false, narrative: "You pointed to your own name on the shirt. The doubters went quiet." },
+      { act: 3, beat: 1, name: "Your Own Identity", description: "Winning a major honor on merit.", triggered: false, narrative: "Nobody talks about your family name anymore. They talk about yours." }
+    ]
+  },
+  THE_REFUGEE: {
+    drivingQuestion: "Can this game finally give you the home that circumstance took away?",
+    beats: [
+      { act: 1, beat: 1, name: "Sanctuary Pitch", description: "First professional match in your host country.", triggered: false, narrative: "After everything you've survived, stepping onto this pitch feels like a miracle." },
+      { act: 2, beat: 1, name: "International Calling", description: "Reaching a major international tournament choice.", triggered: false, narrative: "Representing your people on the world stage brings tears to your eyes." },
+      { act: 3, beat: 1, name: "A Place of Belonging", description: "Securing a long-term contract and trophy.", triggered: false, narrative: "You didn't just survive—you conquered. Football is your permanent home." }
+    ]
+  },
+  LATE_REPLACEMENT: {
+    drivingQuestion: "What happens when the accident becomes the opportunity?",
+    beats: [
+      { act: 1, beat: 1, name: "The Unplanned Debut", description: "Thrust into match action after an unexpected injury.", triggered: false, narrative: "Nobody planned for you to play, but you grabbed the opportunity with both hands." },
+      { act: 2, beat: 1, name: "Holding the Spot", description: "Keeping your place in the starting XI over returning seniors.", triggered: false, narrative: "The manager had no choice but to keep picking you based on performance." },
+      { act: 3, beat: 1, name: "Undisputed Pillar", description: "Becoming the core star of the first team.", triggered: false, narrative: "From an emergency bench-warmer to the first name on the team sheet." }
+    ]
+  },
+  SECOND_SPORT_CONVERT: {
+    drivingQuestion: "Can raw talent from another world actually translate to this one?",
+    beats: [
+      { act: 1, beat: 1, name: "Cross-Code Shock", description: "First competitive match displaying raw athleticism.", triggered: false, narrative: "Your physical speed and power shocked the defenders, even if your positioning was raw." },
+      { act: 2, beat: 1, name: "Tactical Awakening", description: "Executing a complex tactical role flawlesly.", triggered: false, narrative: "The hours spent studying match tape paid off—you're reading the game like a veteran." },
+      { act: 3, beat: 1, name: "The Complete Athlete", description: "Dominating at the highest level as a refined footballer.", triggered: false, narrative: "You proved that elite multi-sport drive creates unstoppable world-class footballers." }
+    ]
   }
 };

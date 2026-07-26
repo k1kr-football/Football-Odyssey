@@ -15,7 +15,7 @@ export function Glossary() {
     return GLOSSARY_ENTRIES.filter(entry => {
       const matchesSearch = entry.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
         entry.definition.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.seeAlso.some(sa => sa.toLowerCase().includes(searchTerm.toLowerCase()));
+        (entry.seeAlso || []).some(sa => sa.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = activeCategory === 'ALL' || entry.category === activeCategory;
       return matchesSearch && matchesCategory;
     }).sort((a, b) => a.term.localeCompare(b.term));
