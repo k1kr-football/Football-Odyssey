@@ -121,7 +121,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const { generateEvent } = useEventManager();
 
-  const setScreen = (screen: Screen) => setState(s => ({ ...s, screen }));
+  const setScreen = (screen: Screen) => setState(s => {
+    if ((s.screen === 'MATCH' || s.screen === 'TRIAL_MATCH') && screen !== s.screen && screen !== 'MATCH' && screen !== 'TRIAL_MATCH') {
+      return s; // Lock-in: Cannot navigate away while match is running
+    }
+    return { ...s, screen };
+  });
   
   const updateNextMatch = (fields: any) => setState(s => ({
     ...s,

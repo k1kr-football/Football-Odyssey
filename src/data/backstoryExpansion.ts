@@ -86,27 +86,37 @@ export const BACKSTORY_EXPANSIONS: Record<BackstoryType, BackstoryExpansionConfi
       Nigeria: [
         { city: 'Lagos', description: 'Bustling megacity tarmac cages in Surulere & Yaba.' },
         { city: 'Kano', description: 'Northern street pitches known for rapid technical play.' },
-        { city: 'Port Harcourt', description: 'Oil city leagues played on gritty industrial lots.' }
+        { city: 'Port Harcourt', description: 'Oil city leagues played on gritty industrial lots.' },
+        { city: 'Ibadan', description: 'Historic southwestern city with passionate grassroots leagues.' },
+        { city: 'Benin City', description: 'Ancient kingdom hub with rapid technical youth talents.' }
       ],
       Ghana: [
         { city: 'Accra', description: 'Bukom neighborhood cage tournaments near the coast.' },
         { city: 'Kumasi', description: 'Ashanti region dirt pitches with intense rivalries.' },
-        { city: 'Tamale', description: 'Northern district dust bowls forging physical stamina.' }
+        { city: 'Tamale', description: 'Northern district dust bowls forging physical stamina.' },
+        { city: 'Cape Coast', description: 'Coastal historic pitch with fierce regional pride.' },
+        { city: 'Sekondi', description: 'Industrial port town grassroots tournaments.' }
       ],
       Brazil: [
         { city: 'São Paulo', description: 'Favela concrete courts under high-voltage streetlights.' },
         { city: 'Rio de Janeiro', description: 'Copacabana beach cages and North Zone alleyways.' },
-        { city: 'Salvador', description: 'Pelourinho street games fueled by samba rhythm.' }
+        { city: 'Salvador', description: 'Pelourinho street games fueled by samba rhythm.' },
+        { city: 'Belo Horizonte', description: 'Minas Gerais hilly street courts and technical duels.' },
+        { city: 'Curitiba', description: 'Southern urban pitches with crisp passing culture.' }
       ],
       Argentina: [
         { city: 'Buenos Aires', description: 'Potrero dirt fields in the outer barrios.' },
         { city: 'Rosario', description: 'Riverbank street courts that bred global legends.' },
-        { city: 'Córdoba', description: 'Mountain district street games with fierce tackle culture.' }
+        { city: 'Córdoba', description: 'Mountain district street games with fierce tackle culture.' },
+        { city: 'Mendoza', description: 'Western vineyard district grassroots football.' },
+        { city: 'La Plata', description: 'University city rivalries and technical street play.' }
       ],
       'Ivory Coast': [
         { city: 'Abidjan', description: 'Treichville street tournaments with packed sidelines.' },
         { city: 'Bouaké', description: 'Central town square games with raw physical duel intensity.' },
-        { city: 'San-Pédro', description: 'Port city street pitch where sand meets concrete.' }
+        { city: 'San-Pédro', description: 'Port city street pitch where sand meets concrete.' },
+        { city: 'Yamoussoukro', description: 'Capital district open-air technical pitches.' },
+        { city: 'Korhogo', description: 'Northern savanna town endurance games.' }
       ]
     },
     familyOptions: [
@@ -189,27 +199,37 @@ export const BACKSTORY_EXPANSIONS: Record<BackstoryType, BackstoryExpansionConfi
       Spain: [
         { city: 'Madrid', description: 'Valdebebas academy roots surrounded by elite expectation.' },
         { city: 'Barcelona', description: 'La Masia system where possession dogma was ingrained early.' },
-        { city: 'Seville', description: 'Andalusian academy known for intense derby pressure.' }
+        { city: 'Seville', description: 'Andalusian academy known for intense derby pressure.' },
+        { city: 'Valencia', description: 'Mediterranean coast academy with sharp technical wing play.' },
+        { city: 'Bilbao', description: 'Basque academy system known for fierce combativeness.' }
       ],
       France: [
         { city: 'Paris', description: 'Banlieue elite academy pipeline with fierce competition.' },
         { city: 'Marseille', description: 'Southern coast academy with passionate, demanding fans.' },
-        { city: 'Lyon', description: 'Rhône valley youth system famous for technical excellence.' }
+        { city: 'Lyon', description: 'Rhône valley youth system famous for technical excellence.' },
+        { city: 'Nice', description: 'French Riviera youth ranks with tactical sophistication.' },
+        { city: 'Bordeaux', description: 'Aquitaine development hub focused on discipline.' }
       ],
       Portugal: [
         { city: 'Lisbon', description: 'Alcochete academy grounds that produced Ballon d\'Or winners.' },
         { city: 'Porto', description: 'Olival youth center focused on tactical toughness.' },
-        { city: 'Braga', description: 'Minho region development hub known for sharp technical training.' }
+        { city: 'Braga', description: 'Minho region development hub known for sharp technical training.' },
+        { city: 'Coimbra', description: 'Historic university city academy circuit.' },
+        { city: 'Faro', description: 'Algarve coastal development ranks.' }
       ],
       Italy: [
         { city: 'Milan', description: 'Milanello academy grounds built on defensive perfection.' },
         { city: 'Rome', description: 'Trigoria youth ranks where passion and pressure collide.' },
-        { city: 'Naples', description: 'Campania youth circuit under the shadow of footballing gods.' }
+        { city: 'Naples', description: 'Campania youth circuit under the shadow of footballing gods.' },
+        { city: 'Turin', description: 'Piedmont academy grounds emphasizing tactical discipline.' },
+        { city: 'Florence', description: 'Tuscan youth setup known for creative flair.' }
       ],
       Netherlands: [
         { city: 'Amsterdam', description: 'De Toekomst academy emphasizing Total Football principles.' },
         { city: 'Rotterdam', description: 'Varkenoord grounds built on working-class grit.' },
-        { city: 'Eindhoven', description: 'De Herdgang facility with cutting-edge sport science.' }
+        { city: 'Eindhoven', description: 'De Herdgang facility with cutting-edge sport science.' },
+        { city: 'Utrecht', description: 'Central development hub with technical focus.' },
+        { city: 'The Hague', description: 'Randstad regional academy circuit.' }
       ]
     },
     familyOptions: [

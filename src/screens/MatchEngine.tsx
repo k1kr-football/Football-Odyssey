@@ -170,7 +170,7 @@ export function MatchEngine() {
     distanceCovered: 0.0
   });
 
-  const [stamina, setStamina] = useState<number>(100 - (p.fatigue / 2));
+  const [stamina, setStamina] = useState<number>(100 - ((typeof p.fatigue === 'number' && !isNaN(p.fatigue) ? p.fatigue : 0) / 2));
   const [momentum, setMomentum] = useState<number>(0); // -10 to +10
   const [activeDecision, setActiveDecision] = useState<KeyDecision | null>(null);
   const [lastActionResult, setLastActionResult] = useState<string | null>(null);
@@ -797,11 +797,7 @@ export function MatchEngine() {
             ))}
           </div>
 
-          {lastActionResult && (
-            <div className="text-[11px] font-bold text-[#00FF88] bg-[#00FF88]/10 border border-[#00FF88]/30 px-3 py-1 rounded truncate max-w-md">
-              {lastActionResult}
-            </div>
-          )}
+
 
           <button
             onClick={handleInstantSim}
@@ -871,8 +867,8 @@ export function MatchEngine() {
           <span className="text-xs font-bold text-white/40 uppercase tracking-wider block mb-3">Live Commentary Feed</span>
           <div className="overflow-y-auto max-h-48 hide-scrollbar">
             <AnimatePresence initial={false}>
-              {commentaryLogs.map((log) => {
-                const uniqueKey = `${log.minute}-${log.text.substring(0, 30).replace(/\s+/g, '')}`;
+              {commentaryLogs.map((log, index) => {
+                const uniqueKey = `${index}-${log.minute}-${log.text.substring(0, 20).replace(/\s+/g, '')}`;
                 return (
                   <motion.div
                     layout

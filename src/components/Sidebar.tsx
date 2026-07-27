@@ -25,6 +25,7 @@ export function Sidebar() {
  
  if (state.screen === 'CREATION') return null;
 
+ const isMatchLocked = state.screen === 'MATCH' || state.screen === 'TRIAL_MATCH';
  const unreadCount = state.inbox ? state.inbox.filter((m: any) => !m.read).length : 0;
  const todaysCalendarEntry = state.seasonCalendar?.find(
   e => e.week === state.currentWeek && e.day === state.currentDay
@@ -46,8 +47,8 @@ export function Sidebar() {
      const club = CLUBS.find(c => c.symbol.toUpperCase() === state.player?.currentClubSymbol?.toUpperCase());
      return club ? (
       <button 
-       onClick={() => setScreen('PROFILE')} 
-       className="p-1 rounded-full border border-white/10 bg-[#0e0e0e] hover:border-[#00FF88] hover:scale-105 active:scale-95 transition-all w-12 h-12 flex items-center justify-center cursor-pointer"
+       onClick={() => { if (!isMatchLocked) setScreen('PROFILE'); }} 
+       className={`p-1 rounded-full border border-white/10 bg-[#0e0e0e] hover:border-[#00FF88] hover:scale-105 active:scale-95 transition-all w-12 h-12 flex items-center justify-center ${isMatchLocked ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
        title="View Profile"
       >
        <TeamLogo
@@ -68,7 +69,7 @@ export function Sidebar() {
     {visibleNavItems.map((item) => {
      const isActive = state.screen === item.id;
      const isMatchItem = item.id === 'MATCH';
-     const isDisabled = item.requiresPattern === 'matchday' && !isMatchday;
+     const isDisabled = (item.requiresPattern === 'matchday' && !isMatchday) || (isMatchLocked && !isMatchItem && state.screen !== item.id);
      
      let customStyle = 'border-transparent text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95';
      if (isDisabled) {
@@ -86,7 +87,7 @@ export function Sidebar() {
         if (!isDisabled) setScreen(item.id);
        }}
        disabled={isDisabled}
-       title={isMatchItem ? (isMatchday ? 'PLAY MATCHDAY FIXTURE' : 'MATCHDAY (SAT ONLY)') : item.label}
+       title={isMatchLocked ? 'MATCH ENGINE LOCKED IN' : isMatchItem ? (isMatchday ? 'PLAY MATCHDAY FIXTURE' : 'MATCHDAY (SAT ONLY)') : item.label}
        className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer shrink-0 border ${customStyle}`}
       >
        {/* Icon wrapper to ensure 20px size */}
@@ -95,14 +96,14 @@ export function Sidebar() {
        </div>
 
        {/* Unread count badge */}
-       {item.id === 'INBOX' && unreadCount > 0 && (
+       {!isMatchLocked && item.id === 'INBOX' && unreadCount > 0 && (
         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-black animate-pulse">
          {unreadCount}
         </span>
        )}
 
        {/* Matchday pulse badge */}
-       {isMatchItem && isMatchday && (
+       {isMatchItem && isMatchday && !isMatchLocked && (
         <span className="absolute -top-1 -right-1 bg-[#00FF88] text-black text-[7px] font-black px-1 rounded-full uppercase tracking-tighter border border-black animate-pulse shadow">
          LIVE
         </span>
@@ -115,9 +116,10 @@ export function Sidebar() {
    {/* Save & Exit Option at bottom */}
    <div className="mt-auto pt-4 border-t border-white/5 w-full flex justify-center shrink-0">
     <button 
-     onClick={saveAndQuit}
-     title="SAVE & EXIT"
-     className="w-12 h-12 rounded-xl flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/5 hover:border-red-500/20 active:scale-95 border border-transparent transition-all cursor-pointer"
+     onClick={() => { if (!isMatchLocked) saveAndQuit(); }}
+     disabled={isMatchLocked}
+     title={isMatchLocked ? 'MATCH ENGINE LOCKED IN' : 'SAVE & EXIT'}
+     className={`w-12 h-12 rounded-xl flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/5 hover:border-red-500/20 active:scale-95 border border-transparent transition-all ${isMatchLocked ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer'}`}
     >
      <LogOut size={20} />
     </button>

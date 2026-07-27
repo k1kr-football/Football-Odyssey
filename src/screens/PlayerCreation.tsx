@@ -618,8 +618,7 @@ export function PlayerCreation() {
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none placeholder-white/30"
-                        placeholder="e.g. Marcus"
+                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none"
                       />
                     </div>
                     <div className="flex-1">
@@ -628,8 +627,7 @@ export function PlayerCreation() {
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none placeholder-white/30"
-                        placeholder="e.g. Rashford"
+                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none"
                       />
                     </div>
                   </div>
