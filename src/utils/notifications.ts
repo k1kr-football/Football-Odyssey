@@ -77,6 +77,14 @@ export function tagInboxMessagePriority(msg: any): InboxMessage {
   } as InboxMessage;
 }
 
+export function isDecisionRequired(msg: InboxMessage): boolean {
+  if (!msg) return false;
+  if (msg.handled) return false;
+  if (msg.choices && msg.choices.length > 0) return true;
+  if (msg.priority === 'CRITICAL' && !msg.read) return true;
+  return false;
+}
+
 /**
  * Filter and group the inbox messages based on player's adjustable verbosity setting
  * and Digest Mode toggle.

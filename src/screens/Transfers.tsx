@@ -814,7 +814,7 @@ export function Transfers() {
     <DollarSign size={12} />
     Financial Records
     </h3>
-    <div className="text-white text-3xl font-black tracking-tighter">£{player.finances.balance.toLocaleString()}</div>
+    <div className="text-white text-3xl font-black tracking-tighter">£{(player.finances?.balance || 0).toLocaleString()}</div>
     <div className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1 flex justify-between">
     <span>Personal Liquidity</span>
     <span className="text-emerald-500">+<GlossaryTooltip term="Agent Tier">{player.agentTier}</GlossaryTooltip> Agent Tier</span>

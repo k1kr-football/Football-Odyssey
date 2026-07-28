@@ -271,3 +271,29 @@ export function decayReputationAndPerception(
   
   return { player: updated, decayMsgs };
 }
+
+/**
+ * Calculates Team Chemistry based on player interactions in the Social section,
+ * teammate relationships, form consistency, mentoring, and hierarchy role.
+ */
+export function calculateSquadChemistry(player: Player): number {
+  if (!player) return 50;
+  const teammateRel = player.relationships?.teammates ?? 50;
+  const form = player.form ?? 50;
+  const trust = player.trust ?? 50;
+  
+  // Mentoring active count
+  const mentees = (player.stateFlags as any)?.openThreads?.mentees || [];
+  const activeMenteesCount = mentees.filter((m: any) => m.isMentored).length;
+  const mentoringBonus = activeMenteesCount * 8; // +8% per active mentee
+
+  let chemistry = Math.round((teammateRel * 0.45) + (form * 0.30) + (trust * 0.15) + mentoringBonus);
+  
+  // Hierarchy role bonus
+  if (player.hierarchyRole === 'Captain') chemistry += 8;
+  else if (player.hierarchyRole === 'Vice-Captain') chemistry += 5;
+  else if (player.hierarchyRole === 'Core') chemistry += 3;
+
+  return Math.max(10, Math.min(100, chemistry));
+}
+

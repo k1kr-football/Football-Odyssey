@@ -71,7 +71,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
        {state.currentWeek >= 1 && state.currentWeek <= 4 && "Pre-Season"}
        {state.currentWeek >= 5 && state.currentWeek <= 40 && "Domestic Campaign"}
        {state.currentWeek >= 41 && state.currentWeek <= 52 && "Off-Season"}
-       {isTransferWindow && " (Transfer Window)"}
       </span>
      </div>
 
@@ -85,7 +84,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       >
        <CalendarIcon size={12} className="text-[#00FF88] shrink-0" />
        <span className="text-white font-bold text-[10px] uppercase font-mono tracking-wider">
-        Wk {state.currentWeek} &middot; {state.currentDay}
+        {getFormattedCalendarDate(state.currentWeek, state.currentDay)}
        </span>
       </button>
 

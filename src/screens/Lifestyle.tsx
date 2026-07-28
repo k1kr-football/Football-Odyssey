@@ -39,7 +39,7 @@ export function Lifestyle() {
     showNotification("Agent is already at maximum Tier!");
     return;
    }
-   if (p.finances.balance < upgrade.cost) {
+   if ((p.finances?.balance || 0) < upgrade.cost) {
     showNotification(`Insufficient funds! Upgrade requires £${upgrade.cost.toLocaleString()}`);
     return;
    }
@@ -48,7 +48,7 @@ export function Lifestyle() {
     agentTier: upgrade.next as any,
     finances: {
      ...p.finances,
-     balance: p.finances.balance - upgrade.cost
+     balance: (p.finances?.balance || 0) - upgrade.cost
     },
     relationships: {
      ...p.relationships,
@@ -90,9 +90,9 @@ export function Lifestyle() {
  propertyRentalYield += pOwned.yield || 0;
  });
 
- const sponsorIncome = (p.reputation.world * 1500) || 0;
- const totalIncome = p.contract.wage + sponsorIncome + customSponsorIncome + propertyRentalYield;
- const totalExpenses = p.finances.expenses.housing + p.finances.expenses.training + p.finances.expenses.lifestyle + p.finances.expenses.family;
+ const sponsorIncome = ((p.reputation?.world || 50) * 1500) || 0;
+ const totalIncome = (p.contract?.wage || 0) + sponsorIncome + customSponsorIncome + propertyRentalYield;
+ const totalExpenses = (p.finances?.expenses?.housing || 0) + (p.finances?.expenses?.training || 0) + (p.finances?.expenses?.lifestyle || 0) + (p.finances?.expenses?.family || 0);
  const netWeekly = totalIncome - totalExpenses;
 
  const showNotification = (msg: string) => {
@@ -100,24 +100,24 @@ export function Lifestyle() {
  setTimeout(() => setNotification(null), 3500);
  };
 
- const handleUpgrade = (category: keyof typeof p.lifestyleTier, level: string, cost: number, attr: keyof typeof p.finances.expenses) => {
+ const handleUpgrade = (category: keyof typeof p.lifestyleTier, level: string, cost: number, attr: 'housing' | 'training' | 'lifestyle' | 'family') => {
  setPlayer({
   ...p,
   lifestyleTier: { ...p.lifestyleTier, [category]: level },
   finances: {
   ...p.finances,
-  expenses: { ...p.finances.expenses, [attr]: cost }
+  expenses: { housing: 0, training: 0, lifestyle: 0, family: 0, ...(p.finances?.expenses || {}), [attr]: cost }
   }
  });
  showNotification(`${level} Tier Active! -£${cost}/w`);
  };
 
  const handleEvent = (cost: number, title: string, cb: (updated: typeof p) => void) => {
- if (p.finances.balance < cost) {
+ if ((p.finances?.balance || 0) < cost) {
   showNotification("INSUFFICIENT FUNDS IN BANK BALANCE.");
   return;
  }
- const updated = { ...p, finances: { ...p.finances, balance: p.finances.balance - cost } };
+ const updated = { ...p, finances: { ...p.finances, balance: (p.finances?.balance || 0) - cost } };
  cb(updated);
  setPlayer(updated);
  showNotification(`Purchased ${title}! -£${cost.toLocaleString()}`);
@@ -385,7 +385,11 @@ export function Lifestyle() {
      </button>
 
      <button 
-     onClick={() => handleEvent(10000, "Luxury Cruise", (up) => { up.relationships.family = Math.min(100, up.relationships.family + 20); up.morale = Math.min(100, up.morale + 10); })}
+     onClick={() => handleEvent(10000, "Luxury Cruise", (up) => { 
+      up.relationships = up.relationships || { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 75 };
+      up.relationships.family = Math.min(100, (up.relationships.family ?? 75) + 20); 
+      up.morale = Math.min(100, up.morale + 10); 
+     })}
      className="w-full p-4 hover:border-white/10 bg-[#0c0c0c] rounded-lg text-left transition-colors flex justify-between items-center"
      >
      <div>

@@ -1,32 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Player, Attributes } from "../types";
 import { useGame } from "../store/GameContext";
+import { getRolesForPosition } from "../data/roles";
 import { CoreFormulas } from "../utils/coreFormulas";
-import { calculateOVR } from "../utils/player";
-import { getRoleById, getRolesForPosition, POSITION_GROUPS } from "../data/roles";
 import {
- UNIVERSAL_MINIGAMES,
- POSITION_MINIGAMES,
- MENTAL_MINIGAMES,
- MinigameConfig,
- IntensityLevel,
-} from "../data/minigames";
-import {
- ArrowLeft,
- Activity,
- Brain,
- Clock,
- Shield,
- Award,
- Zap,
- CheckCircle2,
- AlertTriangle,
- Flame,
- UserCheck,
- RefreshCw,
- Target,
- Play,
- RotateCcw
+  ArrowLeft,
+  Award,
+  UserCheck,
+  Target,
+  Zap,
+  Shield,
+  Activity,
+  Flame,
+  CheckCircle2,
+  Sparkles,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Dumbbell,
+  Heart,
+  RotateCcw,
+  Star
 } from "lucide-react";
 import { GlossaryTooltip } from "../components/GlossaryTooltip";
 
@@ -46,7 +41,7 @@ const TRAINING_INCIDENTS = [
           p.relationships = p.relationships || { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 50 };
           p.relationships.teammates = Math.max(0, p.relationships.teammates - 5);
           return {
-            text: "You push him square in the chest. Craig narrows his eyes and swears, but the manager quickly blows the whistle to break it up. You gained +10 Morale but lost -5 Teammate Chemistry. Craig won't forget this.",
+            text: "You push him square in the chest. Craig narrows his eyes and swears, but the manager quickly blows the whistle to break it up. You gained +10 Morale but lost -5 Teammate Chemistry.",
             player: p
           };
         }
@@ -60,7 +55,7 @@ const TRAINING_INCIDENTS = [
           p.relationships.teammates = Math.min(100, p.relationships.teammates + 6);
           if (p.attributes) p.attributes.composure = Math.min(99, p.attributes.composure + 0.5);
           return {
-            text: "You ignore the bait, spring up, and offer Craig a hand. He grunts and pulls you up. On the very next play, you slide-tackle cleanly to win the ball back. Assistant Coach Davies nods: 'Brilliant reaction, lad.' Gained +8 Manager Trust and +6 Teammate relationship.",
+            text: "You ignore the bait, spring up, and offer Craig a hand. On the very next play, you slide-tackle cleanly to win the ball back. Assistant Coach Davies nods: 'Brilliant reaction, lad.' Gained +8 Manager Trust and +6 Teammate relationship.",
             player: p
           };
         }
@@ -72,7 +67,7 @@ const TRAINING_INCIDENTS = [
           p.fatigue = Math.max(0, p.fatigue - 8);
           p.morale = Math.max(0, p.morale - 5);
           return {
-            text: "You lie on the grass for a few seconds to let the pain subside. Your teammate Marcus runs over to check on you. You saved some physical strain (-8% Fatigue) but lost -5 Morale as the veterans chuck some banter at your expense.",
+            text: "You lie on the grass for a few seconds to let the pain subside. You saved physical strain (-8% Fatigue) but lost -5 Morale as the veterans banter.",
             player: p
           };
         }
@@ -92,7 +87,7 @@ const TRAINING_INCIDENTS = [
           p.reputation.league = Math.min(100, p.reputation.league + 15);
           p.trust = Math.max(0, p.trust - 10);
           return {
-            text: "You grab a bag of balls and unleash five absolute screamers into the top corner. The scout is seen writing frantically. However, your manager yells from the bench: 'Get inside, stop wasting energy!' Gained +15 League Reputation but lost -10 Manager Trust for showboating.",
+            text: "You grab a bag of balls and unleash five absolute screamers into the top corner. Gained +15 League Reputation but lost -10 Manager Trust for showboating.",
             player: p
           };
         }
@@ -104,7 +99,7 @@ const TRAINING_INCIDENTS = [
           p.trust = Math.min(100, p.trust + 12);
           if (p.attributes) p.attributes.positioning = Math.min(99, p.attributes.positioning + 0.4);
           return {
-            text: "You ignore the distraction and work twice as hard to stay in your defensive block. Your manager pulls you aside in the corridor: 'Love the work ethic today, son. That's real professional discipline.' Gained +12 Manager Trust and +0.4 Positioning.",
+            text: "You ignore the distraction and work twice as hard. Your manager pulls you aside: 'Love the work ethic today, son.' Gained +12 Manager Trust and +0.4 Positioning.",
             player: p
           };
         }
@@ -114,7 +109,7 @@ const TRAINING_INCIDENTS = [
   {
     id: "inc_freestyle_bet",
     title: "⚽ Locker Room Freestyle",
-    description: "The team is huddled around a bench playing two-touch soccer-tennis. Winger Jordan Cole smirks: 'A hundred quid says the new boy can't complete five around-the-world juggles in a row. You up for a flutter, kid?'",
+    description: "The team is huddled around a bench playing soccer-tennis. Winger Jordan Cole smirks: 'A hundred quid says the new boy can't complete five around-the-world juggles in a row. You up for a flutter, kid?'",
     choices: [
       {
         text: "Accept the wager (£100 bet)",
@@ -122,19 +117,21 @@ const TRAINING_INCIDENTS = [
         effect: (p: any) => {
           const hasSkill = (p.attributes?.dribbling || 50) > 60 || p.backstory === "STREET_PRODIGY";
           if (hasSkill) {
-            p.finances = (p.finances || 0) + 100;
+            p.finances = p.finances || { balance: 0, expenses: { housing: 0, training: 0, lifestyle: 0, family: 0 } };
+            p.finances.balance = (p.finances.balance || 0) + 100;
             p.morale = Math.min(100, p.morale + 15);
             p.relationships = p.relationships || { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 50 };
             p.relationships.teammates = Math.min(100, p.relationships.teammates + 10);
             return {
-              text: "You flick the ball up and effortlessly reel off five around-the-world flicks. The room goes absolutely wild! Marcus pours water on your head in celebration. You win £100 and gain +10 Teammate relationship and +15 Morale.",
+              text: "You flick the ball up and effortlessly reel off five around-the-world flicks. The room goes wild! You win £100, +10 Teammate relationship, and +15 Morale.",
               player: p
             };
           } else {
-            p.finances = Math.max(-10000, (p.finances || 0) - 100);
+            p.finances = p.finances || { balance: 0, expenses: { housing: 0, training: 0, lifestyle: 0, family: 0 } };
+            p.finances.balance = (p.finances.balance || 0) - 100;
             p.morale = Math.max(0, p.morale - 8);
             return {
-              text: "You drop the ball on the third juggle! The squad erupts in laughter and roasts you. You pay Jordan Cole £100 and suffer a minor knock to your confidence (-8 Morale).",
+              text: "You drop the ball on the third juggle! The squad roasts you. You lose £100 and -8 Morale.",
               player: p
             };
           }
@@ -147,7 +144,7 @@ const TRAINING_INCIDENTS = [
           p.fatigue = Math.max(0, p.fatigue - 8);
           if (p.attributes) p.attributes.composure = Math.min(99, p.attributes.composure + 0.5);
           return {
-            text: "You roll your eyes, grab your towel, and head out. 'Suit yourself, boring!' Cole yells. You avoid any locker room drama and recover your muscles (-8% Fatigue).",
+            text: "You grab your towel and head out. You avoid any drama and recover muscle fatigue (-8% Fatigue).",
             player: p
           };
         }
@@ -156,736 +153,1169 @@ const TRAINING_INCIDENTS = [
   }
 ];
 
+// DRILL CONFIGURATIONS
+interface DrillConfig {
+  id: 'SHOOTING' | 'PASSING' | 'DRIBBLING' | 'TACKLING';
+  name: string;
+  category: string;
+  icon: any;
+  color: string;
+  accentBg: string;
+  borderColor: string;
+  targetStats: { key: keyof Attributes; label: string }[];
+  description: string;
+  minigameType: 'TIMING' | 'SEQUENCE' | 'DODGE' | 'HOLD_RELEASE';
+  instructions: string;
+}
+
+const DRILL_CONFIGS: DrillConfig[] = [
+  {
+    id: 'SHOOTING',
+    name: 'Precision Finishing',
+    category: 'Attack & Power',
+    icon: Target,
+    color: '#00FF88',
+    accentBg: 'bg-[#00FF88]/10',
+    borderColor: 'border-[#00FF88]/30',
+    targetStats: [
+      { key: 'finishing', label: 'Finishing' },
+      { key: 'composure', label: 'Composure' }
+    ],
+    description: 'Time your strike inside the green target zone for maximum power and corner placement.',
+    minigameType: 'TIMING',
+    instructions: 'Press STRIKE when the oscillating indicator reaches the central GREEN target zone!'
+  },
+  {
+    id: 'PASSING',
+    name: 'Vision & Passing Matrix',
+    category: 'Playmaking & Vision',
+    icon: Zap,
+    color: '#3B82F6',
+    accentBg: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+    targetStats: [
+      { key: 'passing', label: 'Passing' },
+      { key: 'vision', label: 'Vision' }
+    ],
+    description: 'Memorize and execute rapid directional passing sequences under intense pressure.',
+    minigameType: 'SEQUENCE',
+    instructions: 'Tap the arrow directional controls in exact sequence before the time limit expires!'
+  },
+  {
+    id: 'DRIBBLING',
+    name: 'Slalom Dribble & Reflex',
+    category: 'Agility & Pace',
+    icon: Activity,
+    color: '#F59E0B',
+    accentBg: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+    targetStats: [
+      { key: 'dribbling', label: 'Dribbling' },
+      { key: 'pace', label: 'Pace' }
+    ],
+    description: 'React rapidly to slalom cones and tackle challenges by dodging left, straight, or right.',
+    minigameType: 'DODGE',
+    instructions: 'React and dodge to the correct clear lane (Left, Center, or Right) as cones approach!'
+  },
+  {
+    id: 'TACKLING',
+    name: 'Last-Man Slide Tackle',
+    category: 'Defense & Physical',
+    icon: Shield,
+    color: '#EC4899',
+    accentBg: 'bg-pink-500/10',
+    borderColor: 'border-pink-500/30',
+    targetStats: [
+      { key: 'tackling', label: 'Tackling' },
+      { key: 'positioning', label: 'Positioning' }
+    ],
+    description: 'Charge up your tackle power gauge and execute a clean slide tackle without fouling.',
+    minigameType: 'HOLD_RELEASE',
+    instructions: 'Press and hold TACKLE to charge power, then release inside the green Sweet Spot!'
+  }
+];
+
+type ArrowDir = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+const ALL_DIRECTIONS: ArrowDir[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+
 export function Training() {
- const { state, setPlayer, advanceDay, setScreen } = useGame();
+  const { state, setPlayer, setScreen } = useGame();
 
- const [selectedCategory, setSelectedCategory] = useState<"UNIVERSAL" | "POSITION" | "MENTAL">("UNIVERSAL");
- const [selectedGame, setSelectedGame] = useState<MinigameConfig | null>(null);
- const [intensity, setIntensity] = useState<IntensityLevel>("Standard");
+  // Group Training session state
+  const [isGroupSessionActive, setIsGroupSessionActive] = useState<boolean>(false);
+  const [groupStep, setGroupStep] = useState<number>(1);
+  const [groupResults, setGroupResults] = useState<number[]>([]);
+  const [showPostResult, setShowPostResult] = useState<boolean>(false);
+  const [lastDeltas, setLastDeltas] = useState<{ attr: string; gain: number | string }[]>([]);
 
- // Minigame arcade session state
- const [activeEngine, setActiveEngine] = useState<string | null>(null);
- const [error, setError] = useState<string | null>(null);
- const [sessionRep, setSessionRep] = useState<number>(1);
- const TOTAL_REPS = 3;
- const [repScores, setRepScores] = useState<number[]>([]); // 1 to 3 rating per rep
- const [showPostResult, setShowPostResult] = useState<boolean>(false);
- const [lastDeltas, setLastDeltas] = useState<{ attr: string; gain: number }[]>([]);
+  // Story incidents & Retraining
+  const [activeIncident, setActiveIncident] = useState<any | null>(null);
+  const [showRetrainModal, setShowRetrainModal] = useState<boolean>(false);
+  const [retrainError, setRetrainError] = useState<string | null>(null);
 
- // Arcade Interactive States
- const [reactionTriggered, setReactionTriggered] = useState<boolean>(false);
- const [reactionStartTime, setReactionStartTime] = useState<number>(0);
- const [timingPos, setTimingPos] = useState<number>(0); // 0 to 100
- const [timingDir, setTimingDir] = useState<number>(1);
- const [dirChoiceIndex, setDirChoiceIndex] = useState<number>(0);
- const [targetReticlePos, setTargetReticlePos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
- const [holdCharge, setHoldCharge] = useState<number>(0);
- const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Individual Minigame State
+  const [activeDrill, setActiveDrill] = useState<DrillConfig | null>(null);
+  const [drillIntensity, setDrillIntensity] = useState<'LIGHT' | 'STANDARD' | 'INTENSE'>('STANDARD');
+  
+  // Minigame Runtime States
+  const [repIndex, setRepIndex] = useState<number>(1);
+  const [repScores, setRepScores] = useState<number[]>([]);
+  const [repFeedback, setRepFeedback] = useState<string | null>(null);
+  
+  // Timing / Gauge Oscillator state
+  const [gaugePos, setGaugePos] = useState<number>(0);
+  const [gaugeDir, setGaugeDir] = useState<number>(1);
+  const [isHoldingGauge, setIsHoldingGauge] = useState<boolean>(false);
 
- // Group Training session state
- const [isGroupSessionActive, setIsGroupSessionActive] = useState<boolean>(false);
- const [groupStep, setGroupStep] = useState<number>(1);
- const [groupResults, setGroupResults] = useState<number[]>([]);
+  // Sequence state
+  const [targetSequence, setTargetSequence] = useState<ArrowDir[]>([]);
+  const [userSequence, setUserSequence] = useState<ArrowDir[]>([]);
+  const [sequenceTimer, setSequenceTimer] = useState<number>(4.0);
 
- // Story incidents & Retraining
- const [activeIncident, setActiveIncident] = useState<any | null>(null);
- const [showRetrainModal, setShowRetrainModal] = useState<boolean>(false);
- const [retrainError, setRetrainError] = useState<string | null>(null);
+  // Dodge state
+  const [targetLane, setTargetLane] = useState<'LEFT' | 'CENTER' | 'RIGHT'>('CENTER');
+  const [dodgeTimer, setDodgeTimer] = useState<number>(2.5);
 
- if (!state.player) return null;
+  const gaugeAnimationRef = useRef<number | null>(null);
 
- const weeklySessions = state.player.training?.weeklySessions || {
-  clubOrganized: 0,
-  individual: 0,
-  recovery: 0,
-  trainingMatch: 0
- };
+  if (!state.player) return null;
 
- const currentFatigue = state.player.fatigue || 0;
- const currentSharpness = state.player.sharpness || 0;
- const isOvertrained = currentFatigue > 70;
- const isSpent = currentFatigue > 90;
-
- // Filter positional minigames
- const posGames = POSITION_MINIGAMES.filter((g) => {
-  const p = state.player!;
-  if (g.category === "GK" && p.position === "GK") return true;
-  if (g.category === "CB" && p.position === "CB") return true;
-  if (g.category === "LB" && (p.position === "LB" || p.position === "RB" || p.position === "LWB" || p.position === "RWB")) return true;
-  if (g.category === "CM" && p.position === "CM" && p.subPosition !== "Defensive Midfielder") return true;
-  if (g.category === "DM" && p.position === "CM" && p.subPosition === "Defensive Midfielder") return true;
-  if (g.category === "AM" && p.position === "AM" && p.subPosition !== "Shadow Striker") return true;
-  if (g.category === "SS" && (p.subPosition === "Shadow Striker" || p.subPosition === "Deep-Lying Forward")) return true;
-  if (g.category === "LW" && (p.position === "LW" || p.position === "RW" || p.position === "LM" || p.position === "RM")) return true;
-  if (g.category === "ST" && p.position === "ST") return true;
-  return false;
- });
-
- const availableGames = selectedCategory === "UNIVERSAL" ? UNIVERSAL_MINIGAMES : selectedCategory === "MENTAL" ? MENTAL_MINIGAMES : posGames;
-
- // Determine minigame interaction type mapped from engine or id
- const getMinigameInteractionType = (game: MinigameConfig): 'REACTION' | 'TIMING' | 'DIRECTIONAL' | 'RETICLE' | 'HOLD' => {
-  if (game.engine === 'TIMING') return 'TIMING';
-  if (game.engine === 'DECISION') return 'DIRECTIONAL';
-  if (game.engine === 'SEQUENCE') return 'REACTION';
-  if (game.id.includes('SHOT') || game.id.includes('FINISH')) return 'RETICLE';
-  if (game.id.includes('HOLD') || game.id.includes('AERIAL') || game.id.includes('STRENGTH')) return 'HOLD';
-  return 'TIMING';
- };
-
- // Start Individual Training Minigame
- const handleStartMinigame = (game: MinigameConfig) => {
-  if (isSpent && game.engine !== 'RECOVERY') {
-   setError("YOUR BODY IS SPENT (Fatigue > 90%). You must choose a Recovery session or rest.");
-   return;
-  }
-  if (weeklySessions.individual >= 3 && game.engine !== 'RECOVERY') {
-   setError("WEEKLY LIMIT REACHED: You have completed all 3 individual slots for this week.");
-   return;
-  }
-  if (game.engine === 'RECOVERY' && weeklySessions.recovery >= 1) {
-   setError("WEEKLY LIMIT REACHED: You can only perform 1 recovery session per week.");
-   return;
-  }
-
-  setSelectedGame(game);
-  setSessionRep(1);
-  setRepScores([]);
-  setError(null);
-
-  if (game.engine === 'RECOVERY') {
-   applyRecoverySession();
-   return;
-  }
-
-  setActiveEngine(getMinigameInteractionType(game));
-  initRepInteraction(getMinigameInteractionType(game));
- };
-
- const initRepInteraction = (type: string) => {
-  if (type === 'REACTION') {
-   setReactionTriggered(false);
-   const delay = 1000 + Math.random() * 1500;
-   setTimeout(() => {
-    setReactionTriggered(true);
-    setReactionStartTime(Date.now());
-   }, delay);
-  } else if (type === 'TIMING') {
-   setTimingPos(0);
-   setTimingDir(1);
-  } else if (type === 'DIRECTIONAL') {
-   setDirChoiceIndex(Math.floor(Math.random() * 3));
-  } else if (type === 'RETICLE') {
-   setTargetReticlePos({ x: Math.floor(Math.random() * 60) + 20, y: Math.floor(Math.random() * 60) + 20 });
-  } else if (type === 'HOLD') {
-   setHoldCharge(0);
-  }
- };
-
- // Timing bar tick
- useEffect(() => {
-  if (activeEngine !== 'TIMING') return;
-  const interval = setInterval(() => {
-   setTimingPos((prev) => {
-    let next = prev + 3 * timingDir;
-    if (next >= 100 || next <= 0) setTimingDir((d) => -d);
-    return Math.max(0, Math.min(100, next));
-   });
-  }, 30);
-  return () => clearInterval(interval);
- }, [activeEngine, timingDir]);
-
- const handleInteractionAction = (actionScore: number) => {
-  const updatedScores = [...repScores, actionScore];
-  setRepScores(updatedScores);
-
-  if (sessionRep < TOTAL_REPS) {
-   setSessionRep((r) => r + 1);
-   initRepInteraction(activeEngine!);
-  } else {
-   finalizeIndividualSession(updatedScores);
-  }
- };
-
- const finalizeIndividualSession = (scores: number[]) => {
-  const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const isFlowState = scores.every((s) => s >= 2);
-
-  const player = { ...state.player! };
-  player.training = player.training || {
-   weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
-   sessionHistory: [],
-   trainingMatchHistory: []
+  const weeklySessions = state.player.training?.weeklySessions || {
+    clubOrganized: 0,
+    individual: 0,
+    recovery: 0,
+    trainingMatch: 0
   };
-  player.training.weeklySessions.individual = (player.training.weeklySessions.individual || 0) + 1;
 
-  // Fatigue & Recovery Cost
-  const baseFatigueCost = intensity === 'Light' ? 6 : intensity === 'Standard' ? 12 : 18;
-  const age = player.age || 19;
-  const ageMulti = age < 21 ? 0.8 : age > 30 ? 1.3 : 1.0;
-  const totalFatigue = Math.round(baseFatigueCost * ageMulti);
-  player.fatigue = Math.min(100, (player.fatigue || 0) + totalFatigue);
-  player.sharpness = Math.min(100, (player.sharpness || 0) + 4);
+  const currentFatigue = state.player.fatigue || 0;
+  const currentSharpness = state.player.sharpness || 0;
 
-  // Calculate Stat Gains using CoreFormulas
-  const targetAttrs = selectedGame?.targetAttributes || ['passing', 'composure'];
-  const deltas: { attr: string; gain: number }[] = [];
-
-  targetAttrs.forEach((attrKey) => {
-   if (player.attributes && attrKey in player.attributes) {
-    const currentVal = player.attributes[attrKey as keyof Attributes] as number;
-    const baseGain = intensity === 'Light' ? 0.2 : intensity === 'Standard' ? 0.4 : 0.6;
-    const performanceMultiplier = avgScore >= 2.5 ? 1.3 : avgScore >= 1.8 ? 1.0 : 0.6;
-    const flowMultiplier = isFlowState ? 1.25 : 1.0;
-
-    const calculatedGain = CoreFormulas.calculateTrainingGain(
-     baseGain * performanceMultiplier * flowMultiplier,
-     currentVal,
-     85,
-     player.age,
-     (player.difficulty as any) || 'STANDARD',
-     false
-    );
-
-    if (calculatedGain > 0) {
-     const roundedGain = Math.round(calculatedGain * 10) / 10;
-     (player.attributes as any)[attrKey] = Math.min(99, currentVal + roundedGain);
-     deltas.push({ attr: attrKey, gain: roundedGain });
+  // ==========================================
+  // MINIGAME LAUNCH & LOGIC
+  // ==========================================
+  const startMinigame = (drill: DrillConfig) => {
+    if (weeklySessions.individual >= 3) {
+      alert("You have reached your 3 individual training sessions limit for this week!");
+      return;
     }
-   }
-  });
-
-  setLastDeltas(deltas);
-  setShowPostResult(true);
-  setActiveEngine(null);
-  setPlayer(player);
- };
-
- const applyRecoverySession = () => {
-  const player = { ...state.player! };
-  player.training = player.training || {
-   weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
-   sessionHistory: [],
-   trainingMatchHistory: []
+    setActiveDrill(drill);
+    setRepIndex(1);
+    setRepScores([]);
+    setRepFeedback(null);
+    initRepState(drill, 1);
   };
-  player.training.weeklySessions.recovery = 1;
-  player.fatigue = Math.max(0, (player.fatigue || 0) - 20);
-  player.sharpness = Math.max(0, (player.sharpness || 0) - 5);
-  setPlayer(player);
-  setLastDeltas([]);
-  setShowPostResult(true);
- };
 
- // Group Training Session Handler
- const startGroupSession = () => {
-  if (weeklySessions.clubOrganized >= 1) {
-   setError("Group Training has already been completed for this week.");
-   return;
-  }
-  setIsGroupSessionActive(true);
-  setGroupStep(1);
-  setGroupResults([]);
- };
+  const initRepState = (drill: DrillConfig, repNum: number) => {
+    setRepFeedback(null);
+    setGaugePos(10);
+    setGaugeDir(1);
+    setIsHoldingGauge(false);
 
- const handleGroupStepAction = (score: number) => {
-  const nextRes = [...groupResults, score];
-  setGroupResults(nextRes);
-  if (groupStep < 3) {
-   setGroupStep((s) => s + 1);
-  } else {
-   finalizeGroupSession(nextRes);
-  }
- };
-
- const finalizeGroupSession = (res: number[]) => {
-  const avg = res.reduce((a, b) => a + b, 0) / res.length;
-  const player = { ...state.player! };
-  player.training = player.training || {
-   weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
-   sessionHistory: [],
-   trainingMatchHistory: []
+    if (drill.minigameType === 'SEQUENCE') {
+      const len = 3 + repNum; // length 4, 5, 6
+      const seq: ArrowDir[] = [];
+      for (let i = 0; i < len; i++) {
+        seq.push(ALL_DIRECTIONS[Math.floor(Math.random() * ALL_DIRECTIONS.length)]);
+      }
+      setTargetSequence(seq);
+      setUserSequence([]);
+      setSequenceTimer(3.5 + repNum * 0.5);
+    } else if (drill.minigameType === 'DODGE') {
+      const lanes: ('LEFT' | 'CENTER' | 'RIGHT')[] = ['LEFT', 'CENTER', 'RIGHT'];
+      setTargetLane(lanes[Math.floor(Math.random() * lanes.length)]);
+      setDodgeTimer(2.0 - repNum * 0.3);
+    }
   };
-  player.training.weeklySessions.clubOrganized = 1;
 
-  // Manager Trust & Chemistry Impact based on Manager Personality
-  const managerPersonality = player.managerInfo?.personality || 'Pragmatic';
-  let trustDelta = avg >= 2.5 ? 6 : avg >= 1.8 ? 3 : -4;
-  if (managerPersonality === 'Demanding' && avg < 2) trustDelta -= 3;
-  if (managerPersonality === 'Nurturing' && avg >= 2) trustDelta += 2;
+  // Oscillating gauge effect for TIMING and HOLD_RELEASE
+  useEffect(() => {
+    if (!activeDrill) return;
+    if (activeDrill.minigameType !== 'TIMING' && activeDrill.minigameType !== 'HOLD_RELEASE') return;
+    if (repFeedback) return;
 
-  player.trust = Math.max(0, Math.min(100, (player.trust || 50) + trustDelta));
-  player.relationships = player.relationships || { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 50 };
-  player.relationships.teammates = Math.max(0, Math.min(100, (player.relationships.teammates || 50) + (avg >= 2 ? 5 : -3)));
-  player.fatigue = Math.min(100, (player.fatigue || 0) + 10);
-  player.sharpness = Math.min(100, (player.sharpness || 0) + 8);
+    const speed = (activeDrill.minigameType === 'TIMING' ? 1.4 : 1.1) + repIndex * 0.2;
 
-  setPlayer(player);
-  setIsGroupSessionActive(false);
-  setLastDeltas([{ attr: 'Squad Cohesion & Manager Trust', gain: trustDelta }]);
-  setShowPostResult(true);
- };
+    const interval = setInterval(() => {
+      setGaugePos((prev) => {
+        let next = prev + gaugeDir * speed * 2;
+        if (next >= 95) {
+          setGaugeDir(-1);
+          next = 95;
+        } else if (next <= 5) {
+          setGaugeDir(1);
+          next = 5;
+        }
+        return next;
+      });
+    }, 20);
 
- return (
-  <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] text-white p-6 overflow-y-auto hide-scrollbar">
-   {/* Header */}
-   <div className="flex justify-between items-center pb-6 border-b border-white/10 mb-6">
-    <div className="flex items-center gap-4">
-     <button onClick={() => setScreen('HUB')} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 transition-colors">
-      <ArrowLeft size={18} />
-     </button>
-     <div>
-      <h1 className="text-xl font-black uppercase tracking-wider text-white">Training Center & Drills</h1>
-      <p className="text-xs text-white/50 font-mono mt-0.5">Master your position, build manager trust, and manage physical load.</p>
-     </div>
-    </div>
+    return () => clearInterval(interval);
+  }, [activeDrill, gaugeDir, repIndex, repFeedback]);
 
-    {/* Condition Badges */}
-    <div className="flex items-center gap-3">
-     <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
-      <div>
-       <span className="text-[9px] font-mono text-white/40 uppercase block"><GlossaryTooltip term="Fatigue">Fatigue</GlossaryTooltip></span>
-       <span className={`text-sm font-bold font-mono ${currentFatigue > 80 ? 'text-red-400' : currentFatigue > 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
-        {currentFatigue}%
-       </span>
-      </div>
-      <div className="w-px h-6 bg-white/10"></div>
-      <div>
-       <span className="text-[9px] font-mono text-white/40 uppercase block"><GlossaryTooltip term="Match Sharpness">Sharpness</GlossaryTooltip></span>
-       <span className="text-sm font-bold font-mono text-emerald-400">{currentSharpness}%</span>
-      </div>
-     </div>
-    </div>
-   </div>
+  // Timer countdown for SEQUENCE
+  useEffect(() => {
+    if (!activeDrill || activeDrill.minigameType !== 'SEQUENCE' || repFeedback) return;
 
-   {/* ACTIVE MINIGAME ARCADE MODAL */}
-   {activeEngine && selectedGame && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-     <div className="premium-card w-full max-w-lg border border-white/15 rounded-2xl p-6 bg-[#121216] shadow-2xl flex flex-col items-center text-center">
-      <div className="w-full flex justify-between items-center mb-4 border-b border-white/10 pb-3">
-       <div>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#00FF88]">
-         Rep {sessionRep} of {TOTAL_REPS} &bull; {selectedGame.title}
-        </span>
-        <h3 className="text-lg font-black uppercase tracking-wider text-white mt-0.5">{selectedGame.title}</h3>
-       </div>
-       <button onClick={() => setActiveEngine(null)} className="text-white/40 hover:text-white text-xs font-mono">Cancel</button>
-      </div>
+    const interval = setInterval(() => {
+      setSequenceTimer((prev) => {
+        if (prev <= 0.1) {
+          handleSequenceTimeout();
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
 
-      {/* 1. REACTION CHECK ENGINE */}
-      {activeEngine === 'REACTION' && (
-       <div className="py-12 flex flex-col items-center justify-center w-full">
-        {!reactionTriggered ? (
-         <div className="text-white/50 font-mono text-sm animate-pulse">Get ready... Watch for the green flash!</div>
-        ) : (
-         <button
-          onClick={() => {
-           const timeTaken = Date.now() - reactionStartTime;
-           const score = timeTaken < 300 ? 3 : timeTaken < 500 ? 2 : 1;
-           handleInteractionAction(score);
-          }}
-          className="w-36 h-36 rounded-full bg-[#00FF88] text-black font-black text-sm uppercase tracking-widest shadow-[0_0_30px_rgba(0,255,136,0.6)] animate-bounce cursor-pointer flex items-center justify-center"
-         >
-          TAP NOW!
-         </button>
-        )}
-       </div>
-      )}
+    return () => clearInterval(interval);
+  }, [activeDrill, repFeedback]);
 
-      {/* 2. TIMING BAR ENGINE */}
-      {activeEngine === 'TIMING' && (
-       <div className="py-10 flex flex-col items-center justify-center w-full gap-6">
-        <p className="text-xs text-white/60 font-mono">Stop the indicator inside the green sweet spot zone!</p>
-        <div className="w-full bg-white/10 h-8 rounded-full relative overflow-hidden border border-white/20">
-         <div className="absolute top-0 bottom-0 left-[45%] w-[15%] bg-emerald-500/40 border-x border-emerald-400"></div>
-         <div className="absolute top-0 bottom-0 w-3 bg-white rounded shadow" style={{ left: `${timingPos}%` }}></div>
-        </div>
-        <button
-         onClick={() => {
-          const score = timingPos >= 45 && timingPos <= 60 ? 3 : timingPos >= 35 && timingPos <= 70 ? 2 : 1;
-          handleInteractionAction(score);
-         }}
-         className="bg-white hover:bg-gray-200 text-black font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg"
-        >
-         STOP INDICATOR
-        </button>
-       </div>
-      )}
+  // Timer countdown for DODGE
+  useEffect(() => {
+    if (!activeDrill || activeDrill.minigameType !== 'DODGE' || repFeedback) return;
 
-      {/* 3. DIRECTIONAL CHOICE ENGINE */}
-      {activeEngine === 'DIRECTIONAL' && (
-       <div className="py-8 flex flex-col items-center justify-center w-full gap-4">
-        <p className="text-xs text-white/60 font-mono mb-2">Select the optimal tactical passing/movement option under pressure:</p>
-        <div className="grid grid-cols-1 gap-3 w-full">
-         {[
-          { text: "Quick one-two into central channel", lane: 0 },
-          { text: "Switch play to advancing winger", lane: 1 },
-          { text: "Shield and recycle possession safely", lane: 2 }
-         ].map((opt, idx) => (
-          <button
-           key={idx}
-           onClick={() => {
-            const score = opt.lane === dirChoiceIndex ? 3 : 1;
-            handleInteractionAction(score);
-           }}
-           className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#00FF88]/15 hover:border-[#00FF88] text-left text-xs font-mono font-bold text-white transition-all flex items-center justify-between"
-          >
-           <span>{opt.text}</span>
-           <span className="text-[10px] text-white/40 uppercase">Option {idx + 1}</span>
+    const interval = setInterval(() => {
+      setDodgeTimer((prev) => {
+        if (prev <= 0.1) {
+          handleDodgeChoice('NONE');
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [activeDrill, repFeedback]);
+
+  // ==========================================
+  // ACTION HANDLERS FOR DRILLS
+  // ==========================================
+  // 1. TIMING DRILL ACTION (Shooting)
+  const handleTimingStrike = () => {
+    if (repFeedback) return;
+
+    // Sweet spot is 42 to 58
+    const distFromCenter = Math.abs(gaugePos - 50);
+    let pts = 0;
+    let label = '';
+
+    if (distFromCenter <= 8) {
+      pts = 10;
+      label = '🎯 PERFECT TOP CORNER! (+10)';
+    } else if (distFromCenter <= 18) {
+      pts = 7;
+      label = '⚽ GREAT STRIKE! (+7)';
+    } else if (distFromCenter <= 30) {
+      pts = 4;
+      label = '🥅 ON TARGET (+4)';
+    } else {
+      pts = 1;
+      label = '💨 WIDE / SAVED (+1)';
+    }
+
+    processRepScore(pts, label);
+  };
+
+  // 2. HOLD & RELEASE TACKLE ACTION
+  const handleTackleRelease = () => {
+    if (repFeedback) return;
+
+    // Sweet spot for tackle power is 65 to 85
+    let pts = 0;
+    let label = '';
+
+    if (gaugePos >= 68 && gaugePos <= 84) {
+      pts = 10;
+      label = '🛡️ PERFECT TIMED TACKLE! (+10)';
+    } else if ((gaugePos >= 52 && gaugePos < 68) || (gaugePos > 84 && gaugePos <= 92)) {
+      pts = 6;
+      label = '⚡ POKED CLEAR! (+6)';
+    } else if (gaugePos > 92) {
+      pts = 0;
+      label = '🚨 OVERCOMMITTED / FOUL! (+0)';
+    } else {
+      pts = 2;
+      label = '⚠️ WEAK TACKLE (+2)';
+    }
+
+    processRepScore(pts, label);
+  };
+
+  // 3. SEQUENCE DRILL ACTION (Passing)
+  const handleSequenceInput = (dir: ArrowDir) => {
+    if (repFeedback || !activeDrill) return;
+
+    const newSeq = [...userSequence, dir];
+    setUserSequence(newSeq);
+
+    const step = newSeq.length - 1;
+    if (newSeq[step] !== targetSequence[step]) {
+      // Wrong key!
+      processRepScore(1, '❌ MISPLACED PASS! (+1)');
+      return;
+    }
+
+    if (newSeq.length === targetSequence.length) {
+      // Completed correctly!
+      const timeBonus = sequenceTimer > 1.5 ? 3 : 0;
+      const totalPts = 7 + timeBonus;
+      processRepScore(totalPts, `⚡ FLAWLESS PASSING SEQUENCE! (+${totalPts})`);
+    }
+  };
+
+  const handleSequenceTimeout = () => {
+    if (repFeedback) return;
+    processRepScore(0, '⏰ TIMED OUT / INTERCEPTED! (+0)');
+  };
+
+  // 4. DODGE DRILL ACTION (Dribbling)
+  const handleDodgeChoice = (lane: 'LEFT' | 'CENTER' | 'RIGHT' | 'NONE') => {
+    if (repFeedback) return;
+
+    if (lane === targetLane) {
+      const isFast = dodgeTimer > 0.8;
+      const pts = isFast ? 10 : 7;
+      const msg = isFast ? '🔥 LIGHTNING NUTMEG & FLICK! (+10)' : '⚡ CLEAN SLALOM DODGE! (+7)';
+      processRepScore(pts, msg);
+    } else {
+      processRepScore(1, '💥 COLLISION / LOST CONTROL (+1)');
+    }
+  };
+
+  // Process rep score and advance or finalize
+  const processRepScore = (pts: number, msg: string) => {
+    const updated = [...repScores, pts];
+    setRepScores(updated);
+    setRepFeedback(msg);
+
+    setTimeout(() => {
+      if (repIndex < 3) {
+        const nextRep = repIndex + 1;
+        setRepIndex(nextRep);
+        initRepState(activeDrill!, nextRep);
+      } else {
+        finalizeMinigame(updated);
+      }
+    }, 1200);
+  };
+
+  // Finalize Drill Session & Compute Gains
+  const finalizeMinigame = (scores: number[]) => {
+    const totalScore = scores.reduce((a, b) => a + b, 0); // max 30
+    const player = { ...state.player! };
+
+    // Intensity Multipliers
+    let fatigueAdd = 8;
+    let sharpnessAdd = 6;
+    let gainMult = 1.0;
+
+    if (drillIntensity === 'LIGHT') {
+      fatigueAdd = 5;
+      sharpnessAdd = 4;
+      gainMult = 0.7;
+    } else if (drillIntensity === 'INTENSE') {
+      fatigueAdd = 14;
+      sharpnessAdd = 10;
+      gainMult = 1.35;
+    }
+
+    // Performance grade rating
+    let grade = 'C';
+    let baseGain = 0.2;
+    if (totalScore >= 25) {
+      grade = 'A+';
+      baseGain = 0.6;
+    } else if (totalScore >= 18) {
+      grade = 'A';
+      baseGain = 0.45;
+    } else if (totalScore >= 12) {
+      grade = 'B';
+      baseGain = 0.3;
+    }
+
+    // Calculate actual stat gains
+    const deltas: { attr: string; gain: number | string }[] = [];
+    const difficultyTier = 'STANDARD';
+
+    player.attributes = { ...player.attributes };
+
+    activeDrill!.targetStats.forEach((st) => {
+      const currentVal = player.attributes[st.key] || 50;
+      const calcGain = CoreFormulas.calculateTrainingGain(
+        baseGain * gainMult,
+        currentVal,
+        (player as any).potential || 85,
+        player.age,
+        difficultyTier as any
+      );
+      const roundedGain = Math.round(calcGain * 10) / 10;
+      player.attributes[st.key] = Math.min(99, currentVal + roundedGain);
+      deltas.push({ attr: st.label, gain: roundedGain });
+    });
+
+    // Recalculate OVR
+    player.ovr = CoreFormulas.calculateOVR(player.attributes, player.position);
+
+    // Update physical status & weekly session counter
+    player.fatigue = Math.min(100, (player.fatigue || 0) + fatigueAdd);
+    player.sharpness = Math.min(100, (player.sharpness || 0) + sharpnessAdd);
+
+    player.training = player.training || {
+      weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
+      sessionHistory: [],
+      trainingMatchHistory: []
+    };
+    player.training.weeklySessions.individual = (player.training.weeklySessions.individual || 0) + 1;
+
+    deltas.push({ attr: 'Drill Grade', gain: grade });
+    deltas.push({ attr: 'Fatigue Load', gain: `+${fatigueAdd}%` });
+    deltas.push({ attr: 'Match Sharpness', gain: `+${sharpnessAdd}%` });
+
+    setPlayer(player);
+    setActiveDrill(null);
+    setLastDeltas(deltas);
+    setShowPostResult(true);
+  };
+
+  // RECOVERY SESSION HANDLER
+  const handleRecoverySession = () => {
+    if (weeklySessions.individual >= 3) {
+      alert("You have reached your 3 individual training slots for this week!");
+      return;
+    }
+    const player = { ...state.player! };
+    player.fatigue = Math.max(0, (player.fatigue || 0) - 22);
+    player.sharpness = Math.min(100, (player.sharpness || 0) + 2);
+
+    player.training = player.training || {
+      weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
+      sessionHistory: [],
+      trainingMatchHistory: []
+    };
+    player.training.weeklySessions.individual = (player.training.weeklySessions.individual || 0) + 1;
+
+    setPlayer(player);
+    setLastDeltas([
+      { attr: 'Fatigue Restored', gain: '-22%' },
+      { attr: 'Condition Status', gain: 'Muscles Fully Refreshed' }
+    ]);
+    setShowPostResult(true);
+  };
+
+  // Group Training Session Handler
+  const startGroupSession = () => {
+    if (weeklySessions.clubOrganized >= 1) return;
+    setIsGroupSessionActive(true);
+    setGroupStep(1);
+    setGroupResults([]);
+  };
+
+  const handleGroupStepAction = (score: number) => {
+    const nextRes = [...groupResults, score];
+    setGroupResults(nextRes);
+    if (groupStep < 3) {
+      setGroupStep((s) => s + 1);
+    } else {
+      finalizeGroupSession(nextRes);
+    }
+  };
+
+  const finalizeGroupSession = (res: number[]) => {
+    const avg = res.reduce((a, b) => a + b, 0) / res.length;
+    const player = { ...state.player! };
+    player.training = player.training || {
+      weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
+      sessionHistory: [],
+      trainingMatchHistory: []
+    };
+    player.training.weeklySessions.clubOrganized = 1;
+
+    const managerPersonality = player.managerInfo?.personality || 'Pragmatic';
+    let trustDelta = avg >= 2.5 ? 6 : avg >= 1.8 ? 3 : -4;
+    if (managerPersonality === 'Demanding' && avg < 2) trustDelta -= 3;
+    if (managerPersonality === 'Nurturing' && avg >= 2) trustDelta += 2;
+
+    player.trust = Math.max(0, Math.min(100, (player.trust || 50) + trustDelta));
+    player.relationships = player.relationships || { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 50 };
+    player.relationships.teammates = Math.max(0, Math.min(100, (player.relationships.teammates || 50) + (avg >= 2 ? 5 : -3)));
+    player.fatigue = Math.min(100, (player.fatigue || 0) + 10);
+    player.sharpness = Math.min(100, (player.sharpness || 0) + 8);
+
+    setPlayer(player);
+    setIsGroupSessionActive(false);
+    setLastDeltas([
+      { attr: 'Manager Trust', gain: trustDelta > 0 ? `+${trustDelta}` : `${trustDelta}` },
+      { attr: 'Squad Chemistry', gain: avg >= 2 ? '+5' : '-3' }
+    ]);
+    setShowPostResult(true);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] text-white p-6 overflow-y-auto hide-scrollbar">
+      {/* Top Navigation Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-white/10 mb-6 gap-4">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setScreen('HUB')} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 transition-colors border border-white/10">
+            <ArrowLeft size={18} />
           </button>
-         ))}
-        </div>
-       </div>
-      )}
-
-      {/* 4. TARGET RETICLE ENGINE */}
-      {activeEngine === 'RETICLE' && (
-       <div className="py-12 flex flex-col items-center justify-center w-full gap-6">
-        <p className="text-xs text-white/60 font-mono">Tap precisely when the target reticle flashes center!</p>
-        <div className="w-48 h-48 rounded-full border-2 border-dashed border-white/30 relative flex items-center justify-center bg-white/5">
-         <div className="absolute w-24 h-24 rounded-full border border-[#00FF88]/60 animate-ping"></div>
-         <button
-          onClick={() => {
-           handleInteractionAction(3);
-          }}
-          className="w-16 h-16 rounded-full bg-[#00FF88] text-black font-black text-[10px] uppercase shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
-         >
-          STRIKE
-         </button>
-        </div>
-       </div>
-      )}
-
-      {/* 5. HOLD & RELEASE ENGINE */}
-      {activeEngine === 'HOLD' && (
-       <div className="py-10 flex flex-col items-center justify-center w-full gap-6">
-        <p className="text-xs text-white/60 font-mono">Press and hold to charge power, release in the green zone!</p>
-        <div className="w-full bg-white/10 h-6 rounded-full relative overflow-hidden border border-white/20">
-         <div className="absolute top-0 bottom-0 left-[60%] w-[20%] bg-emerald-500/40"></div>
-         <div className="absolute top-0 bottom-0 bg-[#00FF88]" style={{ width: `${holdCharge}%` }}></div>
-        </div>
-        <button
-         onMouseDown={() => {
-          setHoldCharge(0);
-          holdIntervalRef.current = setInterval(() => {
-           setHoldCharge((prev) => Math.min(100, prev + 5));
-          }, 50);
-         }}
-         onMouseUp={() => {
-          if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
-          const score = holdCharge >= 60 && holdCharge <= 80 ? 3 : holdCharge >= 40 && holdCharge <= 90 ? 2 : 1;
-          handleInteractionAction(score);
-         }}
-         className="bg-[#00FF88] text-black font-black py-4 px-10 rounded-xl text-xs uppercase tracking-widest shadow-lg select-none"
-        >
-         HOLD & RELEASE
-        </button>
-       </div>
-      )}
-     </div>
-    </div>
-   )}
-
-   {/* GROUP TRAINING SESSION MODAL */}
-   {isGroupSessionActive && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-     <div className="premium-card w-full max-w-lg border border-blue-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl flex flex-col items-center text-center">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 mb-1">
-       Mandatory Group Session &bull; Drill {groupStep} of 3
-      </span>
-      <h3 className="text-lg font-black uppercase tracking-wider text-white mb-4">Manager Tactical Drill</h3>
-      <p className="text-xs text-white/60 font-mono mb-6 leading-relaxed">
-       The coaching staff is running full-pitch tactical shape drills. Execute your assigned role responsibilities with high precision to impress the manager.
-      </p>
-
-      <div className="grid grid-cols-1 gap-3 w-full">
-       <button
-        onClick={() => handleGroupStepAction(3)}
-        className="w-full p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-left text-xs font-mono font-bold text-white transition-all"
-       >
-        🚀 Execute high-tempo tactical press and recover
-       </button>
-       <button
-        onClick={() => handleGroupStepAction(2)}
-        className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
-       >
-        🛡️ Maintain defensive shape and positional discipline
-       </button>
-       <button
-        onClick={() => handleGroupStepAction(1)}
-        className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
-       >
-        🚶 Play conservative short passes to keep safe
-       </button>
-      </div>
-     </div>
-    </div>
-   )}
-
-   {/* POST SESSION RESULT MODAL */}
-   {showPostResult && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-     <div className="premium-card w-full max-w-md border border-[#00FF88]/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-center">
-      <div className="w-12 h-12 rounded-full bg-[#00FF88]/20 border border-[#00FF88]/40 flex items-center justify-center mx-auto mb-4 text-[#00FF88]">
-       <Award size={24} />
-      </div>
-      <h3 className="text-lg font-black uppercase tracking-wider text-white mb-1">Training Session Complete</h3>
-      <p className="text-xs text-white/50 font-mono mb-6">Your session was processed successfully through the development pipeline.</p>
-
-      <div className="space-y-2 mb-6 text-left bg-white/5 p-4 rounded-xl border border-white/10">
-       <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest block mb-2">Attribute & Development Gains</span>
-       {lastDeltas.map((d, idx) => (
-        <div key={idx} className="flex justify-between items-center text-xs font-mono">
-         <span className="text-white/70 uppercase">{d.attr}</span>
-         <span className="text-[#00FF88] font-bold">+{d.gain}</span>
-        </div>
-       ))}
-       {lastDeltas.length === 0 && (
-        <div className="text-xs font-mono text-white/50 text-center py-2">Recovery session completed. Muscle fatigue cleared.</div>
-       )}
-      </div>
-
-      <button
-       onClick={() => setShowPostResult(false)}
-       className="w-full bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg"
-      >
-       Continue
-      </button>
-     </div>
-    </div>
-   )}
-
-   {/* STORY INCIDENT MODAL */}
-   {activeIncident && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-     <div className="premium-card w-full max-w-lg border border-amber-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 block mb-1">Training Ground Incident</span>
-      <h3 className="text-lg font-black uppercase tracking-wider text-white mb-2">{activeIncident.title}</h3>
-      <p className="text-xs text-white/70 font-mono leading-relaxed mb-6">{activeIncident.description}</p>
-      <div className="space-y-3">
-       {activeIncident.choices.map((choice: any, idx: number) => (
-        <button
-         key={idx}
-         onClick={() => {
-          const res = choice.effect({ ...state.player });
-          setPlayer(res.player);
-          setActiveIncident(null);
-         }}
-         className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-amber-500/15 hover:border-amber-500/40 text-left transition-all"
-        >
-         <div className="text-xs font-bold text-white mb-0.5">{choice.text}</div>
-         <div className="text-[10px] text-white/50">{choice.description}</div>
-        </button>
-       ))}
-      </div>
-     </div>
-    </div>
-   )}
-
-   {/* MAIN TRAINING DASHBOARD LAYOUT */}
-   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    {/* Left 2 Cols: Individual & Group Training */}
-    <div className="lg:col-span-2 space-y-6">
-     {/* 1. Individual Training Slots */}
-     <div className="premium-card p-6 rounded-2xl flex flex-col gap-5">
-      <div className="flex justify-between items-center border-b border-white/10 pb-4">
-       <div>
-        <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-         <Zap size={16} className="text-[#00FF88]" />
-         Individual Training Slots ({weeklySessions.individual}/3 Completed)
-        </h2>
-        <p className="text-white/40 text-[10px] mt-0.5">Choose light, fast-to-repeat minigames tailored to your position and role.</p>
-       </div>
-       <div className="flex gap-2">
-        {(["UNIVERSAL", "POSITION", "MENTAL"] as const).map((cat) => (
-         <button
-          key={cat}
-          onClick={() => setSelectedCategory(cat)}
-          className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase transition-all ${
-           selectedCategory === cat ? "bg-[#00FF88] text-black" : "bg-white/5 text-white/50 hover:text-white"
-          }`}
-         >
-          {cat}
-         </button>
-        ))}
-       </div>
-      </div>
-
-      {/* Minigames Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
-       {availableGames.map((game) => (
-        <div
-         key={game.id}
-         onClick={() => handleStartMinigame(game)}
-         className="glass-panel p-4 rounded-xl border border-white/10 hover:border-[#00FF88]/50 hover:bg-white/[0.07] transition-all cursor-pointer flex flex-col justify-between"
-        >
-         <div>
-          <div className="flex justify-between items-start mb-2">
-           <h3 className="text-white text-xs font-bold uppercase tracking-wide">{game.title}</h3>
-           <span className="text-[9px] font-mono bg-white/10 px-2 py-0.5 rounded text-white/70 uppercase">
-            {game.engine}
-           </span>
+          <div>
+            <h1 className="text-xl font-black uppercase tracking-wider text-white flex items-center gap-2">
+              Training Grounds & Minigame Arcade
+            </h1>
+            <p className="text-xs text-white/50 font-mono mt-0.5">Sharpen technical skills, build manager trust, and manage weekly physical load.</p>
           </div>
-          <p className="text-[11px] text-white/60 mb-3 leading-relaxed">{game.description}</p>
-         </div>
+        </div>
 
-         <div className="flex items-center justify-between pt-3 border-t border-white/10">
-          <div className="flex flex-wrap gap-1">
-           {game.targetAttributes.map((attr) => (
-            <span key={attr} className="text-[9px] font-mono bg-[#00FF88]/10 text-[#00FF88] px-1.5 py-0.5 rounded uppercase font-bold">
-             +{attr}
+        {/* Condition Badges & Session Slots */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-4 border border-white/10 bg-black/40">
+            <div>
+              <span className="text-[9px] font-mono text-white/40 uppercase block"><GlossaryTooltip term="Fatigue">Fatigue</GlossaryTooltip></span>
+              <span className={`text-sm font-bold font-mono ${currentFatigue > 80 ? 'text-red-400' : currentFatigue > 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {currentFatigue}%
+              </span>
+            </div>
+            <div className="w-px h-6 bg-white/10"></div>
+            <div>
+              <span className="text-[9px] font-mono text-white/40 uppercase block"><GlossaryTooltip term="Match Sharpness">Sharpness</GlossaryTooltip></span>
+              <span className="text-sm font-bold font-mono text-emerald-400">{currentSharpness}%</span>
+            </div>
+            <div className="w-px h-6 bg-white/10"></div>
+            <div>
+              <span className="text-[9px] font-mono text-white/40 uppercase block">Weekly Slots</span>
+              <span className="text-sm font-bold font-mono text-[#00FF88]">
+                {weeklySessions.individual}/3 Drills
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* INTERACTIVE MINIGAME MODAL */}
+      {activeDrill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 animate-fade-in">
+          <div className={`premium-card w-full max-w-xl border ${activeDrill.borderColor} rounded-2xl p-6 bg-[#0f1115] shadow-2xl flex flex-col items-center text-center relative overflow-hidden`}>
+            
+            {/* Header info */}
+            <div className="w-full flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+              <div className="flex items-center gap-2 text-left">
+                <activeDrill.icon size={20} style={{ color: activeDrill.color }} />
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-wider">{activeDrill.name}</h3>
+                  <span className="text-[10px] font-mono text-white/50">{activeDrill.category} &bull; Repetition {repIndex} of 3</span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setActiveDrill(null)}
+                className="text-xs font-mono text-white/40 hover:text-white px-2.5 py-1 rounded bg-white/5"
+              >
+                Cancel Drill
+              </button>
+            </div>
+
+            <p className="text-xs font-mono text-white/70 mb-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+              {activeDrill.instructions}
+            </p>
+
+            {/* MINIGAME VIEW: 1. TIMING DRILL (Shooting) */}
+            {activeDrill.minigameType === 'TIMING' && (
+              <div className="w-full my-6 flex flex-col items-center">
+                {/* Target Pitch Goal Visual */}
+                <div className="w-full h-36 bg-[#182a1e] border-2 border-white/20 rounded-xl relative overflow-hidden flex items-center justify-center mb-6 shadow-inner">
+                  <div className="absolute inset-0 bg-[radial-gradient(#00FF88_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
+                  
+                  {/* Goal Frame */}
+                  <div className="w-64 h-24 border-t-4 border-x-4 border-white rounded-t relative flex justify-between items-end p-2 bg-black/30">
+                    <div className="w-10 h-10 border border-[#00FF88]/50 bg-[#00FF88]/20 rounded flex items-center justify-center text-[10px] font-mono text-[#00FF88] font-bold">TOP L</div>
+                    <div className="w-10 h-10 border border-[#00FF88]/50 bg-[#00FF88]/20 rounded flex items-center justify-center text-[10px] font-mono text-[#00FF88] font-bold">TOP R</div>
+                  </div>
+
+                  {/* Ball Marker */}
+                  <div 
+                    className="absolute bottom-2 w-6 h-6 bg-white rounded-full border-2 border-black shadow-[0_0_12px_rgba(255,255,255,0.8)] transition-all"
+                    style={{ left: `calc(${gaugePos}% - 12px)` }}
+                  />
+                </div>
+
+                {/* Oscillating Slider Bar */}
+                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-white/20 mb-6 p-1">
+                  {/* Green Sweet Spot Zone */}
+                  <div className="absolute top-0 bottom-0 left-[42%] right-[42%] bg-[#00FF88]/40 border-x-2 border-[#00FF88] flex items-center justify-center">
+                    <span className="text-[8px] font-mono font-bold text-[#00FF88] uppercase tracking-tighter">SWEET SPOT</span>
+                  </div>
+
+                  {/* Moving Cursor Indicator */}
+                  <div 
+                    className="absolute top-0 bottom-0 w-2.5 bg-amber-400 rounded-full shadow-[0_0_10px_#F59E0B]"
+                    style={{ left: `${gaugePos}%` }}
+                  />
+                </div>
+
+                <button
+                  onClick={handleTimingStrike}
+                  disabled={!!repFeedback}
+                  className="w-full py-4 bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-lg shadow-[#00FF88]/20 active:scale-98"
+                >
+                  ⚡ STRIKE BALL!
+                </button>
+              </div>
+            )}
+
+            {/* MINIGAME VIEW: 2. HOLD_RELEASE DRILL (Tackling) */}
+            {activeDrill.minigameType === 'HOLD_RELEASE' && (
+              <div className="w-full my-6 flex flex-col items-center">
+                <div className="w-full h-32 bg-[#201318] border-2 border-pink-500/30 rounded-xl relative flex items-center justify-center mb-6 overflow-hidden">
+                  <div className="text-center">
+                    <Shield className="mx-auto text-pink-400 mb-1" size={32} />
+                    <span className="text-xs font-mono font-bold text-white uppercase">Charging Attacker Approaching</span>
+                  </div>
+
+                  {/* Meter Fill Visual */}
+                  <div 
+                    className="absolute left-0 bottom-0 top-0 bg-pink-500/20 border-r-2 border-pink-400 transition-all"
+                    style={{ width: `${gaugePos}%` }}
+                  />
+                </div>
+
+                {/* Power Gauge Bar */}
+                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-white/20 mb-6 p-1">
+                  {/* Ideal Slide Tackle Zone */}
+                  <div className="absolute top-0 bottom-0 left-[68%] right-[16%] bg-pink-500/40 border-x-2 border-pink-400 flex items-center justify-center">
+                    <span className="text-[8px] font-mono font-bold text-pink-300 uppercase tracking-tighter">PERFECT TIMING</span>
+                  </div>
+
+                  {/* Moving Cursor Indicator */}
+                  <div 
+                    className="absolute top-0 bottom-0 w-2.5 bg-white rounded-full shadow-[0_0_10px_#FFF]"
+                    style={{ left: `${gaugePos}%` }}
+                  />
+                </div>
+
+                <button
+                  onClick={handleTackleRelease}
+                  disabled={!!repFeedback}
+                  className="w-full py-4 bg-pink-500 hover:bg-pink-400 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-lg shadow-pink-500/20 active:scale-98"
+                >
+                  🛡️ EXECUTE SLIDE TACKLE!
+                </button>
+              </div>
+            )}
+
+            {/* MINIGAME VIEW: 3. SEQUENCE DRILL (Passing) */}
+            {activeDrill.minigameType === 'SEQUENCE' && (
+              <div className="w-full my-4 flex flex-col items-center">
+                {/* Timer Bar */}
+                <div className="w-full flex justify-between items-center text-xs font-mono mb-3 text-white/70">
+                  <span>TIME REMAINING:</span>
+                  <span className="text-blue-400 font-bold">{sequenceTimer.toFixed(1)}s</span>
+                </div>
+                <div className="w-full h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 transition-all duration-100" 
+                    style={{ width: `${(sequenceTimer / (3.5 + repIndex * 0.5)) * 100}%` }}
+                  />
+                </div>
+
+                {/* Target Sequence Display */}
+                <div className="flex items-center justify-center gap-3 mb-8">
+                  {targetSequence.map((dir, idx) => {
+                    const isDone = idx < userSequence.length;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`w-12 h-12 rounded-xl border flex items-center justify-center font-bold transition-all ${
+                          isDone 
+                            ? 'bg-blue-500/30 border-blue-400 text-blue-400 scale-105' 
+                            : 'bg-white/5 border-white/20 text-white/40'
+                        }`}
+                      >
+                        {dir === 'UP' && <ChevronUp size={24} />}
+                        {dir === 'DOWN' && <ChevronDown size={24} />}
+                        {dir === 'LEFT' && <ChevronLeft size={24} />}
+                        {dir === 'RIGHT' && <ChevronRight size={24} />}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Input Directional Buttons */}
+                <div className="grid grid-cols-3 gap-2 w-48 mx-auto">
+                  <div></div>
+                  <button 
+                    onClick={() => handleSequenceInput('UP')}
+                    disabled={!!repFeedback}
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                  >
+                    <ChevronUp size={24} />
+                  </button>
+                  <div></div>
+
+                  <button 
+                    onClick={() => handleSequenceInput('LEFT')}
+                    disabled={!!repFeedback}
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={() => handleSequenceInput('DOWN')}
+                    disabled={!!repFeedback}
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                  >
+                    <ChevronDown size={24} />
+                  </button>
+                  <button 
+                    onClick={() => handleSequenceInput('RIGHT')}
+                    disabled={!!repFeedback}
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* MINIGAME VIEW: 4. DODGE DRILL (Dribbling) */}
+            {activeDrill.minigameType === 'DODGE' && (
+              <div className="w-full my-4 flex flex-col items-center">
+                <div className="w-full flex justify-between items-center text-xs font-mono mb-2 text-white/70">
+                  <span>REFLEX WINDOW:</span>
+                  <span className="text-amber-400 font-bold">{dodgeTimer.toFixed(1)}s</span>
+                </div>
+
+                {/* Field Slalom View */}
+                <div className="w-full h-40 bg-[#1f2316] border-2 border-amber-500/30 rounded-xl relative overflow-hidden grid grid-cols-3 p-2 gap-2 mb-6">
+                  {(['LEFT', 'CENTER', 'RIGHT'] as const).map((lane) => {
+                    const isTarget = targetLane === lane;
+                    return (
+                      <div 
+                        key={lane}
+                        className={`h-full rounded-lg border border-dashed flex flex-col items-center justify-between p-2 transition-all ${
+                          isTarget 
+                            ? 'bg-amber-500/20 border-amber-400' 
+                            : 'bg-black/20 border-white/10'
+                        }`}
+                      >
+                        <span className="text-[9px] font-mono text-white/40">{lane}</span>
+                        {isTarget ? (
+                          <div className="text-amber-400 font-bold text-xs flex flex-col items-center gap-1 animate-bounce">
+                            <Flame size={20} />
+                            <span>CLEAR LANE!</span>
+                          </div>
+                        ) : (
+                          <div className="text-red-400/60 font-bold text-xs">🚧 CONE</div>
+                        )}
+                        <div></div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Dodge Controls */}
+                <div className="grid grid-cols-3 gap-3 w-full">
+                  <button
+                    onClick={() => handleDodgeChoice('LEFT')}
+                    disabled={!!repFeedback}
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                  >
+                    ⬅️ Dodge Left
+                  </button>
+                  <button
+                    onClick={() => handleDodgeChoice('CENTER')}
+                    disabled={!!repFeedback}
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                  >
+                    ⬆️ Burst Straight
+                  </button>
+                  <button
+                    onClick={() => handleDodgeChoice('RIGHT')}
+                    disabled={!!repFeedback}
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                  >
+                    ➡️ Dodge Right
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Rep Feedback Banner */}
+            {repFeedback && (
+              <div className="mt-4 p-3 rounded-xl bg-white/10 border border-white/20 text-xs font-mono font-bold text-[#00FF88] animate-bounce">
+                {repFeedback}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GROUP TRAINING SESSION MODAL */}
+      {isGroupSessionActive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-lg border border-blue-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl flex flex-col items-center text-center">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 mb-1">
+              Mandatory Group Session &bull; Drill {groupStep} of 3
             </span>
-           ))}
-           {game.targetAttributes.length === 0 && (
-            <span className="text-[9px] font-mono bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded uppercase font-bold">
-             Fatigue Recovery
-            </span>
-           )}
+            <h3 className="text-lg font-black uppercase tracking-wider text-white mb-4">Manager Tactical Drill</h3>
+            <p className="text-xs text-white/60 font-mono mb-6 leading-relaxed">
+              The coaching staff is running full-pitch tactical shape drills. Execute your assigned role responsibilities with high precision to impress the manager.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 w-full">
+              <button
+                onClick={() => handleGroupStepAction(3)}
+                className="w-full p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-left text-xs font-mono font-bold text-white transition-all"
+              >
+                🚀 Execute high-tempo tactical press and recover
+              </button>
+              <button
+                onClick={() => handleGroupStepAction(2)}
+                className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
+              >
+                🛡️ Maintain defensive shape and positional discipline
+              </button>
+              <button
+                onClick={() => handleGroupStepAction(1)}
+                className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
+              >
+                🚶 Play conservative short passes to keep safe
+              </button>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-[#00FF88] uppercase font-bold flex items-center gap-1">
-           Play <Play size={10} />
-          </span>
-         </div>
         </div>
-       ))}
-      </div>
-     </div>
-
-     {/* 2. Group Training Session Card */}
-     <div className="premium-card p-6 rounded-2xl flex flex-col gap-4">
-      <div className="flex justify-between items-center border-b border-white/10 pb-3">
-       <div>
-        <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-         <UserCheck size={16} className="text-blue-400" />
-         Mandatory Group Training Session
-        </h2>
-        <p className="text-white/40 text-[10px] mt-0.5">Club-scheduled tactical drills. Builds Manager Trust and Squad Chemistry.</p>
-       </div>
-       <div className="text-[10px] font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded">
-        {weeklySessions.clubOrganized >= 1 ? "Completed" : "Scheduled"}
-       </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-       <div className="text-xs text-white/70 font-mono">
-        Manager Personality: <strong className="text-white uppercase">{state.player.managerInfo?.personality || 'Pragmatic'}</strong>
-       </div>
-       <button
-        onClick={startGroupSession}
-        disabled={weeklySessions.clubOrganized >= 1}
-        className={`px-6 py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-widest transition-all ${
-         weeklySessions.clubOrganized >= 1
-          ? "bg-white/5 text-white/30 cursor-not-allowed"
-          : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
-        }`}
-       >
-        {weeklySessions.clubOrganized >= 1 ? "Group Training Done" : "Start Group Session"}
-       </button>
-      </div>
-     </div>
-    </div>
-
-    {/* Right Col: Player Condition & Story Incidents */}
-    <div className="space-y-6">
-     {/* Development Status */}
-     <div className="premium-card rounded-2xl p-5 border border-white/10 relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FF88]/5 rounded-full blur-2xl pointer-events-none"></div>
-      <span className="text-[10px] font-mono uppercase tracking-widest text-[#00FF88] block mb-2 border-b border-white/10 pb-1">
-       Development Phase
-      </span>
-      <div className="text-white font-bold text-sm mb-1">
-       {state.player.age < 21 ? '⚡ RAPID GROWTH' : state.player.age < 28 ? '💎 PEAK YEARS' : '📉 LATE PLATEAU'}
-      </div>
-      <p className="text-[11px] text-white/60 leading-relaxed font-sans">
-       {state.player.age < 21
-        ? 'Training gains are amplified (+50%) and physical recovery is extremely efficient.'
-        : state.player.age < 28
-        ? 'You are in your prime physical window. Training gains are steady and balanced.'
-        : 'Development is slowing down. Maintaining stats requires elite training sessions.'}
-      </p>
-     </div>
-
-     {/* Story Incident Trigger */}
-     <div className="premium-card rounded-2xl p-5 border border-amber-500/30 bg-amber-500/5">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 block mb-2 border-b border-amber-500/20 pb-1">
-       Training Ground Drama
-      </span>
-      <p className="text-xs text-white/70 font-mono mb-4 leading-relaxed">
-       Encounter real locker room incidents, veteran clashes, and scouting spotlights during your weekly training regime.
-      </p>
-      <button
-       onClick={() => {
-        const inc = TRAINING_INCIDENTS[Math.floor(Math.random() * TRAINING_INCIDENTS.length)];
-        setActiveIncident(inc);
-       }}
-       className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md"
-      >
-       Trigger Incident Event
-      </button>
-     </div>
-
-     {/* Retrain Tactical Role */}
-     <div className="premium-card rounded-2xl p-5">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-white/50 block mb-2 border-b border-white/10 pb-1">
-       Tactical Specialization
-      </span>
-      <p className="text-xs text-white/60 font-mono mb-4">Adapt your tactical role familiarity for your position group (£1,500).</p>
-      <button
-       onClick={() => setShowRetrainModal(true)}
-       className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all border border-white/10"
-      >
-       Retrain Role
-      </button>
-     </div>
-    </div>
-   </div>
-
-   {/* RETRAIN MODAL */}
-   {showRetrainModal && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-     <div className="premium-card w-full max-w-md border border-white/15 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
-      <h3 className="text-lg font-black uppercase tracking-widest text-white mb-2">Retrain Tactical Role</h3>
-      <p className="text-xs text-white/50 mb-4 leading-relaxed">Select a new role for your position group. Retraining costs <strong className="text-white">£1,500</strong>.</p>
-      
-      {retrainError && (
-       <div className="p-3 mb-4 bg-red-950/40 border border-red-500/20 rounded text-red-400 text-xs font-mono">{retrainError}</div>
       )}
 
-      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-       {getRolesForPosition(state.player.position).map((role) => {
-        const isCurrent = state.player!.roleSpecialization?.selectedRoleId === role.id;
-        return (
-         <div
-          key={role.id}
-          onClick={() => {
-           if (isCurrent) return;
-           if (state.player!.finances.balance < 1500) {
-            setRetrainError("Insufficient bank balance (£1,500 required).");
-            return;
-           }
-           const updatedPlayer = { ...state.player! };
-           updatedPlayer.finances.balance -= 1500;
-           updatedPlayer.roleSpecialization = { selectedRoleId: role.id, familiarity: 30, recentMatchesInRole: 0 };
-           updatedPlayer.subPosition = role.name as any;
-           setPlayer(updatedPlayer);
-           setShowRetrainModal(false);
-          }}
-          className={`p-3 rounded border text-left cursor-pointer transition-all ${
-           isCurrent ? 'border-[#00FF88] bg-[#00FF88]/15 opacity-80' : 'border-white/10 bg-white/5 hover:bg-white/10'
-          }`}
-         >
-          <div className="flex justify-between items-center mb-1">
-           <span className="font-bold text-white text-xs">{role.name}</span>
-           {isCurrent && <span className="text-[8px] bg-[#00FF88]/20 text-[#00FF88] px-1.5 py-0.5 rounded uppercase font-mono font-bold">Active</span>}
+      {/* POST SESSION RESULT MODAL */}
+      {showPostResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-md border border-[#00FF88]/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-full bg-[#00FF88]/20 border border-[#00FF88]/40 flex items-center justify-center mx-auto mb-4 text-[#00FF88]">
+              <Award size={24} />
+            </div>
+            <h3 className="text-lg font-black uppercase tracking-wider text-white mb-1">Session Summary</h3>
+            <p className="text-xs text-white/50 font-mono mb-6">Your training drill was processed into player progression.</p>
+
+            <div className="space-y-2.5 mb-6 text-left bg-white/5 p-4 rounded-xl border border-white/10">
+              <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest block mb-2">Attribute & Condition Impact</span>
+              {lastDeltas.map((d, idx) => (
+                <div key={idx} className="flex justify-between items-center text-xs font-mono border-b border-white/5 pb-1 last:border-0">
+                  <span className="text-white/70 uppercase">{d.attr}</span>
+                  <span className="text-[#00FF88] font-bold">{d.gain}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowPostResult(false)}
+              className="w-full bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg"
+            >
+              Continue
+            </button>
           </div>
-          <p className="text-[10px] text-white/60 mb-2">{role.description}</p>
-         </div>
-        );
-       })}
+        </div>
+      )}
+
+      {/* STORY INCIDENT MODAL */}
+      {activeIncident && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-lg border border-amber-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 block mb-1">Training Ground Incident</span>
+            <h3 className="text-lg font-black uppercase tracking-wider text-white mb-2">{activeIncident.title}</h3>
+            <p className="text-xs text-white/70 font-mono leading-relaxed mb-6">{activeIncident.description}</p>
+            <div className="space-y-3">
+              {activeIncident.choices.map((choice: any, idx: number) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    const res = choice.effect({ ...state.player });
+                    setPlayer(res.player);
+                    setActiveIncident(null);
+                  }}
+                  className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-amber-500/15 hover:border-amber-500/40 text-left transition-all"
+                >
+                  <div className="text-xs font-bold text-white mb-0.5">{choice.text}</div>
+                  <div className="text-[10px] text-white/50">{choice.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN DASHBOARD LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Individual Minigame Training Drills */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex justify-between items-center border-b border-white/10 pb-3">
+            <div>
+              <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                <Dumbbell size={18} className="text-[#00FF88]" />
+                Individual Skill Minigames
+              </h2>
+              <p className="text-white/40 text-[10px] mt-0.5">Interactive drill challenges to build specific technical stats.</p>
+            </div>
+
+            {/* Drill Intensity Selector */}
+            <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10">
+              {(['LIGHT', 'STANDARD', 'INTENSE'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setDrillIntensity(mode)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase transition-all ${
+                    drillIntensity === mode
+                      ? 'bg-[#00FF88] text-black shadow'
+                      : 'text-white/50 hover:text-white'
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamic Fatigue & Energy Impact Indicator */}
+          {(() => {
+            const fatigueCost = drillIntensity === 'LIGHT' ? 5 : drillIntensity === 'INTENSE' ? 14 : 8;
+            const sharpnessGain = drillIntensity === 'LIGHT' ? 4 : drillIntensity === 'INTENSE' ? 10 : 6;
+            const statGainMult = drillIntensity === 'LIGHT' ? '0.7x' : drillIntensity === 'INTENSE' ? '1.35x' : '1.0x';
+            const projectedFatigue = Math.min(100, currentFatigue + fatigueCost);
+            const fatigueColor = projectedFatigue > 85 ? 'text-red-400 bg-red-500/10 border-red-500/30' : projectedFatigue > 65 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+
+            return (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                <div className="flex items-center gap-3.5">
+                  <div className={`p-3 rounded-xl border ${fatigueColor} flex items-center justify-center`}>
+                    <Zap size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-white">Intensity Energy Impact</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-white/80 font-bold uppercase">
+                        {drillIntensity} MODE
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/50 font-mono mt-0.5">
+                      Energy loss: <strong className="text-red-400 font-bold">+{fatigueCost}% Fatigue</strong> &bull; Sharpness: <strong className="text-emerald-400 font-bold">+{sharpnessGain}%</strong> &bull; Growth: <strong className="text-[#00FF88] font-bold">{statGainMult}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-56 flex flex-col gap-1.5 bg-black/40 p-3 rounded-xl border border-white/10">
+                  <div className="flex justify-between items-center text-[10px] font-mono">
+                    <span className="text-white/50">Projected Fatigue:</span>
+                    <span className={`font-bold ${projectedFatigue > 85 ? 'text-red-400' : projectedFatigue > 65 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      {currentFatigue}% ➡️ {projectedFatigue}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden relative">
+                    <div 
+                      className="absolute top-0 bottom-0 left-0 bg-white/30 rounded-full transition-all duration-300"
+                      style={{ width: `${currentFatigue}%` }}
+                    />
+                    <div 
+                      className={`absolute top-0 bottom-0 rounded-full transition-all duration-300 ${
+                        projectedFatigue > 85 ? 'bg-red-500 animate-pulse' : projectedFatigue > 65 ? 'bg-amber-500' : 'bg-[#00FF88]'
+                      }`}
+                      style={{ left: `${currentFatigue}%`, width: `${fatigueCost}%` }}
+                    />
+                  </div>
+                  {projectedFatigue >= 90 && (
+                    <span className="text-[9px] font-mono text-red-400 font-bold flex items-center gap-1 mt-0.5">
+                      ⚠️ High fatigue risk! Consider hydrotherapy.
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Drills Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {DRILL_CONFIGS.map((drill) => {
+              const Icon = drill.icon;
+              return (
+                <div 
+                  key={drill.id}
+                  className={`premium-card p-5 rounded-2xl border ${drill.borderColor} flex flex-col justify-between hover:border-[#00FF88]/50 transition-all group`}
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className={`p-2.5 rounded-xl ${drill.accentBg} border ${drill.borderColor}`}>
+                        <Icon size={20} style={{ color: drill.color }} />
+                      </div>
+                      <span className="text-[9px] font-mono text-white/40 uppercase bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                        {drill.category}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white mb-1 uppercase tracking-wider">{drill.name}</h3>
+                    <p className="text-xs text-white/50 font-mono mb-4 leading-relaxed">{drill.description}</p>
+
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {drill.targetStats.map((st) => (
+                        <span key={st.key} className="text-[10px] font-mono font-bold text-[#00FF88] bg-[#00FF88]/10 border border-[#00FF88]/20 px-2 py-0.5 rounded">
+                          +{st.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => startMinigame(drill)}
+                    disabled={weeklySessions.individual >= 3}
+                    className={`w-full py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+                      weeklySessions.individual >= 3
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        : 'bg-[#00FF88] hover:bg-[#00FF88]/80 text-black shadow-lg shadow-[#00FF88]/15 group-hover:scale-[1.02]'
+                    }`}
+                  >
+                    {weeklySessions.individual >= 3 ? 'Slots Depleted' : 'Play Minigame'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Muscle Recovery Session Option */}
+          <div className="premium-card p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+                <Heart size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Hydrotherapy & Cryo Recovery</h3>
+                <p className="text-xs text-white/50 font-mono mt-0.5">Clears -22% Fatigue load to prevent matchday muscle fatigue.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleRecoverySession}
+              disabled={weeklySessions.individual >= 3}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg whitespace-nowrap disabled:opacity-40"
+            >
+              Start Recovery
+            </button>
+          </div>
+        </div>
+
+        {/* Right Col: Group Training & Story Events */}
+        <div className="space-y-6">
+          {/* Group Training Session Card */}
+          <div className="premium-card p-5 rounded-2xl border border-blue-500/30 flex flex-col gap-4">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <div>
+                <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                  <UserCheck size={16} className="text-blue-400" />
+                  Mandatory Group Training
+                </h2>
+                <p className="text-white/40 text-[10px] mt-0.5">Club-scheduled tactical drills with the squad.</p>
+              </div>
+              <div className="text-[10px] font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded">
+                {weeklySessions.clubOrganized >= 1 ? "Completed" : "Scheduled"}
+              </div>
+            </div>
+
+            <div className="text-xs text-white/70 font-mono">
+              Manager Style: <strong className="text-white uppercase">{state.player.managerInfo?.personality || 'Pragmatic'}</strong>
+            </div>
+
+            <button
+              onClick={startGroupSession}
+              disabled={weeklySessions.clubOrganized >= 1}
+              className={`w-full py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+                weeklySessions.clubOrganized >= 1
+                  ? "bg-white/5 text-white/30 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
+              }`}
+            >
+              {weeklySessions.clubOrganized >= 1 ? "Group Training Done" : "Start Group Session"}
+            </button>
+          </div>
+
+          {/* Development Status */}
+          <div className="premium-card rounded-2xl p-5 border border-white/10 relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FF88]/5 rounded-full blur-2xl pointer-events-none"></div>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00FF88] block mb-2 border-b border-white/10 pb-1">
+              Development Phase
+            </span>
+            <div className="text-white font-bold text-sm mb-1">
+              {state.player.age < 21 ? '⚡ RAPID GROWTH' : state.player.age < 28 ? '💎 PEAK YEARS' : '📉 LATE PLATEAU'}
+            </div>
+            <p className="text-[11px] text-white/60 leading-relaxed font-sans">
+              {state.player.age < 21
+                ? 'Training gains are amplified (+50%) and physical recovery is extremely efficient.'
+                : state.player.age < 28
+                ? 'You are in your prime physical window. Training gains are steady and balanced.'
+                : 'Development is slowing down. Maintaining stats requires elite training sessions.'}
+            </p>
+          </div>
+
+          {/* Retrain Tactical Role */}
+          <div className="premium-card rounded-2xl p-5 border border-white/10">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-white/50 block mb-2 border-b border-white/10 pb-1">
+              Tactical Specialization
+            </span>
+            <p className="text-xs text-white/60 font-mono mb-4">Adapt your tactical role familiarity for your position (£1,500).</p>
+            <button
+              onClick={() => setShowRetrainModal(true)}
+              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all border border-white/10"
+            >
+              Retrain Role
+            </button>
+          </div>
+
+
+        </div>
       </div>
-      <button onClick={() => setShowRetrainModal(false)} className="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase">Cancel</button>
-     </div>
+
+      {/* RETRAIN MODAL */}
+      {showRetrainModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-md border border-white/15 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
+            <h3 className="text-lg font-black uppercase tracking-widest text-white mb-2">Retrain Tactical Role</h3>
+            <p className="text-xs text-white/50 mb-4 leading-relaxed">Select a new role for your position group. Retraining costs <strong className="text-white">£1,500</strong>.</p>
+            
+            {retrainError && (
+              <div className="p-3 mb-4 bg-red-950/40 border border-red-500/20 rounded text-red-400 text-xs font-mono">{retrainError}</div>
+            )}
+
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              {getRolesForPosition(state.player.position).map((role) => {
+                const isCurrent = state.player!.roleSpecialization?.selectedRoleId === role.id;
+                return (
+                  <div
+                    key={role.id}
+                    onClick={() => {
+                      if (isCurrent) return;
+                      const balance = state.player!.finances?.balance || 0;
+                      if (balance < 1500) {
+                        setRetrainError("Insufficient bank balance (£1,500 required).");
+                        return;
+                      }
+                      const updatedPlayer = { ...state.player! };
+                      updatedPlayer.finances = updatedPlayer.finances || { balance: 0, expenses: { housing: 0, training: 0, lifestyle: 0, family: 0 } };
+                      updatedPlayer.finances.balance -= 1500;
+                      updatedPlayer.roleSpecialization = { selectedRoleId: role.id, familiarity: 30, recentMatchesInRole: 0 };
+                      updatedPlayer.subPosition = role.name as any;
+                      setPlayer(updatedPlayer);
+                      setShowRetrainModal(false);
+                    }}
+                    className={`p-3 rounded border text-left cursor-pointer transition-all ${
+                      isCurrent ? 'border-[#00FF88] bg-[#00FF88]/15 opacity-80' : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-white text-xs">{role.name}</span>
+                      {isCurrent && <span className="text-[8px] bg-[#00FF88]/20 text-[#00FF88] px-1.5 py-0.5 rounded uppercase font-mono font-bold">Active</span>}
+                    </div>
+                    <p className="text-[10px] text-white/60 mb-2">{role.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={() => setShowRetrainModal(false)} className="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase">Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
-   )}
-  </div>
- );
+  );
 }

@@ -12,6 +12,8 @@ import { CharacterPortrait } from '../components/CharacterPortrait';
 import { calculateLegacyScore } from '../utils/gameRefinements';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
 import { getRoleById } from '../data/roles';
+import { getFormattedCalendarDate } from '../utils/careerSystems';
+import { BookOpen } from 'lucide-react';
 
 export function Profile() {
  const { state, setScreen, setPlayer, startLegacyContinuation } = useGame();
@@ -19,13 +21,15 @@ export function Profile() {
  const player = state.player;
  const isMatchDay = state.currentDay === 'FRI';
 
- const [activeTab, setActiveTab] = useState<'ATTRIBUTES' | 'TIMELINE' | 'RIVALS' | 'TROPHIES' | 'RETIREMENT' | 'STORY' | 'MEDICAL'>('ATTRIBUTES');
+ const [activeTab, setActiveTab] = useState<'ATTRIBUTES' | 'TIMELINE' | 'JOURNAL' | 'RIVALS' | 'TROPHIES' | 'RETIREMENT' | 'STORY' | 'MEDICAL'>('ATTRIBUTES');
  const [isRetired, setIsRetired] = useState(!!player?.stateFlags?.retired);
  const [retirementStep, setRetirementStep] = useState<'MENU' | 'GRACEFUL' | 'COACHING' | 'RECORDS' | 'HOMECOMING' | 'CONFIRMED'>('MENU');
  const [selectedCoachingStyle, setSelectedCoachingStyle] = useState<'TACTICAL' | 'MAN_MANAGER' | 'YOUTH'>('TACTICAL');
  const [selectedRecordQuest, setSelectedRecordQuest] = useState<'CAPS' | 'GOALS' | 'TRUST'>('CAPS');
  const [timelineFilter, setTimelineFilter] = useState<'ALL' | 'MILESTONE' | 'INJURY' | 'TRANSFER'>('ALL');
  const [timelineSearch, setTimelineSearch] = useState('');
+ const [journalFilter, setJournalFilter] = useState<'ALL' | 'MILESTONE' | 'CHOICE' | 'MEDIA'>('ALL');
+ const [journalSearch, setJournalSearch] = useState('');
 
  const fullTimeline = useMemo(() => {
   if (!player) return [];
@@ -144,6 +148,62 @@ export function Profile() {
   return combined;
  }, [player.timeline, player.backstory, player.startingClubSymbol]);
 
+ const journalEntries = useMemo(() => {
+  if (!player) return [];
+  
+  const timelineMilestones = (player.timeline || []).map(evt => ({
+   id: evt.id,
+   week: evt.week,
+   season: Math.floor((evt.week - 1) / 52) + 1,
+   day: evt.day || 'MON',
+   category: 'MILESTONE' as const,
+   subType: evt.type,
+   title: evt.title,
+   description: evt.description,
+   clubSymbol: evt.clubSymbol,
+   source: 'Milestone'
+  }));
+
+  const rawDecisions = player.decisionMemory || (player.stateFlags as any)?.decisionMemory || [];
+  const careerChoices = rawDecisions.map((dec: any, idx: number) => {
+   const isMedia = dec.system?.toLowerCase().includes('media') || dec.system?.toLowerCase().includes('press') || dec.system?.toLowerCase().includes('social');
+   return {
+    id: dec.id || `dec_${idx}_${dec.week}`,
+    week: dec.week,
+    season: dec.season || Math.floor((dec.week - 1) / 52) + 1,
+    day: 'MON' as const,
+    category: isMedia ? ('MEDIA' as const) : ('CHOICE' as const),
+    subType: dec.significance || 'MODERATE',
+    title: dec.choiceText ? `Choice: ${dec.choiceText}` : 'Career Decision',
+    description: dec.description,
+    clubSymbol: dec.entitiesInvolved?.[0],
+    source: dec.system || 'Career Choice',
+    consequences: dec.statConsequences
+   };
+  });
+
+  const combined = [...timelineMilestones, ...careerChoices];
+  return combined.sort((a, b) => {
+   if (b.week !== a.week) return b.week - a.week;
+   return b.season - a.season;
+  });
+ }, [player]);
+
+ const filteredJournalEntries = useMemo(() => {
+  return journalEntries.filter(entry => {
+   if (journalFilter !== 'ALL' && entry.category !== journalFilter) return false;
+   if (journalSearch.trim()) {
+    const query = journalSearch.toLowerCase();
+    return (
+     entry.title.toLowerCase().includes(query) ||
+     entry.description.toLowerCase().includes(query) ||
+     entry.source.toLowerCase().includes(query)
+    );
+   }
+   return true;
+  });
+ }, [journalEntries, journalFilter, journalSearch]);
+
  const parsedInjuries = useMemo(() => {
   const historicalInjuries = [
    {
@@ -204,7 +264,7 @@ export function Profile() {
     return {
      name: evt.title,
      severity,
-     week: evt.week < 1 ? `Pre-Career (Wk ${evt.week})` : `Wk ${evt.week}`,
+     week: evt.week < 1 ? 'Pre-Career' : getFormattedCalendarDate(evt.week, 'MON'),
      duration,
      clubImpact,
      intlImpact,
@@ -323,7 +383,7 @@ export function Profile() {
 
    <div className="mt-6 pt-6 border-t border-white/10">
     <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Backstory</div>
-    <div className="text-white font-bold uppercase tracking-wider mb-2">{player.backstory.replace('_', ' ')}</div>
+    <div className="text-white font-bold uppercase tracking-wider mb-2">{player.backstory ? player.backstory.replace('_', ' ') : 'Pro Career'}</div>
     {player.backstoryDetails ? (
       <div className="space-y-2 mt-3 text-xs">
         {player.backstoryDetails.region && (
@@ -421,6 +481,18 @@ export function Profile() {
    Timeline Feed
    </button>
    <button 
+   id="tab-journal"
+   onClick={() => setActiveTab('JOURNAL')} 
+   className={`pb-4 text-xs font-bold uppercase tracking-widest border-b-2 px-3 transition-all duration-200 flex items-center gap-1.5 ${
+    activeTab === 'JOURNAL' 
+    ? 'border-[#00FF88] text-[#00FF88] font-black' 
+    : 'border-transparent text-white/40 hover:text-[#ccc]'
+   }`}
+   >
+   <BookOpen size={13} />
+   Journal
+   </button>
+   <button 
    id="tab-rivals"
    onClick={() => setActiveTab('RIVALS')} 
    className={`pb-4 text-xs font-bold uppercase tracking-widest border-b-2 px-3 transition-all duration-200 ${
@@ -489,11 +561,11 @@ export function Profile() {
      <ProgressBar label="Manager Trust" value={player.trust} showValue={true} colorMode="trust" height="h-2" />
      <ProgressBar label="Morale" value={player.morale} showValue={true} colorMode="morale" height="h-2" />
      
-     <ProgressBar label="Squad Chemistry" value={player.relationships.teammates} showValue={true} colorMode="trust" height="h-2" />
-     <ProgressBar label="Tactical" value={player.tacticalFamiliarity} showValue={true} colorMode="default" height="h-2" />
-     <ProgressBar label="Manager Relationship" value={player.relationships.manager} showValue={true} colorMode="trust" height="h-2" />
-     <ProgressBar label="Discipline Trust" value={player.relationships.manager_discipline} showValue={true} colorMode="trust" height="h-2" />
-     <ProgressBar label="Intl Manager Trust" value={player.relationships.intlManager || 50} showValue={true} colorMode="trust" height="h-2" />
+     <ProgressBar label="Squad Chemistry" value={player.relationships?.teammates ?? 50} showValue={true} colorMode="trust" height="h-2" />
+     <ProgressBar label="Tactical" value={player.tacticalFamiliarity || 50} showValue={true} colorMode="default" height="h-2" />
+     <ProgressBar label="Manager Relationship" value={player.relationships?.manager ?? 50} showValue={true} colorMode="trust" height="h-2" />
+     <ProgressBar label="Discipline Trust" value={player.relationships?.manager_discipline ?? 50} showValue={true} colorMode="trust" height="h-2" />
+     <ProgressBar label="Intl Manager Trust" value={player.relationships?.intlManager ?? 50} showValue={true} colorMode="trust" height="h-2" />
      <div>
      <ProgressBar label="♡ Fatigue" value={player.fatigue} colorMode="fatigue" height="h-2" className="mt-2" />
      </div>
@@ -710,7 +782,7 @@ export function Profile() {
        {/* Date Header */}
        <div className="flex items-center gap-3">
         <span className={`font-mono text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border rounded-sm ${labelColor}`}>
-        {evt.week < 1 ? `Pre-Career (Wk ${evt.week})` : `Wk ${evt.week} · ${evt.day || 'MON'}`}
+        {evt.week < 1 ? 'Pre-Career' : getFormattedCalendarDate(evt.week, evt.day || 'MON')}
         </span>
         <span className="text-[#64748b] text-[9px] font-mono font-bold uppercase tracking-widest">
         {evt.type}
@@ -741,6 +813,121 @@ export function Profile() {
     </div>
     )}
    </div>
+   </div>
+  )}
+
+  {activeTab === 'JOURNAL' && (
+   <div className="flex-1 flex flex-col gap-4 premium-card p-6 overflow-hidden animate-fadeIn">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10 shrink-0">
+     <div>
+      <h3 className="text-white text-base font-bold tracking-wider uppercase flex items-center gap-2">
+       <BookOpen size={18} className="text-[#00FF88]" />
+       <span>Career Journal & Memoir</span>
+      </h3>
+      <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Autonomous chronicle logging major milestones, career choices, and headline media moments</p>
+     </div>
+     
+     {/* Search Bar */}
+     <div className="relative">
+      <input 
+       type="text" 
+       placeholder="SEARCH JOURNAL..." 
+       value={journalSearch}
+       onChange={(e) => setJournalSearch(e.target.value)}
+       className="bg-[#181818] border border-[#2d2d2d] text-xs px-4 py-2 text-white font-mono placeholder-[#444] rounded-sm focus:outline-none focus:border-[#00FF88] w-64 uppercase tracking-wider"
+      />
+     </div>
+    </div>
+
+    {/* Filter buttons */}
+    <div className="flex flex-wrap gap-2 py-1 shrink-0">
+     {[
+      { label: 'ALL ENTRIES', val: 'ALL', color: 'border-transparent hover:border-[#444]' },
+      { label: 'MILESTONES', val: 'MILESTONE', color: 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' },
+      { label: 'CAREER CHOICES', val: 'CHOICE', color: 'border-cyan-500/20 text-cyan-400 bg-cyan-500/5' },
+      { label: 'MEDIA HEADLINES', val: 'MEDIA', color: 'border-amber-500/20 text-amber-400 bg-amber-500/5' }
+     ].map(f => (
+      <button
+       key={f.val}
+       onClick={() => setJournalFilter(f.val as any)}
+       className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border transition-all rounded-sm
+       ${journalFilter === f.val 
+        ? 'bg-[#00FF88] text-white border-[#00FF88]' 
+        : `bg-[#131313] border-white/10 text-white/50 ${f.color}`}
+       `}
+      >
+       {f.label}
+      </button>
+     ))}
+    </div>
+
+    {/* Journal Stream Feed */}
+    <div className="flex-1 overflow-y-auto pr-2 no-scrollbar mt-4">
+     {filteredJournalEntries.length === 0 ? (
+      <div className="h-full flex flex-col items-center justify-center text-center py-16">
+       <BookOpen size={32} className="text-white/20 mb-3 animate-pulse" />
+       <span className="text-[#444] text-xs font-black uppercase tracking-widest">No Journal Entries Recorded</span>
+       <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2 leading-relaxed max-w-xs">As you advance weeks, make career choices, and headline media moments, your memoir will automatically update here.</p>
+      </div>
+     ) : (
+      <div className="relative pl-6 border-l border-white/10 ml-4 space-y-6 py-2">
+       {filteredJournalEntries.map((entry) => {
+        let colorDot = 'bg-[#10b981] shadow-[0_0_8px_#10b981]';
+        let labelColor = 'text-emerald-400 border-emerald-500/10 bg-emerald-500/5';
+        let categoryName = 'MILESTONE';
+
+        if (entry.category === 'CHOICE') {
+         colorDot = 'bg-[#06b6d4] shadow-[0_0_8px_#06b6d4]';
+         labelColor = 'text-cyan-400 border-cyan-500/10 bg-cyan-500/5';
+         categoryName = 'CAREER CHOICE';
+        } else if (entry.category === 'MEDIA') {
+         colorDot = 'bg-[#f59e0b] shadow-[0_0_8px_#f59e0b]';
+         labelColor = 'text-amber-400 border-amber-500/10 bg-amber-500/5';
+         categoryName = 'MEDIA HEADLINE';
+        }
+
+        return (
+         <div key={entry.id} className="relative group">
+          <div className={`absolute -left-[31px] top-1.5 w-2 h-2 rounded-full ${colorDot} border border-[#111] transition-transform duration-200 group-hover:scale-125`} />
+          
+          <div className="flex items-start justify-between bg-[#151515] p-5 border border-[#1e1e1e] hover:border-[#2d2d2d] transition-all duration-200">
+           <div className="flex-1">
+            <div className="flex items-center gap-3">
+             <span className={`font-mono text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border rounded-sm ${labelColor}`}>
+              {entry.week < 1 ? 'Pre-Career' : getFormattedCalendarDate(entry.week, entry.day || 'MON')}
+             </span>
+             <span className="text-[#64748b] text-[9px] font-mono font-bold uppercase tracking-widest">
+              {categoryName} • {entry.source}
+             </span>
+            </div>
+
+            <h4 className="text-white text-sm font-bold uppercase tracking-wider mt-2 group-hover:text-[#00FF88] transition-colors">
+             {entry.title}
+            </h4>
+
+            <p className="text-white/60 text-xs mt-2 leading-relaxed font-sans font-medium">
+             {entry.description}
+            </p>
+
+            {entry.consequences && (
+             <div className="mt-3 inline-block bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] font-mono text-[#00FF88] uppercase tracking-wider">
+              Impact: {entry.consequences}
+             </div>
+            )}
+           </div>
+
+           {entry.clubSymbol && (
+            <div className="bg-[#1b1b1b] border border-[#2a2a2a] text-[#00FF88] font-mono font-black text-[10px] px-2.5 py-1 uppercase tracking-widest ml-4 shadow-sm self-start">
+             {entry.clubSymbol}
+            </div>
+           )}
+          </div>
+         </div>
+        );
+       })}
+      </div>
+     )}
+    </div>
    </div>
   )}
 

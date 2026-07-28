@@ -1,5 +1,5 @@
 import { ProgressBar } from "../components/ProgressBar";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGame } from "../store/GameContext";
 import {
  Mail,
@@ -10,6 +10,7 @@ import {
  Award,
  Sparkles,
  AlertTriangle,
+ CheckCircle2,
 } from "lucide-react";
 import { TeamLogo } from "../components/TeamLogo";
 import { CLUBS, RIVALRIES } from "../data/teams";
@@ -18,10 +19,12 @@ import { getReputationTags } from "../utils/reputation";
 import { generateSeasonObjective, generateRandomNewManager } from "../utils/seasonObjectives";
 import { getIntlEligibility, processIntlMatch } from "../utils/international";
 import { executeTestimonialMatch } from "../utils/testimonialMatch";
-import { processInboxMessages } from "../utils/notifications";
+import { processInboxMessages, isDecisionRequired } from "../utils/notifications";
 
 export function Inbox() {
  const { state, setPlayer, setInbox, updateCalendar, setScreen } = useGame();
+
+ const messages = state.inbox || [];
 
  const [selectedMsg, setSelectedMsg] = useState<any>(null);
  const [notification, setNotification] = useState<string | null>(null);
@@ -29,6 +32,24 @@ export function Inbox() {
  const [verbosity, setVerbosity] = useState<'ALL' | 'IMPORTANT_AND_CRITICAL' | 'CRITICAL_ONLY'>(
    state.player?.stateFlags?.notificationVerbosity || 'ALL'
  );
+
+ useEffect(() => {
+  if (messages.length > 0) {
+   if (!selectedMsg) {
+    const pending = messages.find((m: any) => isDecisionRequired(m));
+    if (pending) {
+     setSelectedMsg(pending);
+    } else {
+     setSelectedMsg(messages[0]);
+    }
+   } else {
+    const fresh = messages.find((m: any) => m.id === selectedMsg.id);
+    if (fresh) {
+     setSelectedMsg(fresh);
+    }
+   }
+  }
+ }, [messages]);
 
  if (!state.player) return null;
 
@@ -102,8 +123,6 @@ export function Inbox() {
  const [negotiationLog, setNegotiationLog] = useState<string[]>([]);
  const [isSponsorship, setIsSponsorship] = useState(false);
  const [sponsorName, setSponsorName] = useState("");
-
- const messages = state.inbox || [];
 
  const startNegotiations = (choice: any) => {
  setNegotiatingMsg(selectedMsg);
@@ -619,11 +638,12 @@ export function Inbox() {
  newPlayer.relationships = rels;
  setPlayer(newPlayer);
 
- const updatedInbox = messages.map((m) =>
-  m.id === selectedMsg.id ? { ...m, read: true } : m,
+ const actionText = choice.text || "Decision Resolved";
+ const updatedInbox = messages.map((m: any) =>
+  m.id === selectedMsg.id ? { ...m, read: true, handled: true, actionTaken: actionText, choices: [] } : m,
  );
  setInbox(updatedInbox);
- setSelectedMsg(null);
+ setSelectedMsg({ ...selectedMsg, read: true, handled: true, actionTaken: actionText, choices: [] });
  };
 
  const startSponsorshipNegotiations = (choice: any) => {
@@ -776,7 +796,7 @@ export function Inbox() {
    
    setPlayer(newPlayer);
    const updatedInbox = messages.map((m) =>
-    m.id === negotiatingMsg.id ? { ...m, read: true } : m,
+    m.id === negotiatingMsg.id ? { ...m, read: true, handled: true, actionTaken: `Endorsement Agreed (${sponsorName})`, choices: [] } : m,
    );
    setInbox(updatedInbox);
    setNegotiatingMsg(null);
@@ -870,7 +890,7 @@ export function Inbox() {
  setPlayer(newPlayer);
 
  const updatedInbox = messages.map((m) =>
-  m.id === negotiatingMsg.id ? { ...m, read: true } : m,
+  m.id === negotiatingMsg.id ? { ...m, read: true, handled: true, actionTaken: `Contract Agreed (${targetClub})`, choices: [] } : m,
  );
  setInbox(updatedInbox);
 
@@ -889,7 +909,7 @@ export function Inbox() {
 
  // Reject email
  const updatedInbox = messages.map((m) =>
-  m.id === negotiatingMsg.id ? { ...m, read: true } : m,
+  m.id === negotiatingMsg.id ? { ...m, read: true, handled: true, actionTaken: "Negotiation Ended", choices: [] } : m,
  );
  setInbox(updatedInbox);
 
@@ -1330,25 +1350,38 @@ export function Inbox() {
      <p className="text-[#555] text-[10px] max-w-[240px] mt-1 leading-relaxed">No {category !== 'ALL' ? category.toLowerCase() : ''} messages at this time. All official correspondence is up to date.</p>
     </div>
    ) : (() => {
-     const criticalUnread = filteredMessages.filter(m => m.priority === 'CRITICAL' && !m.read);
-     const standardMsgs = filteredMessages.filter(m => m.priority !== 'CRITICAL' || m.read);
+     const decisionRequiredMsgs = filteredMessages.filter((m: any) => isDecisionRequired(m));
+     const standardMsgs = filteredMessages.filter((m: any) => !isDecisionRequired(m));
      
      const renderCard = (msg: any) => {
        let priorityStyle = "";
        let badgeColor = "text-[#666] border-[#333] bg-white/5";
+       let badgeText = "OPTIONAL";
        
-       if (msg.priority === 'CRITICAL') {
+       if (isDecisionRequired(msg)) {
+         priorityStyle = "bg-red-950/20 border-l-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
+         badgeColor = "text-red-400 border-red-500/30 bg-red-950/30 animate-pulse";
+         badgeText = "MUST RESPOND";
+       } else if (msg.handled) {
+         priorityStyle = "border-l-emerald-500/40 opacity-70";
+         badgeColor = "text-emerald-400 border-emerald-500/30 bg-emerald-950/20";
+         badgeText = "RESPONDED";
+       } else if (msg.priority === 'CRITICAL') {
          priorityStyle = msg.read ? "border-l-red-500/40" : "bg-red-950/10 border-l-red-500 shadow-[0_0_15px_rgba(239,68,68,0.05)]";
          badgeColor = "text-red-400 border-red-500/20 bg-red-950/20 animate-pulse";
+         badgeText = "MANDATORY";
        } else if (msg.priority === 'IMPORTANT') {
          priorityStyle = msg.read ? "border-l-cyan-500/40" : "bg-cyan-950/10 border-l-cyan-500";
          badgeColor = "text-cyan-400 border-cyan-500/20 bg-cyan-950/20";
+         badgeText = "IMPORTANT";
        } else if (msg.priority === 'AMBIENT') {
          priorityStyle = "border-l-amber-500/20";
          badgeColor = "text-amber-500 border-amber-500/10 bg-amber-950/5";
+         badgeText = "AMBIENT";
        } else if (msg.sender === 'WEEKLY CORRESPONDENCE DIGEST') {
          priorityStyle = "bg-teal-950/5 border-l-teal-500";
          badgeColor = "text-teal-400 border-teal-500/20 bg-teal-950/20";
+         badgeText = "DIGEST";
        }
 
        return (
@@ -1376,10 +1409,10 @@ export function Inbox() {
              </div>
              <div className="flex items-center gap-1.5">
                <span className={`text-[8px] font-mono font-black uppercase px-1.5 py-0.5 border rounded ${badgeColor}`}>
-                 {msg.priority === 'CRITICAL' ? 'MANDATORY' : 'OPTIONAL'}
+                 {badgeText}
                </span>
                <span className="text-[#555] text-[10px] uppercase font-bold tracking-widest font-mono">
-                 {msg.read ? "Opened" : "New"}
+                 {msg.handled ? "Resolved" : msg.read ? "Opened" : "New"}
                </span>
              </div>
            </div>
@@ -1395,21 +1428,21 @@ export function Inbox() {
 
      return (
        <div className="flex flex-col">
-         {criticalUnread.length > 0 && (
-           <div className="bg-red-950/5 border-b border-red-900/20">
-             <div className="px-5 py-2 text-[9px] font-mono font-black text-red-400 bg-red-950/20 uppercase tracking-widest border-b border-red-950 flex items-center gap-2">
+         {decisionRequiredMsgs.length > 0 && (
+           <div className="bg-red-950/10 border-b border-red-900/30">
+             <div className="px-5 py-2 text-[9px] font-mono font-black text-red-400 bg-red-950/30 uppercase tracking-widest border-b border-red-950 flex items-center gap-2">
                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-               🚨 Mandatory Actions Required ({criticalUnread.length})
+               🚨 Mandatory Actions Required ({decisionRequiredMsgs.length})
              </div>
-             {[...criticalUnread].reverse().map(renderCard)}
+             {[...decisionRequiredMsgs].reverse().map(renderCard)}
            </div>
          )}
          
          {standardMsgs.length > 0 && (
            <div>
-             {criticalUnread.length > 0 && (
+             {decisionRequiredMsgs.length > 0 && (
                <div className="px-5 py-2 text-[9px] font-mono font-black text-white/40 uppercase tracking-widest border-b border-white/5 bg-black/40">
-                 📁 Optional Correspondence ({standardMsgs.length})
+                 📁 General Correspondence ({standardMsgs.length})
                </div>
              )}
              {[...standardMsgs].reverse().map(renderCard)}
@@ -1610,33 +1643,51 @@ export function Inbox() {
     )}
    </div>
 
-   <div className="mt-auto p-6 border-t border-white/10 flex gap-4 bg-[#0a0a0a]">
-    {selectedMsg.choices &&
-    selectedMsg.choices.map((choice: any, idx: number) => {
-     const text = choice.text.toUpperCase();
-     const isAccept = text.includes("ACCEPT") || text.includes("SIGN") || text.includes("AGREE") || text.includes("SUPPORT") || text.includes("ESTABLISH") || text.includes("PUSH") || text.includes("PITCH") || text.includes("NEGOTIATE") || text.includes("RETAIN") || text.includes("YES");
-     const isReject = text.includes("REJECT") || text.includes("CANCEL") || text.includes("DISAGREE") || text.includes("IGNORE") || text.includes("PASS") || text.includes("REFUSE") || text.includes("NO");
-     
-     let btnStyle = "bg-transparent text-white border-white/10 hover:border-white/30";
-     if (isAccept) {
-      btnStyle = "bg-[#4ade80] text-black border-[#4ade80] hover:bg-[#22c55e] hover:border-[#22c55e]";
-     } else if (isReject) {
-      btnStyle = "bg-transparent text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white hover:border-red-500";
-     } else if (idx === 0) {
-      btnStyle = "bg-[#00FF88] text-black border-[#00FF88] hover:bg-[#00FF88]";
-     }
-     
-     return (
-      <button
-      key={idx}
-      onClick={() => handleAction(choice)}
-      className={`flex-1 px-6 py-4 font-black uppercase tracking-widest text-[11px] transition-all duration-300 border font-mono rounded shadow-lg ${btnStyle}`}
-      >
-      {choice.text}
-      </button>
-     );
-    })}
-   </div>
+   {isDecisionRequired(selectedMsg) && (
+    <div className="p-4 bg-red-950/40 border-t border-red-500/40 flex items-center gap-3 text-red-300 text-xs font-mono font-bold animate-pulse">
+     <AlertTriangle size={16} className="text-red-400 shrink-0" />
+     <span>MANDATORY DECISION REQUIRED: You must select a response option below before calendar advancement is permitted.</span>
+    </div>
+   )}
+
+   {selectedMsg.handled && (
+    <div className="mt-auto p-5 border-t border-emerald-500/30 bg-emerald-950/20 flex items-center justify-between">
+     <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
+      <CheckCircle2 size={16} />
+      <span>Decision Registered: {selectedMsg.actionTaken || "Responded"}</span>
+     </div>
+     <span className="text-[10px] text-emerald-500/70 font-mono uppercase tracking-widest">Football Manager Action Resolved</span>
+    </div>
+   )}
+
+   {selectedMsg.choices && selectedMsg.choices.length > 0 && (
+    <div className="mt-auto p-6 border-t border-white/10 flex gap-4 bg-[#0a0a0a]">
+     {selectedMsg.choices.map((choice: any, idx: number) => {
+      const text = choice.text.toUpperCase();
+      const isAccept = text.includes("ACCEPT") || text.includes("SIGN") || text.includes("AGREE") || text.includes("SUPPORT") || text.includes("ESTABLISH") || text.includes("PUSH") || text.includes("PITCH") || text.includes("NEGOTIATE") || text.includes("RETAIN") || text.includes("YES");
+      const isReject = text.includes("REJECT") || text.includes("CANCEL") || text.includes("DISAGREE") || text.includes("IGNORE") || text.includes("PASS") || text.includes("REFUSE") || text.includes("NO");
+      
+      let btnStyle = "bg-transparent text-white border-white/10 hover:border-white/30";
+      if (isAccept) {
+       btnStyle = "bg-[#4ade80] text-black border-[#4ade80] hover:bg-[#22c55e] hover:border-[#22c55e]";
+      } else if (isReject) {
+       btnStyle = "bg-transparent text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white hover:border-red-500";
+      } else if (idx === 0) {
+       btnStyle = "bg-[#00FF88] text-black border-[#00FF88] hover:bg-[#00FF88]";
+      }
+      
+      return (
+       <button
+       key={idx}
+       onClick={() => handleAction(choice)}
+       className={`flex-1 px-6 py-4 font-black uppercase tracking-widest text-[11px] transition-all duration-300 border font-mono rounded shadow-lg ${btnStyle}`}
+       >
+       {choice.text}
+       </button>
+      );
+     })}
+    </div>
+   )}
     </>
    )
   ) : (

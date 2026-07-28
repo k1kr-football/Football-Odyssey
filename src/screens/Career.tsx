@@ -194,9 +194,12 @@ export function Career() {
   morale: Math.min(100, Math.max(0, player.morale + moraleCost)),
   trust: Math.min(100, Math.max(0, player.trust + managerTrustChange)),
   relationships: {
-  ...player.relationships,
-  teammates: Math.min(100, Math.max(0, player.relationships.teammates + teammatesRelChange)),
-  family: player.relationships.family // kept same
+   manager: player.relationships?.manager ?? 50,
+   manager_discipline: player.relationships?.manager_discipline ?? 50,
+   agent: player.relationships?.agent ?? 50,
+   ...player.relationships,
+   teammates: Math.min(100, Math.max(0, (player.relationships?.teammates ?? 50) + teammatesRelChange)),
+   family: player.relationships?.family ?? 75
   },
   fans: Math.min(100, Math.max(0, player.fans + fansRelChange)),
   socialMedia: {
@@ -587,7 +590,7 @@ export function Career() {
     
     <div className="premium-card p-6 rounded-xl flex flex-col relative overflow-hidden shrink-0">
      <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4">Bank Balance</h3>
-     <div className="text-white text-3xl font-black tracking-tighter">£{(player.finances.balance / 1000000).toFixed(2)}M</div>
+     <div className="text-white text-3xl font-black tracking-tighter">£{((player.finances?.balance || 0) / 1000000).toFixed(2)}M</div>
      <div className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
       {player.sponsors || 0} Active Sponsors
      </div>

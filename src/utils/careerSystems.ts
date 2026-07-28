@@ -6,42 +6,163 @@ import { getClubSquad } from '../data/sheetSquads';
 import { STORY_ARCS } from '../data/storyArcs';
 import { getMentalFatigueLevel } from './wellbeingEngine';
 
+export function calculateDetailedMatchSelection(
+  player: Player,
+  competitionType: string
+): { status: 'STARTER' | 'SUBSTITUTE' | 'UNUSED'; reason: string; score: number } {
+  let score = 50;
+  const reasons: string[] = [];
+
+  // 1. Standing in Team / Role
+  const status = player.contract?.status || 'Rotation';
+  if (status === 'Star Player' || status === 'Key Player') {
+    score += 32;
+    reasons.push('Key Star Role');
+  } else if (status === 'First Teamer') {
+    score += 24;
+    reasons.push('First-Team Regular');
+  } else if (status === 'Rotation' || status === 'Squad Player') {
+    score += 10;
+    reasons.push('Rotation Option');
+  } else if (status === 'Backup' as any) {
+    score -= 10;
+    reasons.push('Backup Status');
+  } else if (status === 'Youth' || status === 'Fringe' || (status as string) === 'Prospect') {
+    score -= 18;
+    reasons.push('Young Prospect / Fringe Role');
+  } else if (status === 'Exile') {
+    score -= 55;
+    reasons.push('Out of Manager Favor (Exiled)');
+  }
+
+  // 2. Manager Trust & Relationship
+  const trust = typeof player.trust === 'number' ? player.trust : 50;
+  const managerRel = player.relationships?.manager ?? trust;
+  const combinedTrust = (trust + managerRel) / 2;
+
+  if (combinedTrust >= 80) {
+    score += 20;
+    reasons.push('High Manager Trust (80%+)');
+  } else if (combinedTrust >= 65) {
+    score += 10;
+    reasons.push('Good Manager Confidence');
+  } else if (combinedTrust < 40) {
+    score -= 20;
+    reasons.push('Low Manager Trust');
+  } else if (combinedTrust < 25) {
+    score -= 35;
+    reasons.push('Strained Manager Relationship');
+  }
+
+  // 3. OVR Rating relative to Team Standard
+  const userClub = CLUBS.find(c => c.symbol === player.currentClubSymbol) || { ovr: 70 };
+  const ovrDiff = player.ovr - userClub.ovr;
+  if (ovrDiff >= 5) {
+    score += 18;
+    reasons.push(`Top Quality OVR (${player.ovr} vs ${userClub.ovr} team avg)`);
+  } else if (ovrDiff >= 1) {
+    score += 8;
+  } else if (ovrDiff <= -5) {
+    score -= 20;
+    reasons.push(`OVR Below Team Standard (${player.ovr} vs ${userClub.ovr})`);
+  } else if (ovrDiff <= -2) {
+    score -= 10;
+  }
+
+  // 4. Training Attendance & Conduct
+  const skippedTraining = !!player.stateFlags?.skippedTrainingThisWeek;
+  if (skippedTraining) {
+    score -= 45; // Severe penalty for skipping training!
+    reasons.push('DROPPED/BENCHED: Skipped Mandatory Training Session');
+  } else {
+    score += 10; // Reward training attendance
+  }
+
+  if (player.stateFlags?.managerClash || player.stateFlags?.feudWithManager) {
+    score -= 25;
+    reasons.push('Disciplinary Friction with Manager');
+  }
+
+  // 5. Fatigue & Stamina Condition
+  const fatigue = typeof player.fatigue === 'number' ? player.fatigue : 0;
+  if (fatigue >= 80) {
+    score -= 45;
+    reasons.push(`RESTED: Critical Physical Fatigue (${fatigue}%)`);
+  } else if (fatigue >= 65) {
+    score -= 25;
+    reasons.push(`RESTED: High Fatigue (${fatigue}%)`);
+  } else if (fatigue >= 50) {
+    score -= 12;
+    reasons.push(`Elevated Fatigue (${fatigue}%)`);
+  } else if (fatigue < 25) {
+    score += 8;
+    reasons.push('Peak Physical Fitness');
+  }
+
+  // 6. Recent Match Form & Morale
+  const form = typeof player.form === 'number' ? player.form : 50;
+  const morale = typeof player.morale === 'number' ? player.morale : 50;
+  if (form >= 78) {
+    score += 12;
+    reasons.push(`In-Form Performance (${form})`);
+  } else if (form < 40) {
+    score -= 12;
+    reasons.push(`Poor Recent Form (${form})`);
+  }
+
+  if (morale < 30) {
+    score -= 8;
+    reasons.push('Low Morale');
+  }
+
+  // 7. International / Friendly / Cup Specifics
+  if (competitionType === 'INTERNATIONAL') {
+    const intlStatus = player.stateFlags?.intlStatus || 'Youth';
+    if (intlStatus === 'Senior Captain' || intlStatus === 'Senior Regular') {
+      if (fatigue > 70) {
+        return { status: 'SUBSTITUTE', reason: 'International regular rested due to fatigue', score };
+      }
+      return { status: 'STARTER', reason: 'National Team Starter & Core Leader', score };
+    } else if (intlStatus === 'Youth' || intlStatus === 'Senior Fringe') {
+      if (score > 40) return { status: 'SUBSTITUTE', reason: 'National Squad Bench Option', score };
+      return { status: 'UNUSED', reason: 'Left out of international matchday squad', score };
+    }
+    return { status: 'UNUSED', reason: 'Not called up for international fixture', score };
+  }
+
+  if (competitionType === 'FRIENDLY' || competitionType === 'DOMESTIC_CUP') {
+    if (status === 'Star Player' || status === 'Key Player') {
+      if (fatigue > 40) {
+        score -= 20;
+        reasons.push('Rested for Cup/Friendly Rotation');
+      }
+    } else if (status === 'Youth' || status === 'Fringe' || (status as string) === 'Backup' || (status as string) === 'Prospect') {
+      score += 18;
+      reasons.push('Given Starting Opportunity in Cup/Friendly');
+    }
+  }
+
+  // Determine final status
+  let selectionStatus: 'STARTER' | 'SUBSTITUTE' | 'UNUSED';
+  if (score >= 55) {
+    selectionStatus = 'STARTER';
+  } else if (score >= 32) {
+    selectionStatus = 'SUBSTITUTE';
+  } else {
+    selectionStatus = 'UNUSED';
+  }
+
+  const mainReason = reasons.length > 0 ? reasons.slice(0, 2).join(' • ') : 'Tactical selection decision';
+
+  return {
+    status: selectionStatus,
+    reason: mainReason,
+    score
+  };
+}
+
 export function calculateMatchSelection(player: Player, competitionType: string): 'STARTER' | 'SUBSTITUTE' | 'UNUSED' {
-    if (competitionType === 'INTERNATIONAL') {
-        const status = player.stateFlags?.intlStatus;
-        if (status === 'Senior Captain' || status === 'Senior Regular') {
-            if (player.fatigue > 70) return 'SUBSTITUTE';
-            return 'STARTER';
-        }
-        if (status === 'Youth' || status === 'Senior Fringe') {
-            if (Math.random() > 0.4) return 'SUBSTITUTE';
-            return 'STARTER';
-        }
-        return 'UNUSED';
-    }
-
-    const isFriendly = competitionType === 'FRIENDLY';
-    let selectionScore = (player.trust * 0.5) + (player.form * 0.3) - (player.fatigue * 0.2);
-    
-    // In friendlies, provisional players / new signings get a huge boost to ensure they get evaluated.
-    // Also, we rest star players to avoid injury.
-    if (isFriendly) {
-        if (player.contract.status === 'Star Player' || player.contract.status === 'Key Player') {
-            selectionScore -= 30; // High chance of resting or substitute
-        } else if (player.contract.status === 'Exile' || player.contract.status === 'Backup' || player.contract.status === 'Squad Player') {
-            selectionScore += 20; // Give them a chance to impress
-        } else {
-            selectionScore += 10;
-        }
-        // Force more substitutes and rotation in friendlies
-        selectionScore += (Math.random() * 20) - 10;
-    } else {
-        selectionScore += (Math.random() * 10) - 5;
-    }
-
-    if (selectionScore > 60) return 'STARTER';
-    if (selectionScore > 35) return 'SUBSTITUTE';
-    return 'UNUSED';
+  return calculateDetailedMatchSelection(player, competitionType).status;
 }
 
 // ============================================================================

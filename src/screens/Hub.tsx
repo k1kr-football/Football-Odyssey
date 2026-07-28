@@ -684,7 +684,9 @@ export function Hub() {
       ROUND VS {state.nextMatch?.opponentSymbol || 'OPPONENT'}
      </p>
      <p className="text-red-400 font-sans text-xs mb-8 max-w-sm relative z-10 leading-relaxed">
-      You were not selected for the matchday squad. Instead of traveling with the team, you are ordered to undergo intense training at the club's facility to improve your fitness and regain trust.
+      {state.nextMatch?.selectionReason
+        ? `Manager Decision: ${state.nextMatch.selectionReason}. You were omitted from the matchday squad.`
+        : `You were not selected for the matchday squad. Instead of traveling with the team, you are ordered to undergo intense training at the club's facility to improve your fitness and regain trust.`}
      </p>
      <button 
      onClick={() => {
@@ -913,7 +915,7 @@ export function Hub() {
      <Calendar size={14} className="text-[#00FF88]" />
      Dynamic Weekly Schedule
     </h3>
-    <p className="text-white/40 text-[10px] font-semibold tracking-wider uppercase mt-0.5">Week {state.currentWeek} &middot; {isTransferWindow ? "Active Transfer Window" : "Regular Campaign"}</p>
+    <p className="text-white/40 text-[10px] font-semibold tracking-wider uppercase mt-0.5">{getFormattedCalendarDate(state.currentWeek, state.currentDay)} &middot; {state.currentWeek <= 4 ? "Pre-Season" : state.currentWeek <= 40 ? "Domestic Campaign" : "Off-Season"}</p>
     </div>
     <span className="text-[#00FF88] text-[10px] font-bold tracking-widest uppercase font-mono bg-[#00FF88]/5 px-2.5 py-1 border border-[#00FF88]/10 rounded hidden sm:inline-block">
     {state.currentDay} Status

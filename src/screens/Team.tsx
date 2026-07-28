@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../store/GameContext';
 import { ProgressBar } from '../components/ProgressBar';
-import { Users, Crown, Star, Target, Shield, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { Users, Crown, Star, Target, Shield, AlertTriangle, ArrowUpRight, Sparkles, MessageSquare } from 'lucide-react';
 import { TeamLogo } from '../components/TeamLogo';
 import { CLUBS } from '../data/teams';
 import { getClubSquad } from '../data/sheetSquads';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
+import { calculateSquadChemistry } from '../utils/reputation';
 
 export function Team() {
- const { state } = useGame();
+ const { state, setPlayer } = useGame();
+ const [bondingMsg, setBondingMsg] = useState<string | null>(null);
  
  const playerClubSymbol = state.player?.currentClubSymbol || 'BIR';
  const club = CLUBS.find(c => c.symbol.toUpperCase() === playerClubSymbol.toUpperCase()) || {
@@ -28,9 +30,29 @@ export function Team() {
  const managerName = worldClub?.manager?.name || state.player?.managerInfo?.name || squad.manager || "The Manager";
  
  // Squad Dynamics values
- const squadChemistry = state.player?.squadChemistry || 50;
+ const squadChemistry = state.player ? calculateSquadChemistry(state.player) : 50;
  const playerRole = state.player?.hierarchyRole || 'Fringe';
  const teammateRelation = state.player?.relationships?.teammates || 50;
+ const playerForm = state.player?.form || 50;
+ const mentees = (state.player?.stateFlags as any)?.openThreads?.mentees || [];
+ const activeMenteesCount = mentees.filter((m: any) => m.isMentored).length;
+
+ const handleCallTeamMeeting = () => {
+  if (!state.player) return;
+  const currentTeammates = state.player.relationships?.teammates || 50;
+  const updatedTeammates = Math.min(100, currentTeammates + 6);
+  const updatedPlayer = {
+   ...state.player,
+   relationships: {
+    ...state.player.relationships,
+    teammates: updatedTeammates
+   }
+  };
+  setPlayer(updatedPlayer);
+  setBondingMsg("💬 Players meeting held! Squad morale and peer respect improved (+6%).");
+  setTimeout(() => setBondingMsg(null), 4000);
+ };
+
  
  return (
  <div className="min-h-screen bg-black text-white p-6 pb-24 overflow-y-auto" style={{
@@ -51,7 +73,7 @@ export function Team() {
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
    
    {/* Squad Chemistry */}
-   <div className="premium-card p-6 border-l-4 border-l-emerald-500">
+   <div className="premium-card p-6 border-l-4 border-l-emerald-500 space-y-4">
     <div className="flex items-center gap-3 mb-4">
      <Users className="text-emerald-400 w-6 h-6" />
      <div className="text-xl font-bold tracking-tight"><GlossaryTooltip term="Squad Chemistry">Squad Chemistry</GlossaryTooltip></div>
@@ -59,21 +81,58 @@ export function Team() {
     
     <div className="space-y-4">
      <div className="flex items-end justify-between">
-      <span className="text-5xl font-black">{squadChemistry}<span className="text-2xl text-white/40">/100</span></span>
-      <span className="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase tracking-wider">
+      <span className="text-4xl font-black">{squadChemistry}<span className="text-xl text-white/40">/100</span></span>
+      <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+       squadChemistry > 80 ? 'text-emerald-400 bg-emerald-500/10' :
+       squadChemistry > 60 ? 'text-cyan-400 bg-cyan-500/10' :
+       squadChemistry > 40 ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'
+      }`}>
        {squadChemistry > 80 ? 'Excellent' : squadChemistry > 60 ? 'Good' : squadChemistry > 40 ? 'Average' : 'Poor'}
       </span>
      </div>
      
      <ProgressBar value={squadChemistry} showValue={false} colorMode="trust" height="h-2" />
      
-     <p className="text-sm text-white/60">
+     <p className="text-xs text-white/60">
       {squadChemistry > 70 
-       ? "The squad is united. Players anticipate each other's movements, providing a passive bonus to Passing and Vision."
+       ? "The squad is united. Players anticipate each other's movements, providing a passive bonus to Passing, Vision, and overall match performance."
        : squadChemistry > 40 
-       ? "Standard cohesion. The squad functions adequately but lacks telepathic understanding."
+       ? "Standard cohesion. The squad functions adequately but lacks telepathic understanding on the pitch."
        : "Friction in the locker room. Misplaced passes and lack of defensive cover are prevalent."}
      </p>
+
+     {/* Breakdown */}
+     <div className="bg-white/5 p-3 rounded space-y-1.5 text-xs font-mono border border-white/5">
+      <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Fluctuation Factors</div>
+      <div className="flex justify-between">
+       <span className="text-white/60">Teammate Peer Respect:</span>
+       <span className="font-bold text-white">{teammateRelation}%</span>
+      </div>
+      <div className="flex justify-between">
+       <span className="text-white/60">Active Mentorships:</span>
+       <span className="font-bold text-emerald-400">+{activeMenteesCount * 8}%</span>
+      </div>
+      <div className="flex justify-between">
+       <span className="text-white/60">Form Consistency:</span>
+       <span className="font-bold text-white">{playerForm}%</span>
+      </div>
+     </div>
+
+     {/* Team Meeting Button */}
+     <div className="pt-2">
+      <button
+       onClick={handleCallTeamMeeting}
+       className="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider rounded text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
+      >
+       <MessageSquare size={14} className="text-[#00FF88]" />
+       Call Players Meeting / Bonding Session
+      </button>
+      {bondingMsg && (
+       <div className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 p-2 rounded text-center mt-2 animate-fade-in">
+        {bondingMsg}
+       </div>
+      )}
+     </div>
     </div>
    </div>
 

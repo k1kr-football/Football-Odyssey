@@ -7,8 +7,9 @@ import { decayReputationAndPerception, updateReputationAndPerception } from '../
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { getRandomTrainingDramaEvent, TRAINING_DRAMA_EVENTS } from '../data/events/trainingDramas';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Player, DayOfWeek, RoutineSlot, InboxMessage, EventChoice, DailyEvent, CalendarEntry } from '../types';
+import { Player, DayOfWeek, RoutineSlot, InboxMessage, EventChoice, DailyEvent, CalendarEntry, AppSettings } from '../types';
 import { CLUBS, RIVALRIES } from '../data/teams';
 import { evaluateHierarchyTier, calculateOVR } from '../utils/player';
 import { ALL_EVENTS } from '../data/events';
@@ -19,7 +20,7 @@ import { generateTransferOffers, getClubTier, getGatingStatus } from '../utils/t
 import { generateSeasonCalendar } from '../utils/calendar';
 import { checkAndTriggerPlayerCouncil, checkCaptaincyProgression } from '../utils/playerCouncil';
 import { generateMonthlyScoutReport, checkAndTriggerDressingRoomRumble, progressRivals, checkAndLogTrophies, processFinancialEmpireWeekly } from '../utils/gameRefinements';
-import { initializePlayerCareer, generateSaveNPCs, generateAllClubsRosters, calculateMatchSelection, generatePreseasonReportCard, applyPreseasonResults } from '../utils/careerSystems';
+import { initializePlayerCareer, generateSaveNPCs, generateAllClubsRosters, calculateMatchSelection, calculateDetailedMatchSelection, generatePreseasonReportCard, applyPreseasonResults } from '../utils/careerSystems';
 import { getClubStandings, checkMidSeasonObjective, evaluateEndofSeasonObjective, generateSeasonObjective, generateRandomNewManager } from '../utils/seasonObjectives';
 import { generateIntlCallUp } from '../utils/international';
 import { generateTestimonialProposal } from '../utils/testimonialMatch';
@@ -29,13 +30,13 @@ import { initializeWorldState, simulateWorldWeek, WorldState } from '../utils/wo
 import { initializeAllClubFinances, simulateClubFinancesWeekly } from '../utils/clubFinances';
 import { addDecision } from '../utils/decisionMemory';
 import { migrateSaveData } from '../utils/saveMigration';
-import { tagInboxMessagePriority } from '../utils/notifications';
+import { tagInboxMessagePriority, isDecisionRequired } from '../utils/notifications';
 import { checkFinancialTierUp } from '../utils/financialProgression';
 import { processWeeklyPhysicalUpdate, getRecoveryDetails } from '../utils/recoveryTiers';
 import { processWeeklyMentalFatigue, getMentalFatigueLevel, initializeActiveRehab, processWeeklyRehabStep, applyLifestyleMentalFatigueRecovery } from '../utils/wellbeingEngine';
 import { checkAndTriggerDynamicEvent, DYNAMIC_EVENT_POOL } from '../utils/dynamicEvents';
 
-export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY';
+export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT';
 
 export interface GameState {
   screen: Screen;
@@ -65,6 +66,7 @@ export interface GameState {
     venue?: string;
     scoutReportStudied?: boolean;
     selectedStrategy?: 'BALANCED' | 'EXPOSE_HIGH_LINE' | 'TARGET_FLANKS' | 'HIGH_PRESS';
+    selectionReason?: string;
   };
   npcRegistry?: NPCRegistry;
   npcGeneration?: {
@@ -77,9 +79,13 @@ export interface GameState {
   activeCutscene: string | null;
   unlockedCutscenes: any[];
   storyFlags: Record<string, any>;
+  saveSlot?: number;
 }
 
 interface GameContextType {
+  settings: AppSettings;
+  updateSettings: (newSettings: Partial<AppSettings>) => void;
+  resetData: () => void;
   state: GameState;
   setScreen: (screen: Screen) => void;
   setPlayer: (player: Player) => void;
@@ -90,8 +96,8 @@ interface GameContextType {
   resolveEvent: (choiceType: string) => void;
   updateRelationship: (entity: keyof Player['relationships'], amount: number) => void;
   setInbox: (inbox: InboxMessage[]) => void;
-  loadSavedGame: () => boolean;
-  newGame: () => void;
+  loadSavedGame: (slot: number) => boolean;
+  newGame: (slot: number) => void;
   saveAndQuit: () => void;
   updateCalendar: (entries: CalendarEntry[]) => void;
   updateNextMatch: (fields: any) => void;
@@ -115,9 +121,41 @@ const initialState: GameState = {
   nextMatch: undefined
 };
 
+
+const defaultSettings: AppSettings = {
+  masterVolume: 80,
+  musicVolume: 60,
+  sfxVolume: 100,
+  fullscreen: false,
+  animations: true,
+  matchEngineSpeed: 'Normal',
+  autoSave: true
+};
+
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: ReactNode }) {
+    const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem('rtg_settings');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return defaultSettings;
+  });
+
+  const updateSettings = (newSettings: Partial<AppSettings>) => {
+    setSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      localStorage.setItem('rtg_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const resetData = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const [state, setState] = useState<GameState>(initialState);
   const { generateEvent } = useEventManager();
 
@@ -317,6 +355,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(s => {
       if (!s.player) return s;
       
+      if (choiceType.startsWith('ENGINE_CHOICE_TRAINING_DRAMA_')) {
+        const match = choiceType.match(/^ENGINE_CHOICE_TRAINING_DRAMA_(.+)_(\d+)$/);
+        if (match) {
+          const dramaId = match[1];
+          const choiceIndex = parseInt(match[2], 10);
+          const dramaDef = TRAINING_DRAMA_EVENTS.find(e => e.id === dramaId);
+          if (dramaDef && dramaDef.choices[choiceIndex]) {
+            const stateChanges = dramaDef.choices[choiceIndex].effect(s);
+            return { ...s, activeEvent: null, ...stateChanges };
+          }
+        }
+      }
+
       if (choiceType.startsWith('ENGINE_CHOICE_')) {
         const match = choiceType.match(/^ENGINE_CHOICE_(.+)_(.+)$/);
         if (match && match[1] !== 'CLUB' && match[1] !== 'CLUB_TRAINING') { // Handle dynamic events
@@ -340,6 +391,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
 
         if (choiceType === 'ENGINE_CHOICE_CLUB_TRAINING_ATTEND_FULL') {
+           // Roll for Training Ground Drama incident (65% chance when attending training)
+           if (Math.random() < 0.65) {
+             const dramaEvent = getRandomTrainingDramaEvent(s);
+             if (dramaEvent) {
+               return { ...s, activeEvent: dramaEvent };
+             }
+           }
+
            const p = { ...s.player };
            p.fatigue = Math.min(100, p.fatigue + 10);
            p.trust = Math.min(100, p.trust + 5);
@@ -885,8 +944,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Don't advance if there is an active event waiting to be resolved
       if (s.activeEvent) return s;
       
-      const hasCriticalItem = s.inbox.some(msg => msg.priority === "CRITICAL" && !msg.read);
-      if (hasCriticalItem && !force) return s;
+      const hasPendingDecision = s.inbox.some(msg => isDecisionRequired(msg));
+      if (hasPendingDecision && !force) return s;
 
       const idx = days.indexOf(s.currentDay);
       
@@ -970,12 +1029,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
          let finalSquadList = s.nextMatch?.opponentSymbol === cm.opponentSymbol ? s.nextMatch?.squadList : undefined;
          let finalKickoffTime = s.nextMatch?.opponentSymbol === cm.opponentSymbol ? s.nextMatch?.kickoffTime : undefined;
          let finalVenue = s.nextMatch?.opponentSymbol === cm.opponentSymbol ? s.nextMatch?.venue : undefined;
+         let selectionReason: string | undefined = undefined;
 
          if (!finalStatus && s.player) {
             finalVenue = cm.isHome ? 'Home' : 'Away';
             finalKickoffTime = cm.competitionType === 'DOMESTIC_CUP' || cm.competitionType === 'EUROPEAN' ? '19:45 BST' : '15:00 BST';
             
-            finalStatus = calculateMatchSelection(s.player, cm.competitionType);
+             const selRes = calculateDetailedMatchSelection(s.player, cm.competitionType);
+             finalStatus = selRes.status;
+             selectionReason = selRes.reason;
 
             const currentClubName = CLUBS.find(c => c.symbol === s.player!.currentClubSymbol)?.name || 'Birmingham';
             // getClubSquad imported globally
@@ -1024,6 +1086,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
            pressure,
            rivalryName,
            playerStatus: finalStatus,
+           selectionReason: selectionReason,
            squadList: finalSquadList,
            kickoffTime: finalKickoffTime,
            venue: finalVenue
@@ -1072,7 +1135,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
          venue = tomorrowCalendarEntry.match.isHome ? 'Home' : 'Away';
          kickoffTime = tomorrowCalendarEntry.match.competitionType === 'DOMESTIC_CUP' || tomorrowCalendarEntry.match.competitionType === 'EUROPEAN' ? '19:45 BST' : (Math.random() > 0.5 ? '15:00 BST' : '12:30 BST');
          
-         playerStatus = calculateMatchSelection(updatedPlayerTemp, tomorrowCalendarEntry.match.competitionType);
+         const detailedSel = calculateDetailedMatchSelection(updatedPlayerTemp, tomorrowCalendarEntry.match.competitionType);
+         playerStatus = detailedSel.status;
+         const selectionReason = detailedSel.reason;
 
          const hasSkippedTraining = updatedPlayerTemp.stateFlags?.skippedTrainingThisWeek;
          if (hasSkippedTraining) {
@@ -1127,12 +1192,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
          squadList = { startingXI, substitutes, unused };
          
          const managerName = s.worldState?.clubs?.[s.player.currentClubSymbol]?.manager?.name || clubSquadObj.manager || "The Boss";
-         let selectionDialogue = `You have been selected to start tomorrow against ${tomorrowCalendarEntry.match.opponentSymbol}. Your training performance and form have earned you this spot. I need 100% focus and intensity out there.`;
+         let selectionDialogue = `You have been selected to start tomorrow against ${tomorrowCalendarEntry.match.opponentSymbol} (${selectionReason}). Your training performance and form have earned you this spot. I need 100% focus and intensity out there.`;
          
          if (playerStatus === 'SUBSTITUTE') {
-            selectionDialogue = `You will start on the bench tomorrow against ${tomorrowCalendarEntry.match.opponentSymbol}. We need you fresh to make an impact in the second half. Stay warm, watch the game, and be ready when your name is called.`;
+            selectionDialogue = `You will start on the bench tomorrow against ${tomorrowCalendarEntry.match.opponentSymbol} (${selectionReason}). We need you fresh to make an impact in the second half. Stay warm, watch the game, and be ready when your name is called.`;
          } else if (playerStatus === 'UNUSED') {
-            selectionDialogue = `I have decided to leave you out of the matchday squad for tomorrow's match against ${tomorrowCalendarEntry.match.opponentSymbol}. You need to increase your training intensity and prove you are ready to represent this club. Use the matchday to train hard.`;
+            selectionDialogue = `I have decided to leave you out of the matchday squad for tomorrow's match against ${tomorrowCalendarEntry.match.opponentSymbol} (${selectionReason}). You need to increase your training intensity and prove you are ready to represent this club. Use the matchday to train hard.`;
          }
 
          if (hasSkippedTraining && updatedPlayerTemp) {
@@ -1163,6 +1228,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             nextMatch = {
                ...nextMatch,
                playerStatus,
+               selectionReason,
                squadList,
                kickoffTime,
                venue
@@ -1175,6 +1241,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                matchType: 'REGULAR',
                pressure: 5,
                playerStatus,
+               selectionReason,
                squadList,
                kickoffTime,
                venue
@@ -1680,7 +1747,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
         if (updatedPlayerTemp) {
            // Family relationship naturally decays unless maintained. Reduced decay if high family expense.
-           const familyUpkeep = updatedPlayerTemp.finances.expenses.family;
+           const familyUpkeep = updatedPlayerTemp.finances?.expenses?.family || 0;
            const decayAmt = familyUpkeep > 5000 ? 0 : (familyUpkeep > 1000 ? 1 : 3);
            newFamilyRel = Math.max(0, newFamilyRel - decayAmt);
            
@@ -1691,8 +1758,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
              updatedPlayerTemp.ovr, 
              clubOvr, 
              newManagerRel, 
-             updatedPlayerTemp.relationships.manager_discipline, 
-             updatedPlayerTemp.reputation.club,
+             updatedPlayerTemp.relationships?.manager_discipline ?? 50, 
+             updatedPlayerTemp.reputation?.club ?? 50,
              updatedPlayerTemp.isInjured
            );
 
@@ -1776,12 +1843,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
            };
            openThreads.sponsors = signedSponsors;
 
-           const sponsorIncome = (updatedPlayerTemp.reputation.world * 1500) || 0;
-           const income = updatedPlayerTemp.contract.wage + sponsorIncome + customSponsorIncome + propertyRentalYield;
-           const expenses = updatedPlayerTemp.finances.expenses.housing + updatedPlayerTemp.finances.expenses.training + updatedPlayerTemp.finances.expenses.lifestyle + updatedPlayerTemp.finances.expenses.family;
+           const sponsorIncome = ((updatedPlayerTemp.reputation?.world || 50) * 1500) || 0;
+           const income = (updatedPlayerTemp.contract?.wage || 0) + sponsorIncome + customSponsorIncome + propertyRentalYield;
+           const expenses = (updatedPlayerTemp.finances?.expenses?.housing || 0) + (updatedPlayerTemp.finances?.expenses?.training || 0) + (updatedPlayerTemp.finances?.expenses?.lifestyle || 0) + (updatedPlayerTemp.finances?.expenses?.family || 0);
            const netWeekly = income - expenses;
            
-           let newBalance = updatedPlayerTemp.finances.balance + netWeekly;
+           let newBalance = (updatedPlayerTemp.finances?.balance || 0) + netWeekly;
            
            // Financial Empire Payout (System 6)
            if (updatedPlayerTemp.financialEmpire) {
@@ -2934,18 +3001,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const updateCalendar = (entries: CalendarEntry[]) => setState(s => ({ ...s, seasonCalendar: entries }));
 
   React.useEffect(() => {
-    if (state.player) {
+    if (state.player && settings.autoSave) {
       try {
-        localStorage.setItem('rtg_careersave', JSON.stringify(state));
+        const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
+        localStorage.setItem(slotKey, JSON.stringify(state));
       } catch (e) {
         console.error("Failed to save state", e);
       }
     }
   }, [state]);
 
-  const loadSavedGame = (): boolean => {
+  const loadSavedGame = (slot: number): boolean => {
     try {
-      const saved = localStorage.getItem('rtg_careersave');
+      const saved = localStorage.getItem(`rtg_careersave_${slot}`);
       if (saved) {
         let parsed = JSON.parse(saved);
         if (parsed && parsed.player) {
@@ -3063,6 +3131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           }
           setState({
             ...parsed,
+            saveSlot: slot,
             screen: 'HUB'
           });
           return true;
@@ -3074,7 +3143,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const newGame = () => {
+  const newGame = (slot: number) => {
     setState({
       screen: 'CREATION',
       player: null,
@@ -3087,7 +3156,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       activeEvent: null,
       inbox: [],
       seasonCalendar: [],
-      nextMatch: undefined
+      nextMatch: undefined,
+      saveSlot: slot
     });
   };
 
@@ -3124,12 +3194,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const saveAndQuit = () => {
-    localStorage.setItem('rtg_careersave', JSON.stringify(state));
+    const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
+    localStorage.setItem(slotKey, JSON.stringify(state));
     setState(s => ({ ...s, screen: 'MAIN_MENU' }));
   };
 
   return (
-    <GameContext.Provider value={{ state, setScreen, setPlayer, startCareer, advanceDay, checkCutscenes, resolveCutscene, resolveEvent, updateRelationship, setInbox, loadSavedGame, newGame, saveAndQuit, updateCalendar, updateNextMatch, advanceRehabPacing, reduceMentalFatigue, startLegacyContinuation }}>
+    <GameContext.Provider value={{ settings, updateSettings, resetData, state, setScreen, setPlayer, startCareer, advanceDay, checkCutscenes, resolveCutscene, resolveEvent, updateRelationship, setInbox, loadSavedGame, newGame, saveAndQuit, updateCalendar, updateNextMatch, advanceRehabPacing, reduceMentalFatigue, startLegacyContinuation }}>
       {children}
     </GameContext.Provider>
   );

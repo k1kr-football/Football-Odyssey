@@ -23,6 +23,7 @@ import { RehabMinigame } from './screens/RehabMinigame';
 import { Lifestyle } from './screens/Lifestyle';
 import { Social } from './screens/Social';
 import { Finances } from './screens/Finances';
+import { AgentScreen } from './screens/AgentScreen';
 import { MainMenu } from './screens/MainMenu';
 import { Glossary } from './screens/Glossary';
 import { getTeamColors } from './utils/teamColors';
@@ -79,6 +80,8 @@ function GameRouter() {
         return <Social />;
       case 'FINANCES':
         return <Finances />;
+      case 'AGENT':
+        return <AgentScreen />;
       case 'GLOSSARY':
         return <Glossary />;
       default:

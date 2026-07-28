@@ -58,7 +58,17 @@ export function migrateSaveData(savedState: any): any {
   }
 
   if (!player.finances) {
-    player.finances = { balance: 10000, investments: [], property: [] };
+    player.finances = { balance: 10000, expenses: { housing: 200, training: 0, lifestyle: 0, family: 0 }, investments: [], property: [] };
+  } else {
+    if (player.finances.balance === undefined) player.finances.balance = 10000;
+    if (!player.finances.expenses) {
+      player.finances.expenses = { housing: 200, training: 0, lifestyle: 0, family: 0 };
+    } else {
+      if (player.finances.expenses.housing === undefined) player.finances.expenses.housing = 0;
+      if (player.finances.expenses.training === undefined) player.finances.expenses.training = 0;
+      if (player.finances.expenses.lifestyle === undefined) player.finances.expenses.lifestyle = 0;
+      if (player.finances.expenses.family === undefined) player.finances.expenses.family = 0;
+    }
   }
 
   if (!player.contract) {
@@ -70,7 +80,13 @@ export function migrateSaveData(savedState: any): any {
   }
 
   if (!player.relationships) {
-    player.relationships = { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 60 };
+    player.relationships = { manager: 50, manager_discipline: 50, teammates: 50, agent: 50, family: 60, intlManager: 50 };
+  } else {
+    if (player.relationships.manager === undefined) player.relationships.manager = 50;
+    if (player.relationships.manager_discipline === undefined) player.relationships.manager_discipline = 50;
+    if (player.relationships.teammates === undefined) player.relationships.teammates = 50;
+    if (player.relationships.agent === undefined) player.relationships.agent = 50;
+    if (player.relationships.family === undefined) player.relationships.family = 60;
   }
 
   if (!player.socialMedia) {

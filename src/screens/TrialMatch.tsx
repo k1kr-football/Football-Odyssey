@@ -334,14 +334,14 @@ export function TrialMatch() {
  };
 
  const handleNextStage = () => {
- if (currentStage < 3) {
+ if (currentStage < 2) {
   setCurrentStage(prev => prev + 1);
   setSelectedOption(null);
   setResolvedText('');
   setIsResolved(false);
  } else {
   // Go to Scout offers stage!
-  setCurrentStage(4);
+  setCurrentStage(3);
  }
  };
 
@@ -441,7 +441,7 @@ export function TrialMatch() {
    <h1 className="text-white text-4xl font-black uppercase tracking-tight">The Trial Match</h1>
   </div>
 
-  {currentStage < 4 ? (
+  {currentStage < 3 ? (
    /* Active Scenario Block */
    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
    <div className="md:col-span-2 flex flex-col gap-6">
@@ -476,7 +476,7 @@ export function TrialMatch() {
       onClick={handleNextStage}
       className="self-end px-6 py-2 bg-[#00FF88] text-white text-xs font-bold uppercase tracking-widest hover:bg-white rounded transition-colors"
      >
-      {currentStage === 3 ? "See Scouting Results ➔" : "Continue Match ➔"}
+      {currentStage === 2 ? "See Scouting Results ➔" : "Continue Match ➔"}
      </button>
      </div>
     )}

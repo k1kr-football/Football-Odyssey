@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGame } from '../store/GameContext';
 import { Screen } from '../store/GameContext';
-import { User, Mail, Dumbbell, Users, Calendar, Trophy, LogOut, Home, LineChart, Heart, ArrowLeftRight, Coins, BookOpen } from 'lucide-react';
+import { User, Mail, Dumbbell, Users, Calendar, Trophy, LogOut, Home, LineChart, Heart, ArrowLeftRight, Coins, BookOpen, Briefcase } from 'lucide-react';
 import { TeamLogo } from './TeamLogo';
 import { CLUBS } from '../data/teams';
 
@@ -14,6 +14,7 @@ const navItems: { id: Screen; label: string; icon: React.ReactNode; requiresPatt
  { id: 'SOCIAL', label: 'SOCIAL', icon: <Heart size={18} /> },
  { id: 'TRANSFERS', label: 'TRANSFERS', icon: <ArrowLeftRight size={18} /> },
  { id: 'FINANCES', label: 'FINANCES', icon: <Coins size={18} /> },
+ { id: 'AGENT', label: 'AGENCY', icon: <Briefcase size={18} /> },
  { id: 'LIFESTYLE', label: 'LIFESTYLE', icon: <LineChart size={18} /> },
  { id: 'SCHEDULE', label: 'SCHEDULE', icon: <Calendar size={18} /> },
  { id: 'CAREER', label: 'CAREER', icon: <User size={18} /> },

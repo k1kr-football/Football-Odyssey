@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Info, Flame, Snowflake } from 'lucide-react'
 import { CLUBS, RIVALRIES } from '../data/teams';
 import { getClubStandings } from '../utils/seasonObjectives';
 import { TeamLogo } from '../components/TeamLogo';
+import { getFormattedCalendarDate } from '../utils/careerSystems';
 
 export function Schedule() {
  const { state, setScreen } = useGame();
@@ -242,7 +243,7 @@ export function Schedule() {
             <span className="text-[7px] text-orange-500/60 font-bold tracking-widest uppercase font-mono">GRUDGE</span>
            </div>
           )}
-         <div className="w-16 font-bold text-white/50 tracking-widest uppercase text-[10px]">{idx === 0 ? `Wk ${data.w}` : ''}</div>
+         <div className="w-24 font-bold text-white/50 tracking-widest uppercase text-[10px]">{idx === 0 ? getFormattedCalendarDate(data.w, data.day as any) : ''}</div>
          <div className="w-12 text-white/40 font-bold text-[9px] uppercase">{data.day}</div>
          <div className={`w-36 flex items-center gap-1 font-bold uppercase tracking-widest text-[9px] ${data.isEvent ? 'text-emerald-400' : (data.type === 'LEAGUE' ? 'text-white' : (data.type === 'INTERNATIONAL' ? 'text-teal-400' : (data.type.includes('CUP') || data.type === 'EUROPEAN' ? 'text-orange-400' : 'text-white/40')))}`} title={data.compName}>
           <span>{data.type}</span>
@@ -445,7 +446,7 @@ export function Schedule() {
        </span>
        <div>
         <div className="text-white font-extrabold text-[11px] tracking-wide uppercase">SELECTED: STARTING XI</div>
-        <div className="text-[10px] opacity-90 mt-0.5">Manager Clement has named you in the starting team. Focus on tactical drills.</div>
+        <div className="text-[10px] opacity-90 mt-0.5">{state.nextMatch?.selectionReason ? `Manager Note: ${state.nextMatch.selectionReason}` : 'Manager Clement has named you in the starting team. Focus on tactical drills.'}</div>
        </div>
        </div>
        <span className="text-[10px] font-mono font-bold tracking-widest bg-emerald-900/50 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded">MATCH STARTER</span>
@@ -461,7 +462,7 @@ export function Schedule() {
        </span>
        <div>
         <div className="text-white font-extrabold text-[11px] tracking-wide uppercase">SELECTED: BENCH / SUBSTITUTE</div>
-        <div className="text-[10px] opacity-90 mt-0.5">You will begin on the bench. Stay warm and watch the tactical flow to make an impact.</div>
+        <div className="text-[10px] opacity-90 mt-0.5">{state.nextMatch?.selectionReason ? `Manager Note: ${state.nextMatch.selectionReason}` : 'You will begin on the bench. Stay warm and watch the tactical flow to make an impact.'}</div>
        </div>
        </div>
        <span className="text-[10px] font-mono font-bold tracking-widest bg-amber-900/50 text-amber-400 border border-amber-800 px-2.5 py-1 rounded">BENCH OPTION</span>
@@ -474,7 +475,7 @@ export function Schedule() {
        <span className="w-3 h-3 bg-red-500 rounded-full shrink-0"></span>
        <div>
         <div className="text-white font-extrabold text-[11px] tracking-wide uppercase">NOT SELECTED IN SQUAD</div>
-        <div className="text-[10px] opacity-90 mt-0.5">Left out of the 18-man sheet. Report to the Training Center for independent fitness work.</div>
+        <div className="text-[10px] opacity-90 mt-0.5">{state.nextMatch?.selectionReason ? `Manager Note: ${state.nextMatch.selectionReason}` : 'Left out of the 18-man sheet. Report to the Training Center for independent fitness work.'}</div>
        </div>
        </div>
        <span className="text-[10px] font-mono font-bold tracking-widest bg-red-900/50 text-red-400 border border-red-800 px-2.5 py-1 rounded">UNUSED / OUT</span>

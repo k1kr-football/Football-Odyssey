@@ -10,6 +10,7 @@ import { BACKSTORY_EXPANSIONS, DEFAULT_REGIONS } from '../data/backstoryExpansio
 import { getClubsByTier, CLUBS } from '../data/teams';
 import { Player, BackstoryType, Position } from '../types';
 import { getTrialHostClubByOrigin } from '../utils/careerSystems';
+import { calculateOVR } from '../utils/player';
 import { getRolesForPosition, getDefaultRoleForPositionAndTrait } from '../data/roles';
 
 export function PlayerCreation() {
@@ -27,10 +28,14 @@ export function PlayerCreation() {
   const [nationality, setNationality] = useState('');
   const [region, setRegion] = useState('');
   const [position, setPosition] = useState<Position | ''>('');
-  const [difficulty, setDifficulty] = useState<'CASUAL' | 'STANDARD' | 'REALISTIC'>('STANDARD');
+  const getDifficulty = (origin: string): 'CASUAL' | 'STANDARD' | 'REALISTIC' => {
+    if (origin === 'WONDERKID') return 'CASUAL';
+    if (origin === 'ACADEMY_PRODIGY' || origin === 'ACADEMY_GRADUATE' || origin === 'NEPOTISM_CASE') return 'STANDARD';
+    return 'REALISTIC';
+  };
 
   // Stats & Progression
-  const [rolledOvr, setRolledOvr] = useState<number>(0);
+  
   const [pathwayChoice, setPathwayChoice] = useState<'U21' | 'LOAN' | null>(null);
 
   // Personality & Role
@@ -57,10 +62,6 @@ export function PlayerCreation() {
 
   // React to origin changes and initialize defaults
   useEffect(() => {
-    const baseOvr = originDetails.startingOvr;
-    const roll = baseOvr + (Math.floor(Math.random() * 5) - 2); // +/- 2 variance
-    setRolledOvr(roll);
-
     const initialNat = originDetails.nationalityPool[0];
     setNationality(initialNat);
     setPosition(originDetails.positions[0]);
@@ -210,7 +211,7 @@ export function PlayerCreation() {
         const matched = potential.find(c => c.league === startClub?.league) || potential[0] || CLUBS[0];
         return matched.symbol;
       })(),
-      ovr: rolledOvr,
+      ovr: calculateOVR(startingAttributes, position as Position),
       age: originDetails.age,
       form: 60,
       sharpness: 50,
@@ -296,7 +297,7 @@ export function PlayerCreation() {
       traits: [startingTrait],
       isInjured: false,
       isTutorialMode: true,
-      ceiling: Math.min(99, rolledOvr + 14 + Math.floor(Math.random() * 10)),
+      ceiling: Math.min(99, calculateOVR(startingAttributes, position as Position) + 14 + Math.floor(Math.random() * 10)),
       scoutReports: [],
       dressingRoomEvents: [],
       rivals: initialRivals,
@@ -331,7 +332,7 @@ export function PlayerCreation() {
       ]
     };
 
-    startCareer(newPlayer, difficulty);
+    startCareer(newPlayer, getDifficulty(selectedOrigin));
   };
 
   const stepsList = [
@@ -929,20 +930,14 @@ export function PlayerCreation() {
                   </div>
                 )}
 
-                {/* Difficulty */}
+                {/* Difficulty (Auto-set by Origin) */}
                 <div>
                   <label className="block text-white/60 text-[11px] font-bold mb-1.5 uppercase tracking-widest">
-                    Difficulty Level
+                    Game Difficulty
                   </label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] rounded-xl p-3 text-xs font-bold text-white uppercase tracking-wider focus:outline-none transition-all cursor-pointer"
-                  >
-                    <option value="CASUAL">🟢 Casual (1.5x attribute gains, +20% trust, -30% injuries)</option>
-                    <option value="STANDARD">🟡 Standard (Balanced, realistic simulation curves)</option>
-                    <option value="REALISTIC">🔴 Realistic (0.7x attribute gains, harder trust, +30% injuries)</option>
-                  </select>
+                  <div className="w-full bg-[#0a0a0a] border border-white/20 rounded-xl p-3 text-xs font-bold text-white uppercase tracking-wider">
+                    {getDifficulty(selectedOrigin) === 'CASUAL' ? '🟢 Casual' : getDifficulty(selectedOrigin) === 'STANDARD' ? '🟡 Standard' : '🔴 Realistic'} (Based on Origin)
+                  </div>
                 </div>
               </div>
             </div>
@@ -953,7 +948,7 @@ export function PlayerCreation() {
                 {firstName || 'Player'} {lastName || 'Name'}
               </h2>
               <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-4 pb-3 border-b border-white/10">
-                {originDetails.title} &middot; OVR {rolledOvr}
+                {originDetails.title} &middot; OVR {calculateOVR(originDetails.attributeDistribution, (position || 'CM') as Position)}
               </div>
 
               <div className="space-y-3 text-xs uppercase tracking-wider mb-6">

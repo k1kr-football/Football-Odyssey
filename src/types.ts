@@ -501,6 +501,7 @@ export interface Player {
     currentWeek?: number;
     testimonialHosted?: boolean;
     predecessorLegend?: any;
+    [key: string]: any;
   };
   ceiling: number;
   scoutReports?: ScoutReport[];
@@ -765,6 +766,8 @@ export interface InboxMessage {
   subject: string;
   content: string;
   read: boolean;
+  handled?: boolean;
+  actionTaken?: string;
   type: 'NEWS' | 'DM' | 'TRANSFER' | 'QUEST' | 'CONTRACT' | 'OTHER' | 'SOCIAL' | 'RUMOR' | 'OFFER' | 'SPORTING';
   timestamp: string;
   choices: { text: string; type: string; clubSymbol?: string; bonus?: number; wage?: number; wagePerc?: number; sponsorName?: string }[];
@@ -1040,3 +1043,14 @@ export interface MentalFatigueDetails {
 }
 export type MatchActionOutcome = 'SUCCESS' | 'FAILURE' | 'CRITICAL_SUCCESS' | 'CRITICAL_FAILURE';
 
+
+
+export interface AppSettings {
+  masterVolume: number;
+  musicVolume: number;
+  sfxVolume: number;
+  fullscreen: boolean;
+  animations: boolean;
+  matchEngineSpeed: 'Normal' | 'Fast' | 'Skip (Text Only)';
+  autoSave: boolean;
+}

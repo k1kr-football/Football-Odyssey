@@ -139,9 +139,9 @@ export function Finances() {
   if (p.mediaPerception >= 70) mediaMod = 1.25;
   else if (p.mediaPerception <= 40) mediaMod = 0.75;
  }
- const sponsorIncome = Math.round(((p.reputation.world * 1500) || 0) * mediaMod);
- const totalIncome = p.contract.wage + sponsorIncome + customSponsorIncome + propertyRentalYield;
- const totalExpenses = p.finances.expenses.housing + p.finances.expenses.training + p.finances.expenses.lifestyle + p.finances.expenses.family;
+ const sponsorIncome = Math.round((((p.reputation?.world || 50) * 1500) || 0) * mediaMod);
+ const totalIncome = (p.contract?.wage || 0) + sponsorIncome + customSponsorIncome + propertyRentalYield;
+ const totalExpenses = (p.finances?.expenses?.housing || 0) + (p.finances?.expenses?.training || 0) + (p.finances?.expenses?.lifestyle || 0) + (p.finances?.expenses?.family || 0);
  const netWeekly = totalIncome - totalExpenses;
 
  const realEstateValue = ownedProperties.reduce((sum: number, prop: any) => sum + ((prop.qty || 1) * (prop.cost || 0)), 0);
@@ -496,7 +496,7 @@ export function Finances() {
   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
   <div className="premium-card p-4 rounded-xl">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Checking Balance</span>
-   <span className="text-2xl font-black font-mono text-white">£{p.finances.balance.toLocaleString()}</span>
+   <span className="text-2xl font-black font-mono text-white">£{(p.finances?.balance || 0).toLocaleString()}</span>
   </div>
   <div className="premium-card p-4 rounded-xl">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Total Assets Valuation</span>
@@ -840,19 +840,19 @@ export function Finances() {
     <div className="space-y-4">
     <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
      <span className="text-white/50">Housing Maintenance / Upkeep ({p.lifestyleTier.housing})</span>
-     <span className="text-white font-mono">£{p.finances.expenses.housing.toLocaleString()}</span>
+     <span className="text-white font-mono">£{(p.finances?.expenses?.housing || 0).toLocaleString()}</span>
     </div>
     <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
-     <span className="text-white/50">Physio, Gym, & Diet Coaching ({p.lifestyleTier.training})</span>
-     <span className="text-white font-mono">£{p.finances.expenses.training.toLocaleString()}</span>
+     <span className="text-white/50">Physio, Gym, & Diet Coaching ({p.lifestyleTier?.training || 'Standard'})</span>
+     <span className="text-white font-mono">£{(p.finances?.expenses?.training || 0).toLocaleString()}</span>
     </div>
     <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
-     <span className="text-white/50">PR & Public Relations Outgoings ({p.lifestyleTier.image})</span>
-     <span className="text-white font-mono">£{p.finances.expenses.lifestyle.toLocaleString()}</span>
+     <span className="text-white/50">PR & Public Relations Outgoings ({p.lifestyleTier?.image || 'Standard'})</span>
+     <span className="text-white font-mono">£{(p.finances?.expenses?.lifestyle || 0).toLocaleString()}</span>
     </div>
     <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
      <span className="text-white/50">Family Allowances / Support</span>
-     <span className="text-white font-mono">£{p.finances.expenses.family.toLocaleString()}</span>
+     <span className="text-white font-mono">£{(p.finances?.expenses?.family || 0).toLocaleString()}</span>
     </div>
     <div className="flex justify-between items-center text-xs pt-4 font-bold">
      <span className="text-red-400 uppercase tracking-widest text-[10px]">Gross Weekly Expenses</span>

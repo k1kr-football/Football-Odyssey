@@ -6,10 +6,12 @@ import { CLUBS } from '../data/teams';
 import { TeamLogo } from '../components/TeamLogo';
 import { motion, AnimatePresence } from 'motion/react';
 import { updateProgressionState } from '../utils/careerSystems';
+import { initializeActiveRehab } from '../utils/wellbeingEngine';
+import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import {
   Trophy, CheckCircle2, ArrowRight, Zap, Coins, Users, Award,
   Activity, Flame, Shield, Star, Play, Pause, FastForward, Sparkles,
-  Clock, Target, Compass, Crosshair, ChevronRight, MessageSquare, BarChart3, AlertCircle
+  Clock, Target, Compass, Crosshair, ChevronRight, MessageSquare, BarChart3, AlertCircle, RefreshCw
 } from 'lucide-react';
 
 interface MatchObjective {
@@ -37,7 +39,7 @@ interface KeyDecision {
 }
 
 export function MatchEngine() {
-  const { state, advanceDay, setScreen, setPlayer, setInbox } = useGame();
+  const { state, advanceDay, setScreen, setPlayer, setInbox, settings } = useGame();
   const p = state.player;
 
   if (!p) {
@@ -146,13 +148,43 @@ export function MatchEngine() {
     }
   }, [p.position]);
 
+  // Recharts Pitch Heatmap Spatial Activity Data
+  const heatmapData = useMemo(() => {
+    const points = [];
+    const isAttacker = ['ST', 'CF', 'LW', 'RW', 'CAM'].includes(p.position || 'ST');
+    const isMidfielder = ['CM', 'CDM', 'LM', 'RM'].includes(p.position || 'CM');
+    
+    for (let i = 0; i < 48; i++) {
+      let x = Math.random() * 100;
+      let y = Math.random() * 100;
+
+      if (isAttacker) {
+        x = 55 + (Math.random() * 40);
+        y = 20 + (Math.random() * 60);
+      } else if (isMidfielder) {
+        x = 25 + (Math.random() * 55);
+        y = 15 + (Math.random() * 70);
+      } else {
+        x = 10 + (Math.random() * 45);
+        y = 15 + (Math.random() * 70);
+      }
+
+      const baseIntensity = Math.floor(Math.random() * 5) + 1;
+      const ratingBonus = 2;
+      const intensity = Math.min(10, baseIntensity + ratingBonus);
+
+      points.push({ x: Number(x.toFixed(1)), y: Number(y.toFixed(1)), intensity, zone: x > 65 ? 'Final Third' : x < 35 ? 'Defensive Third' : 'Middle Third' });
+    }
+    return points;
+  }, [p.position]);
+
   // Match State
   const [phase, setPhase] = useState<'PRE_MATCH' | 'IN_MATCH' | 'HALF_TIME' | 'FULL_TIME'>('PRE_MATCH');
   const [mindset, setMindset] = useState<'ATTACKING' | 'BALANCED' | 'HIGH_PRESS' | 'COUNTER'>('BALANCED');
 
   // In-Match State
   const [minute, setMinute] = useState<number>(0);
-  const [simSpeed, setSimSpeed] = useState<1 | 2 | 4 | 'PAUSED'>(2);
+  const [simSpeed, setSimSpeed] = useState<1 | 2 | 4 | 'PAUSED'>(() => settings?.matchEngineSpeed === 'Fast' ? 4 : (settings?.matchEngineSpeed === 'Skip (Text Only)' ? 4 : 2));
   const [userScore, setUserScore] = useState<number>(0);
   const [oppScore, setOppScore] = useState<number>(0);
 
@@ -175,6 +207,16 @@ export function MatchEngine() {
   const [activeDecision, setActiveDecision] = useState<KeyDecision | null>(null);
   const [lastActionResult, setLastActionResult] = useState<string | null>(null);
 
+  // Dynamic In-Match Substitution Tracking
+  const [isSubbedOff, setIsSubbedOff] = useState<boolean>(false);
+  const [subOffMinute, setSubOffMinute] = useState<number | null>(null);
+  const [subOffReason, setSubOffReason] = useState<string | null>(null);
+
+  const [isSubbedOn, setIsSubbedOn] = useState<boolean>(playerStatus === 'STARTER');
+  const [subOnMinute, setSubOnMinute] = useState<number | null>(playerStatus === 'STARTER' ? 1 : null);
+
+  const benchSubTriggerMin = useMemo(() => Math.floor(Math.random() * 12) + 58, []);
+
   const [commentaryLogs, setCommentaryLogs] = useState<{ minute: number; text: string; type: 'info' | 'highlight' | 'goal_user' | 'goal_opp' }[]>([
     { minute: 0, text: `Kickoff at ${isHome ? 'Home Ground' : 'Away Stadium'}. High anticipation in the stands!`, type: 'info' }
   ]);
@@ -186,6 +228,7 @@ export function MatchEngine() {
   // Media Interview State at end
   const [interviewAnswer, setInterviewAnswer] = useState<number | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
+  const [matchInjury, setMatchInjury] = useState<{ name: string; weeks: number; severity: string } | null>(null);
 
   // Scheduled Key Decisions for the match
   const scheduledDecisions = useRef<Record<number, KeyDecision>>({
@@ -243,7 +286,8 @@ export function MatchEngine() {
       return;
     }
 
-    const intervalTime = simSpeed === 4 ? 120 : simSpeed === 2 ? 300 : 600;
+    // @ts-ignore
+    const intervalTime = (settings?.matchEngineSpeed === 'Skip (Text Only)' && simSpeed !== 'PAUSED') ? 5 : (simSpeed === 4 ? 120 : simSpeed === 2 ? 300 : 600);
 
     const timer = setInterval(() => {
       setMinute((prevMin) => {
@@ -271,8 +315,21 @@ export function MatchEngine() {
           return 90;
         }
 
-        // Check for Scheduled Key Decision Moment
-        if (scheduledDecisions.current[nextMin] && playerStatus !== 'UNUSED') {
+        // Check for Bench Substitute Coming On
+        if (playerStatus === 'SUBSTITUTE' && !isSubbedOn && !isSubbedOff) {
+          if (nextMin >= benchSubTriggerMin) {
+            setIsSubbedOn(true);
+            setSubOnMinute(nextMin);
+            setStamina(Math.max(82, Math.min(100, 100 - ((p.fatigue || 0) / 3))));
+            setCommentaryLogs(prev => [
+              { minute: nextMin, text: `🔄 SUBSTITUTION: Manager brings on ${p.lastName} from the bench! Fresh energy entering the pitch.`, type: 'goal_user' },
+              ...prev
+            ]);
+          }
+        }
+
+        // Check for Scheduled Key Decision Moment (ONLY if on pitch)
+        if (scheduledDecisions.current[nextMin] && playerStatus !== 'UNUSED' && isSubbedOn && !isSubbedOff) {
           setActiveDecision(scheduledDecisions.current[nextMin]);
           setSimSpeed('PAUSED');
           return nextMin;
@@ -293,7 +350,6 @@ export function MatchEngine() {
 
         // Random team events
         if (Math.random() < 0.04) {
-          // Opponent Goal Chance
           if (Math.random() < 0.35) {
             addGoalsOpp = 1;
             setOppScore(s => s + 1);
@@ -309,7 +365,6 @@ export function MatchEngine() {
             ]);
           }
         } else if (Math.random() < 0.05) {
-          // Teammate Goal Chance
           if (Math.random() < 0.30) {
             addGoalsUser = 1;
             setUserScore(s => s + 1);
@@ -321,8 +376,8 @@ export function MatchEngine() {
           }
         }
 
-        // Player Passive Stats Update
-        if (playerStatus !== 'UNUSED') {
+        // Player Stats & Stamina Drain (ONLY IF CURRENTLY ON PITCH)
+        if (playerStatus !== 'UNUSED' && isSubbedOn && !isSubbedOff) {
           setPlayerStats(prev => {
             const isAtt = pitchX > 50;
             const passInc = Math.random() < 0.35 ? 1 : 0;
@@ -334,7 +389,7 @@ export function MatchEngine() {
 
             return {
               ...prev,
-              minutes: nextMin,
+              minutes: prev.minutes + 1,
               passesAttempted: prev.passesAttempted + passInc,
               passesCompleted: prev.passesCompleted + passAcc,
               tackles: prev.tackles + tackleInc,
@@ -343,9 +398,63 @@ export function MatchEngine() {
             };
           });
 
-          // Drain Stamina
+          // Drain Stamina & Check Low Stamina Subbing Off Trigger
           const drain = mindset === 'HIGH_PRESS' ? 0.8 : mindset === 'ATTACKING' ? 0.6 : 0.45;
-          setStamina(s => Math.max(10, Number((s - drain).toFixed(1))));
+          setStamina(s => {
+            const nextStam = Math.max(5, Number((s - drain).toFixed(1)));
+            
+            // Realistic Match Injury Check
+            if (!matchInjury && !isSubbedOff && nextMin >= 15 && Math.random() < (0.0018 + (100 - nextStam) * 0.00004 + (p.physicalCondition?.injurySusceptibility || 10) * 0.00008)) {
+              const injuries = [
+                { name: 'Hamstring Strain', weeks: 2, severity: 'MINOR' },
+                { name: 'Medial Ligament Sprain', weeks: 4, severity: 'MODERATE' },
+                { name: 'Calf Muscle Tear', weeks: 3, severity: 'MODERATE' },
+                { name: 'Groin Pull', weeks: 2, severity: 'MINOR' },
+                { name: 'Cruciate Ligament Strain', weeks: 8, severity: 'SEVERE' },
+                { name: 'Metatarsal Fracture', weeks: 6, severity: 'SEVERE' }
+              ];
+              const chosen = injuries[Math.floor(Math.random() * injuries.length)];
+              setMatchInjury(chosen);
+              setIsSubbedOff(true);
+              setSubOffMinute(nextMin);
+              setSubOffReason(`🚨 INJURY: ${chosen.name} (${chosen.weeks} wks recovery)`);
+              setCommentaryLogs(c => [
+                { minute: nextMin, text: `🚨 CRITICAL INJURY INCIDENT: ${p.lastName} goes down clutching their leg in agony! Stretcher called. Medical diagnosis: ${chosen.name} (${chosen.weeks} wks).`, type: 'goal_opp' },
+                ...c
+              ]);
+            }
+
+            // Check if manager hook / substitution should trigger
+            if (!isSubbedOff) {
+              let triggerSub = false;
+              let reason = '';
+
+              if (nextStam <= 22 && nextMin >= 25) {
+                triggerSub = true;
+                reason = `Low Stamina (${Math.round(nextStam)}%) - Physical Exhaustion`;
+              } else if (nextStam <= 32 && nextMin >= 55) {
+                triggerSub = true;
+                reason = `Fatigue (${Math.round(nextStam)}% Stamina)`;
+              } else if (nextMin >= 65 && playerStats.rating < 5.8) {
+                triggerSub = true;
+                reason = `Tactical Sub (Performance Rating: ${playerStats.rating})`;
+              } else if (nextMin >= 72 && nextStam <= 45) {
+                triggerSub = true;
+                reason = `Routine Tactical Rotation (${Math.round(nextStam)}% Stamina)`;
+              }
+
+              if (triggerSub) {
+                setIsSubbedOff(true);
+                setSubOffMinute(nextMin);
+                setSubOffReason(reason);
+                setCommentaryLogs(c => [
+                  { minute: nextMin, text: `🔄 SUBSTITUTION: Manager takes off ${p.lastName} (${reason}). Replaced by tactical substitute.`, type: 'highlight' },
+                  ...c
+                ]);
+              }
+            }
+            return nextStam;
+          });
         }
 
         return nextMin;
@@ -353,7 +462,7 @@ export function MatchEngine() {
     }, intervalTime);
 
     return () => clearInterval(timer);
-  }, [phase, simSpeed, activeDecision, playerStatus, userClub.symbol, oppClub.symbol, oppClub.name, userClub.name, mindset]);
+  }, [phase, simSpeed, activeDecision, playerStatus, isSubbedOn, isSubbedOff, benchSubTriggerMin, userClub.symbol, oppClub.symbol, oppClub.name, userClub.name, mindset]);
 
   // Handle Interactive Key Moment Option Choice
   const handleMakeDecision = (opt: DecisionOption) => {
@@ -530,7 +639,7 @@ export function MatchEngine() {
       if (p.contract?.goalBonus && playerStats.goals > 0) goalBonus = p.contract.goalBonus * playerStats.goals;
     }
     const totalEarnings = appBonus + goalBonus;
-    const newBalance = p.finances.balance + totalEarnings;
+    const newBalance = (p.finances?.balance || 0) + totalEarnings;
 
     // Fatigue & Sharpness
     const fatigueAdd = isBenched ? -2 : Math.min(30, Math.floor((playerStats.minutes / 90) * 22));
@@ -576,6 +685,25 @@ export function MatchEngine() {
       choices: [{ text: 'Acknowledge Result', type: 'ack' }]
     });
 
+    let injuryStateUpdate = {};
+    if (matchInjury) {
+      injuryStateUpdate = {
+        injuryName: matchInjury.name,
+        injuryWeeksLeft: matchInjury.weeks,
+        rehabProcess: initializeActiveRehab(matchInjury.name, matchInjury.weeks)
+      };
+      inboxList.unshift({
+        id: `injury_report_${Date.now()}`,
+        sender: 'DR. SARAH JENKINS (CLUB MEDICAL)',
+        subject: `🏥 MEDICAL REPORT: ${matchInjury.name}`,
+        content: `Dr. Sarah Jenkins: "Following today's fixture, ${p.firstName} ${p.lastName} sustained a ${matchInjury.severity.toLowerCase()} ${matchInjury.name}. Estimated recovery timeline is ${matchInjury.weeks} weeks under strict clinical rehabilitation."`,
+        read: false,
+        type: 'OTHER',
+        timestamp: `${state.currentDay} 18:00`,
+        choices: [{ text: 'Acknowledge Medical Report', type: 'ack' }]
+      });
+    }
+
     // Save state
     setPlayer({
       ...p,
@@ -595,7 +723,8 @@ export function MatchEngine() {
         ...p.finances,
         balance: newBalance
       },
-      progression: nextProgResult.progression
+      progression: nextProgResult.progression,
+      ...injuryStateUpdate
     });
 
     setInbox(inboxList);
@@ -843,24 +972,54 @@ export function MatchEngine() {
                 {playerStats.rating}
               </div>
               <div>
-                <span className="text-xs font-bold text-white block">{p.firstName} {p.lastName}</span>
+                <span className="text-xs font-bold text-white flex items-center gap-2">
+                  {p.firstName} {p.lastName}
+                  {isSubbedOff && (
+                    <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black">
+                      SUBBED OFF ({subOffMinute}')
+                    </span>
+                  )}
+                  {playerStatus === 'SUBSTITUTE' && !isSubbedOn && (
+                    <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-black">
+                      ON BENCH
+                    </span>
+                  )}
+                  {isSubbedOn && !isSubbedOff && playerStatus === 'SUBSTITUTE' && (
+                    <span className="text-[9px] bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/30 px-2 py-0.5 rounded font-black">
+                      SUBBED ON ({subOnMinute}')
+                    </span>
+                  )}
+                </span>
                 <span className="text-[10px] text-white/50 block font-bold">
-                  G: <span className="text-[#00FF88]">{playerStats.goals}</span> | A: <span className="text-[#00FF88]">{playerStats.assists}</span> | Pass: {playerStats.passesCompleted}/{playerStats.passesAttempted}
+                  G: <span className="text-[#00FF88]">{playerStats.goals}</span> | A: <span className="text-[#00FF88]">{playerStats.assists}</span> | Mins: {playerStats.minutes}'
                 </span>
               </div>
             </div>
 
-            <div className="text-right min-w-[100px]">
-              <span className="text-[9px] text-white/40 font-bold block mb-1">STAMINA</span>
+            <div className="text-right min-w-[110px]">
+              <span className="text-[9px] text-white/40 font-bold block mb-1">STAMINA ({Math.round(stamina)}%)</span>
               <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
                 <div
                   className={`h-full transition-all ${stamina > 50 ? 'bg-[#00FF88]' : stamina > 25 ? 'bg-amber-400' : 'bg-red-500'}`}
-                  style={{ width: `${stamina}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, stamina))}%` }}
                 />
               </div>
             </div>
           </div>
         </div>
+
+        {/* Subbed Off Notification Banner */}
+        {isSubbedOff && (
+          <div className="bg-gradient-to-r from-red-950/80 to-black border border-red-500/40 rounded-xl p-3 mb-3 flex items-center gap-3 font-mono shadow-lg">
+            <div className="p-2 bg-red-500/20 text-red-400 rounded-lg shrink-0">
+              <RefreshCw size={18} />
+            </div>
+            <div className="text-xs">
+              <span className="font-bold text-red-300 uppercase block">SUBSTITUTED OFF AT MINUTE {subOffMinute}'</span>
+              <span className="text-white/70 text-[11px]">Reason: {subOffReason || 'Low stamina / Physical fatigue'}. Shift ended with {playerStats.minutes} mins played.</span>
+            </div>
+          </div>
+        )}
 
         {/* Live Match Commentary Ticker */}
         <div className="flex-1 bg-[#0e0e0e] border border-white/10 rounded-2xl p-4 flex flex-col justify-between overflow-hidden">
@@ -1029,6 +1188,96 @@ export function MatchEngine() {
             </div>
             <div className="p-3 bg-black/40 rounded-xl border border-white/10 shrink-0">
               <TeamLogo symbol={oppClub.symbol} name={oppClub.name} primaryColor={oppClub.primaryColor} secondaryColor={oppClub.secondaryColor} size={54} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Realistic Match Injury Alert Banner if injured */}
+      {matchInjury && (
+        <div className="bg-red-950/80 border border-red-500/40 rounded-2xl p-5 mb-6 flex items-start gap-4 shadow-xl">
+          <div className="p-3 bg-red-500/20 text-red-400 rounded-xl shrink-0">
+            <AlertCircle size={22} />
+          </div>
+          <div>
+            <span className="text-xs font-black text-red-400 uppercase tracking-wider block mb-1">
+              🚨 MATCH INJURY SUSTAINED: {matchInjury.name} ({matchInjury.severity})
+            </span>
+            <p className="text-xs text-white/80 leading-relaxed font-sans">
+              Dr. Sarah Jenkins: "{p.lastName} sustained a {matchInjury.severity.toLowerCase()} {matchInjury.name} during match action. Estimated recovery timeline is {matchInjury.weeks} weeks under strict clinical rehabilitation."
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Recharts Pitch Heatmap & Spatial Activity Card */}
+      <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 mb-6 shadow-xl">
+        <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+          <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider">
+            <Target size={16} /> Pitch Heatmap & Spatial Activity (Match Rating: {playerStats.rating})
+          </div>
+          <span className="text-[10px] text-white/50 font-mono uppercase">Recharts Spatial Density</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          {/* Pitch Canvas with Recharts Scatter Heatmap */}
+          <div className="md:col-span-2 relative w-full h-64 bg-[#113820] border border-white/20 rounded-xl overflow-hidden p-2 flex items-center justify-center shadow-inner">
+            <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none opacity-20">
+              <div className="w-full h-full border border-white" />
+              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white" />
+              <div className="absolute top-1/2 left-1/2 w-20 h-20 -mt-10 -ml-10 border border-white rounded-full" />
+            </div>
+
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                <XAxis type="number" dataKey="x" domain={[0, 100]} hide />
+                <YAxis type="number" dataKey="y" domain={[0, 100]} hide />
+                <Tooltip 
+                  cursor={{ strokeDasharray: '3 3' }} 
+                  content={({ payload }) => {
+                    if (payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-black/90 border border-[#00FF88] p-2.5 rounded text-[10px] font-mono text-white shadow-xl">
+                          <p className="font-bold text-[#00FF88]">Zone: {data.zone}</p>
+                          <p>Activity Intensity: {data.intensity}/10</p>
+                          <p>Coords: X: {data.x}%, Y: {data.y}%</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Scatter data={heatmapData} shape="circle">
+                  {heatmapData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.intensity >= 8 ? '#00FF88' : entry.intensity >= 5 ? '#06b6d4' : '#f59e0b'} 
+                      fillOpacity={0.85}
+                    />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Heatmap Insights & Zone Summary */}
+          <div className="flex flex-col justify-between space-y-3 font-mono text-xs">
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+              <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">PRIMARY ZONE</span>
+              <span className="text-sm font-black text-[#00FF88]">
+                {p.position === 'ST' || (p.position as string) === 'CF' ? 'Final Third & Box' : p.position === 'CM' ? 'Central Midfield Engine' : 'Defensive Third & Flanks'}
+              </span>
+            </div>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+              <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">DISTANCE COVERED</span>
+              <span className="text-sm font-black text-white">{playerStats.distanceCovered} km</span>
+            </div>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+              <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">SPATIAL EFFICIENCY</span>
+              <span className="text-xs text-white/80 leading-relaxed font-sans font-medium">
+                {playerStats.rating >= 7.5 ? 'High offensive output and tactical pressing efficiency.' : 'Solid defensive tracking and positional discipline.'}
+              </span>
             </div>
           </div>
         </div>

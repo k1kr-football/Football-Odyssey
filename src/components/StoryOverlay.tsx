@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { CUTSCENES } from '../data/cutscenes';
+import { getFormattedCalendarDate } from '../utils/careerSystems';
 
 export function StoryOverlay() {
   const { state, resolveCutscene } = useGame();
@@ -35,7 +36,7 @@ export function StoryOverlay() {
            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 animate-pulse"></span>
            <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-amber-400/80 font-bold">Memory // Archival Reflection</span>
          </div>
-         <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Season {state.season} • Week {state.currentWeek}</span>
+         <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Season {state.season} • {getFormattedCalendarDate(state.currentWeek, state.currentDay)}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col justify-end px-8 md:px-24 lg:px-48 py-12 relative bg-gradient-to-b from-[#120f0c] via-[#080706] to-[#040404]">
