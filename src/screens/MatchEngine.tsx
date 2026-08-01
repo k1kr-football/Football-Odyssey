@@ -1,12 +1,17 @@
 import { getFlavorText } from "../utils/matchEngineUtils";
+import { generateMatchDecisions, getPositionGroup, DecisionOption, KeyDecision } from "../utils/positionMatchDecisions";
+import { calculateMatchReputationGain, updateReputationAndPerception } from "../utils/reputation";
+import { sfxEngine } from "../utils/sfxEngine";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../store/GameContext';
-import { Player } from '../types';
+import { Player, TurningPointEvent } from '../types';
 import { CLUBS } from '../data/teams';
 import { TeamLogo } from '../components/TeamLogo';
+import { TurningPointsReview } from '../components/TurningPointsReview';
 import { motion, AnimatePresence } from 'motion/react';
 import { updateProgressionState } from '../utils/careerSystems';
 import { initializeActiveRehab } from '../utils/wellbeingEngine';
+import { getClubStaff, getCanonicalSender } from '../utils/clubStaff';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import {
   Trophy, CheckCircle2, ArrowRight, Zap, Coins, Users, Award,
@@ -23,21 +28,6 @@ interface MatchObjective {
   check: (stats: any, rating: number) => boolean;
 }
 
-interface DecisionOption {
-  text: string;
-  attrKey: 'finishing' | 'passing' | 'dribbling' | 'composure' | 'pace' | 'tackling' | 'vision';
-  attrName: string;
-  risk: 'LOW' | 'MED' | 'HIGH';
-  description: string;
-}
-
-interface KeyDecision {
-  minute: number;
-  title: string;
-  situation: string;
-  options: DecisionOption[];
-}
-
 export function MatchEngine() {
   const { state, advanceDay, setScreen, setPlayer, setInbox, settings } = useGame();
   const p = state.player;
@@ -46,7 +36,7 @@ export function MatchEngine() {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center text-white font-mono">
         <p className="text-xl font-bold mb-4">No Active Player Found</p>
-        <button onClick={() => setScreen('HUB')} className="px-6 py-2 bg-[#00FF88] text-black font-bold rounded">
+        <button onClick={() => setScreen('HUB', true)} className="px-6 py-2 bg-[#00FF88] text-black font-bold rounded">
           Return to Hub
         </button>
       </div>
@@ -75,6 +65,10 @@ export function MatchEngine() {
   const isHome = state.nextMatch?.venue === 'Home' || true;
   const playerStatus = state.nextMatch?.playerStatus || (p.contract?.status === 'Backup' ? 'SUBSTITUTE' : 'STARTER');
 
+  // In-Match Score State
+  const [userScore, setUserScore] = useState<number>(0);
+  const [oppScore, setOppScore] = useState<number>(0);
+
   // Weather & Pitch Condition Generator
   const weather = useMemo(() => {
     const list = [
@@ -88,10 +82,117 @@ export function MatchEngine() {
 
   // Procedural Match Objectives
   const objectives = useMemo<MatchObjective[]>(() => {
-    const pos = p.position || 'ST';
-    const isAttacker = ['ST', 'CF', 'LW', 'RW', 'CAM'].includes(pos);
+    const posGroup = getPositionGroup(p.position || 'ST');
 
-    if (isAttacker) {
+    if (posGroup === 'GK') {
+      return [
+        {
+          id: 'obj_1',
+          description: 'Achieve Match Rating >= 7.0',
+          targetText: 'Rating >= 7.0',
+          rewardTrust: 5,
+          rewardXP: 100,
+          check: (_, rating) => rating >= 7.0
+        },
+        {
+          id: 'obj_2',
+          description: 'Keep a Clean Sheet OR Make 3+ Saves',
+          targetText: 'Clean Sheet / 3+ Saves',
+          rewardTrust: 6,
+          rewardXP: 150,
+          check: (s) => (oppScore === 0 || (s.saves || 0) >= 3)
+        },
+        {
+          id: 'obj_3',
+          description: 'Complete 10+ Accurate Passes or Throws',
+          targetText: '10+ Accurate Passes',
+          rewardTrust: 4,
+          rewardXP: 90,
+          check: (s) => s.passesCompleted >= 10
+        }
+      ];
+    } else if (posGroup === 'DEFENDER') {
+      return [
+        {
+          id: 'obj_1',
+          description: 'Achieve Match Rating >= 7.2',
+          targetText: 'Rating >= 7.2',
+          rewardTrust: 5,
+          rewardXP: 100,
+          check: (_, rating) => rating >= 7.2
+        },
+        {
+          id: 'obj_2',
+          description: 'Win 3+ Defensive Tackles or Interceptions',
+          targetText: '3+ Tackles',
+          rewardTrust: 6,
+          rewardXP: 130,
+          check: (s) => s.tackles >= 3
+        },
+        {
+          id: 'obj_3',
+          description: 'Maintain >80% Pass Accuracy or Clean Sheet',
+          targetText: '>80% Acc. / Clean Sheet',
+          rewardTrust: 4,
+          rewardXP: 90,
+          check: (s) => oppScore === 0 || (s.passesAttempted > 0 && (s.passesCompleted / s.passesAttempted) >= 0.8)
+        }
+      ];
+    } else if (posGroup === 'MIDFIELDER') {
+      return [
+        {
+          id: 'obj_1',
+          description: 'Achieve Match Rating >= 7.2',
+          targetText: 'Rating >= 7.2',
+          rewardTrust: 5,
+          rewardXP: 100,
+          check: (_, rating) => rating >= 7.2
+        },
+        {
+          id: 'obj_2',
+          description: 'Complete 20+ Accurate Passes',
+          targetText: '20+ Passes',
+          rewardTrust: 5,
+          rewardXP: 120,
+          check: (s) => s.passesCompleted >= 20
+        },
+        {
+          id: 'obj_3',
+          description: 'Deliver 1+ Key Pass or 2+ Tackles',
+          targetText: 'Key Pass / 2+ Tackles',
+          rewardTrust: 5,
+          rewardXP: 110,
+          check: (s) => s.keyPasses >= 1 || s.tackles >= 2
+        }
+      ];
+    } else if (posGroup === 'ATTACKING_MID_WING') {
+      return [
+        {
+          id: 'obj_1',
+          description: 'Achieve Match Rating >= 7.5',
+          targetText: 'Rating >= 7.5',
+          rewardTrust: 5,
+          rewardXP: 100,
+          check: (_, rating) => rating >= 7.5
+        },
+        {
+          id: 'obj_2',
+          description: 'Score, Assist, or Deliver 2+ Key Passes',
+          targetText: '1 G/A / 2 Key Passes',
+          rewardTrust: 6,
+          rewardXP: 140,
+          check: (s) => (s.goals + s.assists) >= 1 || s.keyPasses >= 2
+        },
+        {
+          id: 'obj_3',
+          description: 'Complete 15+ Accurate Passes',
+          targetText: '15+ Passes',
+          rewardTrust: 4,
+          rewardXP: 90,
+          check: (s) => s.passesCompleted >= 15
+        }
+      ];
+    } else {
       return [
         {
           id: 'obj_1',
@@ -111,67 +212,61 @@ export function MatchEngine() {
         },
         {
           id: 'obj_3',
-          description: 'Complete 15+ Accurate Passes',
-          targetText: '15+ Passes',
-          rewardTrust: 3,
-          rewardXP: 80,
-          check: (s) => s.passesCompleted >= 15
-        }
-      ];
-    } else {
-      return [
-        {
-          id: 'obj_1',
-          description: 'Achieve Match Rating >= 7.0',
-          targetText: 'Rating >= 7.0',
-          rewardTrust: 5,
-          rewardXP: 100,
-          check: (_, rating) => rating >= 7.0
-        },
-        {
-          id: 'obj_2',
-          description: 'Win 2+ Defensive Tackles or Interceptions',
-          targetText: '2+ Tackles',
-          rewardTrust: 5,
-          rewardXP: 120,
-          check: (s) => s.tackles >= 2
-        },
-        {
-          id: 'obj_3',
-          description: 'Maintain >80% Pass Accuracy',
-          targetText: '>80% Pass Acc.',
+          description: 'Record 2+ Shots on Target',
+          targetText: '2+ Shots on Target',
           rewardTrust: 4,
           rewardXP: 90,
-          check: (s) => s.passesAttempted > 0 && (s.passesCompleted / s.passesAttempted) >= 0.8
+          check: (s) => s.shotsOnTarget >= 2
         }
       ];
     }
-  }, [p.position]);
+  }, [p.position, oppScore]);
 
   // Recharts Pitch Heatmap Spatial Activity Data
   const heatmapData = useMemo(() => {
     const points = [];
-    const isAttacker = ['ST', 'CF', 'LW', 'RW', 'CAM'].includes(p.position || 'ST');
-    const isMidfielder = ['CM', 'CDM', 'LM', 'RM'].includes(p.position || 'CM');
+    const posGroup = getPositionGroup(p.position || 'ST');
+    const pos = (p.position || 'ST').toUpperCase();
     
     for (let i = 0; i < 48; i++) {
       let x = Math.random() * 100;
       let y = Math.random() * 100;
 
-      if (isAttacker) {
-        x = 55 + (Math.random() * 40);
-        y = 20 + (Math.random() * 60);
-      } else if (isMidfielder) {
-        x = 25 + (Math.random() * 55);
+      if (posGroup === 'GK') {
+        x = 2 + (Math.random() * 16);
+        y = 25 + (Math.random() * 50);
+      } else if (posGroup === 'DEFENDER') {
+        if (pos === 'LB' || pos === 'LWB') {
+          x = 20 + (Math.random() * 48);
+          y = 5 + (Math.random() * 30);
+        } else if (pos === 'RB' || pos === 'RWB') {
+          x = 20 + (Math.random() * 48);
+          y = 65 + (Math.random() * 30);
+        } else {
+          x = 12 + (Math.random() * 36);
+          y = 20 + (Math.random() * 60);
+        }
+      } else if (posGroup === 'MIDFIELDER') {
+        x = 30 + (Math.random() * 45);
         y = 15 + (Math.random() * 70);
+      } else if (posGroup === 'ATTACKING_MID_WING') {
+        if (pos === 'LW') {
+          x = 50 + (Math.random() * 42);
+          y = 5 + (Math.random() * 32);
+        } else if (pos === 'RW') {
+          x = 50 + (Math.random() * 42);
+          y = 63 + (Math.random() * 32);
+        } else {
+          x = 52 + (Math.random() * 36);
+          y = 22 + (Math.random() * 56);
+        }
       } else {
-        x = 10 + (Math.random() * 45);
-        y = 15 + (Math.random() * 70);
+        x = 65 + (Math.random() * 32);
+        y = 20 + (Math.random() * 60);
       }
 
       const baseIntensity = Math.floor(Math.random() * 5) + 1;
-      const ratingBonus = 2;
-      const intensity = Math.min(10, baseIntensity + ratingBonus);
+      const intensity = Math.min(10, baseIntensity + 2);
 
       points.push({ x: Number(x.toFixed(1)), y: Number(y.toFixed(1)), intensity, zone: x > 65 ? 'Final Third' : x < 35 ? 'Defensive Third' : 'Middle Third' });
     }
@@ -185,8 +280,6 @@ export function MatchEngine() {
   // In-Match State
   const [minute, setMinute] = useState<number>(0);
   const [simSpeed, setSimSpeed] = useState<1 | 2 | 4 | 'PAUSED'>(() => settings?.matchEngineSpeed === 'Fast' ? 4 : (settings?.matchEngineSpeed === 'Skip (Text Only)' ? 4 : 2));
-  const [userScore, setUserScore] = useState<number>(0);
-  const [oppScore, setOppScore] = useState<number>(0);
 
   const [playerStats, setPlayerStats] = useState({
     minutes: 0,
@@ -197,6 +290,7 @@ export function MatchEngine() {
     passesAttempted: 0,
     keyPasses: 0,
     tackles: 0,
+    saves: 0,
     shots: 0,
     shotsOnTarget: 0,
     distanceCovered: 0.0
@@ -221,6 +315,18 @@ export function MatchEngine() {
     { minute: 0, text: `Kickoff at ${isHome ? 'Home Ground' : 'Away Stadium'}. High anticipation in the stands!`, type: 'info' }
   ]);
 
+  // Match Turning Points Log (Detailed events, goals, key decisions & turning points)
+  const [turningPoints, setTurningPoints] = useState<TurningPointEvent[]>([
+    {
+      id: 'tp_0',
+      minute: 1,
+      title: 'Match Kickoff',
+      description: `Match begins at ${isHome ? 'Home Ground' : 'Away Stadium'}. Stadium atmosphere electric as kickoff commences.`,
+      impact: 'MAJOR',
+      team: 'NEUTRAL'
+    }
+  ]);
+
   // Pitch radar ball coordinates (0-100 x, 0-100 y)
   const [ballPos, setBallPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const [phaseText, setPhaseText] = useState<string>('MIDFIELD BUILD-UP');
@@ -230,52 +336,16 @@ export function MatchEngine() {
   const [hasClaimed, setHasClaimed] = useState(false);
   const [matchInjury, setMatchInjury] = useState<{ name: string; weeks: number; severity: string } | null>(null);
 
-  // Scheduled Key Decisions for the match
-  const scheduledDecisions = useRef<Record<number, KeyDecision>>({
-    18: {
-      minute: 18,
-      title: "18' · THROUGH BALL BREAKOUT",
-      situation: "You spot an open pocket of space behind the opponent's defensive line!",
-      options: [
-        { text: "Unleash Power Shot Towards Goal", attrKey: 'finishing', attrName: 'Finishing', risk: 'MED', description: 'Direct strike testing the goalkeeper' },
-        { text: "Slide Precise Through Pass", attrKey: 'passing', attrName: 'Passing', risk: 'LOW', description: 'Set up your teammate for a high-chance shot' },
-        { text: "Skill Dribble Past Defender", attrKey: 'dribbling', attrName: 'Dribbling', risk: 'HIGH', description: 'Take on the defender 1-on-1 for maximum glory' }
-      ]
-    },
-    38: {
-      minute: 38,
-      title: "38' · EDGE OF THE BOX CHANCE",
-      situation: "A loose clearance falls right to your feet 20 yards from goal!",
-      options: [
-        { text: "Curled Finesse Shot", attrKey: 'finishing', attrName: 'Finishing', risk: 'MED', description: 'Aim for the top corner with delicate touch' },
-        { text: "Quick One-Two Combination", attrKey: 'vision', attrName: 'Vision', risk: 'LOW', description: 'Quick pass and move into the penalty area' },
-        { text: "Drive Forward with Speed", attrKey: 'pace', attrName: 'Pace', risk: 'HIGH', description: 'Sprint past the defender into the 6-yard box' }
-      ]
-    },
-    62: {
-      minute: 62,
-      title: "62' · HIGH PRESS INTERCEPTION",
-      situation: "The opponent defender hesitates under pressure near their penalty box!",
-      options: [
-        { text: "Aggressive Slide Tackle", attrKey: 'tackling', attrName: 'Tackling', risk: 'HIGH', description: 'Attempt a crunching tackle to dispossess' },
-        { text: "Jockey and Intercept Pass", attrKey: 'composure', attrName: 'Composure', risk: 'LOW', description: 'Read the passing lane calmly' },
-        { text: "Sprint Press Keeper", attrKey: 'pace', attrName: 'Pace', risk: 'MED', description: 'Force a rushed kick out of bounds' }
-      ]
-    },
-    82: {
-      minute: 82,
-      title: "82' · LATE GAME DECISIVE MOMENT",
-      situation: "Late match tension! A counter-attack opportunity develops down the flank!",
-      options: [
-        { text: "Whipped Cross Into Box", attrKey: 'passing', attrName: 'Passing', risk: 'LOW', description: 'Deliver a high ball for the striker to head' },
-        { text: "Cut Inside and Shoot", attrKey: 'finishing', attrName: 'Finishing', risk: 'HIGH', description: 'Search for a dramatic winning goal yourself' },
-        { text: "Hold Up Play & Retain Possession", attrKey: 'composure', attrName: 'Composure', risk: 'LOW', description: 'Manage the game clock safely' }
-      ]
-    }
-  });
+  // Scheduled Key Decisions for the match (Generated position-aware)
+  const scheduledDecisions = useRef<Record<number, KeyDecision>>({});
+
+  useEffect(() => {
+    scheduledDecisions.current = generateMatchDecisions(p.position || 'ST');
+  }, [p.position]);
 
   // Start Simulation
   const handleStartMatch = () => {
+    sfxEngine.play('WHISTLE_START');
     setPhase('IN_MATCH');
     setMinute(1);
   };
@@ -295,22 +365,46 @@ export function MatchEngine() {
 
         // Half Time Check
         if (nextMin === 45) {
+          sfxEngine.play('WHISTLE_HALF_TIME');
           setPhase('HALF_TIME');
           setSimSpeed('PAUSED');
           setCommentaryLogs(prev => [
             { minute: 45, text: `Half Time whistle! Score: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}`, type: 'info' },
             ...prev
           ]);
+          setTurningPoints(prev => [
+            ...prev,
+            {
+              id: 'tp_45',
+              minute: 45,
+              title: 'Half Time Tactical Shift',
+              description: `Interval score: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}. Tactical adjustments delivered in dressing room.`,
+              impact: 'TACTICAL',
+              team: 'NEUTRAL'
+            }
+          ]);
           return 45;
         }
 
         // Full Time Check
         if (nextMin >= 90) {
+          sfxEngine.play('WHISTLE_FULL_TIME');
           setPhase('FULL_TIME');
           setSimSpeed('PAUSED');
           setCommentaryLogs(prev => [
             { minute: 90, text: `Full Time whistle! Final Score: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}`, type: 'info' },
             ...prev
+          ]);
+          setTurningPoints(prev => [
+            ...prev,
+            {
+              id: 'tp_90',
+              minute: 90,
+              title: 'Full Time Whistle',
+              description: `Final whistle sounded. Result: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}. Match turning points compiled.`,
+              impact: userScore > oppScore ? 'CRITICAL' : 'MAJOR',
+              team: userScore > oppScore ? 'PLAYER' : userScore < oppScore ? 'OPPOSITION' : 'NEUTRAL'
+            }
           ]);
           return 90;
         }
@@ -358,6 +452,17 @@ export function MatchEngine() {
               { minute: nextMin, text: getFlavorText('goal_opp', '', oppClub.name), type: 'goal_opp' },
               ...prev
             ]);
+            setTurningPoints(prev => [
+              ...prev,
+              {
+                id: `tp_${nextMin}_gopp`,
+                minute: nextMin,
+                title: `GOAL! ${oppClub.name}`,
+                description: `Opposition converts scoring attempt in minute ${nextMin}. Defensive structure breached.`,
+                impact: 'GOAL',
+                team: 'OPPOSITION'
+              }
+            ]);
           } else {
             setCommentaryLogs(prev => [
               { minute: nextMin, text: getFlavorText('chance_opp', '', oppClub.name), type: 'highlight' },
@@ -373,18 +478,31 @@ export function MatchEngine() {
               { minute: nextMin, text: getFlavorText('chance_user', '', userClub.name), type: 'goal_user' },
               ...prev
             ]);
+            setTurningPoints(prev => [
+              ...prev,
+              {
+                id: `tp_${nextMin}_guser`,
+                minute: nextMin,
+                title: `GOAL! ${userClub.name}`,
+                description: `Team builds up smoothly from midfield to score crucial goal in minute ${nextMin}!`,
+                impact: 'GOAL',
+                team: 'PLAYER',
+                playerInvolved: `${p.firstName} ${p.lastName}`
+              }
+            ]);
           }
         }
 
         // Player Stats & Stamina Drain (ONLY IF CURRENTLY ON PITCH)
         if (playerStatus !== 'UNUSED' && isSubbedOn && !isSubbedOff) {
           setPlayerStats(prev => {
-            const isAtt = pitchX > 50;
+            const posGroup = getPositionGroup(p.position || 'ST');
             const passInc = Math.random() < 0.35 ? 1 : 0;
             const passAcc = Math.random() < 0.82 ? passInc : 0;
-            const tackleInc = Math.random() < 0.08 ? 1 : 0;
+            const tackleInc = posGroup !== 'GK' && Math.random() < 0.08 ? 1 : 0;
+            const saveInc = posGroup === 'GK' && Math.random() < 0.12 ? 1 : 0;
 
-            const ratingDelta = (addGoalsUser ? 0.3 : 0) + (passAcc ? 0.05 : 0) - (addGoalsOpp ? 0.1 : 0);
+            const ratingDelta = (addGoalsUser ? 0.3 : 0) + (passAcc ? 0.05 : 0) + (saveInc ? 0.25 : 0) - (addGoalsOpp ? (posGroup === 'GK' ? 0.2 : 0.1) : 0);
             const nextRating = Math.min(9.9, Math.max(5.0, Number((prev.rating + ratingDelta).toFixed(1))));
 
             return {
@@ -393,6 +511,7 @@ export function MatchEngine() {
               passesAttempted: prev.passesAttempted + passInc,
               passesCompleted: prev.passesCompleted + passAcc,
               tackles: prev.tackles + tackleInc,
+              saves: (prev.saves || 0) + saveInc,
               distanceCovered: Number((prev.distanceCovered + 0.12).toFixed(2)),
               rating: nextRating
             };
@@ -404,7 +523,7 @@ export function MatchEngine() {
             const nextStam = Math.max(5, Number((s - drain).toFixed(1)));
             
             // Realistic Match Injury Check
-            if (!matchInjury && !isSubbedOff && nextMin >= 15 && Math.random() < (0.0018 + (100 - nextStam) * 0.00004 + (p.physicalCondition?.injurySusceptibility || 10) * 0.00008)) {
+            if (!matchInjury && !isSubbedOff && nextMin >= 15 && Math.random() < (0.0002 + (100 - nextStam) * 0.000012 + (p.physicalCondition?.injurySusceptibility || 10) * 0.00003)) {
               const injuries = [
                 { name: 'Hamstring Strain', weeks: 2, severity: 'MINOR' },
                 { name: 'Medial Ligament Sprain', weeks: 4, severity: 'MODERATE' },
@@ -468,81 +587,111 @@ export function MatchEngine() {
   const handleMakeDecision = (opt: DecisionOption) => {
     if (!activeDecision) return;
 
+    sfxEngine.play('BALL_KICK');
+
     const playerAttrVal = (p.attributes as any)[opt.attrKey] || 70;
     const baseChance = playerAttrVal / 100;
     const riskPenalty = opt.risk === 'HIGH' ? 0.25 : opt.risk === 'MED' ? 0.12 : 0.02;
 
     const finalSuccessChance = Math.max(0.2, Math.min(0.92, baseChance - riskPenalty + (stamina / 500)));
     const isSuccess = Math.random() < finalSuccessChance;
+    const posGroup = getPositionGroup(p.position || 'ST');
 
     if (isSuccess) {
       if (opt.attrKey === 'finishing') {
         // Goal scored!
+        sfxEngine.play('GOAL_CROWD');
         setUserScore(s => s + 1);
         setPlayerStats(prev => ({
           ...prev,
           goals: prev.goals + 1,
           shots: prev.shots + 1,
           shotsOnTarget: prev.shotsOnTarget + 1,
-          rating: Math.min(9.9, Number((prev.rating + 0.9).toFixed(1)))
+          rating: Math.min(9.9, Number((prev.rating + (posGroup === 'GK' ? 1.2 : 0.9)).toFixed(1)))
         }));
         setMomentum(m => Math.min(10, m + 4));
         setCommentaryLogs(prev => [
-          { minute: activeDecision.minute, text: getFlavorText('goal_user', p.lastName, '', opt.text), type: 'goal_user' },
+          { minute: activeDecision.minute, text: getFlavorText('goal_user', p.lastName, '', opt.text, p.position), type: 'goal_user' },
           ...prev
         ]);
         setLastActionResult(`✅ SUCCESSFUL ACTION: GOAL SCORED! (+0.9 Rating)`);
       } else if (opt.attrKey === 'passing' || opt.attrKey === 'vision') {
-        // Assist or Key Pass
-        const isGoalAssist = Math.random() < 0.65;
-        if (isGoalAssist) {
-          setUserScore(s => s + 1);
+        if (posGroup === 'GK') {
           setPlayerStats(prev => ({
             ...prev,
-            assists: prev.assists + 1,
-            keyPasses: prev.keyPasses + 1,
             passesCompleted: prev.passesCompleted + 1,
             passesAttempted: prev.passesAttempted + 1,
-            rating: Math.min(9.9, Number((prev.rating + 0.7).toFixed(1)))
+            rating: Math.min(9.9, Number((prev.rating + 0.4).toFixed(1)))
           }));
-          setMomentum(m => Math.min(10, m + 3));
           setCommentaryLogs(prev => [
-            { minute: activeDecision.minute, text: getFlavorText('assist', p.lastName), type: 'goal_user' },
+            { minute: activeDecision.minute, text: getFlavorText('distribution', p.lastName, '', opt.text, p.position), type: 'highlight' },
             ...prev
           ]);
-          setLastActionResult(`✅ SUCCESSFUL ACTION: ASSIST RECORDED! (+0.7 Rating)`);
+          setLastActionResult(`✅ SUCCESSFUL ACTION: ACCURATE DISTRIBUTION! (+0.4 Rating)`);
+        } else {
+          const isGoalAssist = Math.random() < 0.65;
+          if (isGoalAssist) {
+            setUserScore(s => s + 1);
+            setPlayerStats(prev => ({
+              ...prev,
+              assists: prev.assists + 1,
+              keyPasses: prev.keyPasses + 1,
+              passesCompleted: prev.passesCompleted + 1,
+              passesAttempted: prev.passesAttempted + 1,
+              rating: Math.min(9.9, Number((prev.rating + 0.7).toFixed(1)))
+            }));
+            setMomentum(m => Math.min(10, m + 3));
+            setCommentaryLogs(prev => [
+              { minute: activeDecision.minute, text: getFlavorText('assist', p.lastName, '', opt.text, p.position), type: 'goal_user' },
+              ...prev
+            ]);
+            setLastActionResult(`✅ SUCCESSFUL ACTION: ASSIST RECORDED! (+0.7 Rating)`);
+          } else {
+            setPlayerStats(prev => ({
+              ...prev,
+              keyPasses: prev.keyPasses + 1,
+              passesCompleted: prev.passesCompleted + 1,
+              passesAttempted: prev.passesAttempted + 1,
+              rating: Math.min(9.9, Number((prev.rating + 0.3).toFixed(1)))
+            }));
+            setCommentaryLogs(prev => [
+              { minute: activeDecision.minute, text: getFlavorText('key_pass', p.lastName, '', opt.text, p.position), type: 'highlight' },
+              ...prev
+            ]);
+            setLastActionResult(`✅ SUCCESSFUL ACTION: KEY PASS DELIVERED! (+0.3 Rating)`);
+          }
+        }
+      } else if (opt.attrKey === 'tackling' || (posGroup === 'GK' && (opt.attrKey === 'composure' || opt.attrKey === 'dribbling'))) {
+        if (posGroup === 'GK') {
+          setPlayerStats(prev => ({
+            ...prev,
+            saves: (prev.saves || 0) + 1,
+            rating: Math.min(9.9, Number((prev.rating + 0.5).toFixed(1)))
+          }));
+          setCommentaryLogs(prev => [
+            { minute: activeDecision.minute, text: getFlavorText('save', p.lastName, '', opt.text, p.position), type: 'highlight' },
+            ...prev
+          ]);
+          setLastActionResult(`✅ SUCCESSFUL ACTION: CRUCIAL KEEPER SAVE / CLAIM! (+0.5 Rating)`);
         } else {
           setPlayerStats(prev => ({
             ...prev,
-            keyPasses: prev.keyPasses + 1,
-            passesCompleted: prev.passesCompleted + 1,
-            passesAttempted: prev.passesAttempted + 1,
-            rating: Math.min(9.9, Number((prev.rating + 0.3).toFixed(1)))
+            tackles: prev.tackles + 1,
+            rating: Math.min(9.9, Number((prev.rating + 0.4).toFixed(1)))
           }));
           setCommentaryLogs(prev => [
-            { minute: activeDecision.minute, text: getFlavorText('key_pass', p.lastName), type: 'highlight' },
+            { minute: activeDecision.minute, text: getFlavorText('tackle', p.lastName, '', opt.text, p.position), type: 'highlight' },
             ...prev
           ]);
-          setLastActionResult(`✅ SUCCESSFUL ACTION: KEY PASS DELIVERED! (+0.3 Rating)`);
+          setLastActionResult(`✅ SUCCESSFUL ACTION: DISPOSSESSED OPPONENT! (+0.4 Rating)`);
         }
-      } else if (opt.attrKey === 'tackling') {
-        setPlayerStats(prev => ({
-          ...prev,
-          tackles: prev.tackles + 1,
-          rating: Math.min(9.9, Number((prev.rating + 0.4).toFixed(1)))
-        }));
-        setCommentaryLogs(prev => [
-          { minute: activeDecision.minute, text: getFlavorText('tackle', p.lastName), type: 'highlight' },
-          ...prev
-        ]);
-        setLastActionResult(`✅ SUCCESSFUL ACTION: DISPOSSESSED OPPONENT! (+0.4 Rating)`);
       } else {
         setPlayerStats(prev => ({
           ...prev,
           rating: Math.min(9.9, Number((prev.rating + 0.3).toFixed(1)))
         }));
         setCommentaryLogs(prev => [
-          { minute: activeDecision.minute, text: getFlavorText('skill', p.lastName, '', opt.text), type: 'highlight' },
+          { minute: activeDecision.minute, text: getFlavorText('skill', p.lastName, '', opt.text, p.position), type: 'highlight' },
           ...prev
         ]);
         setLastActionResult(`✅ SUCCESSFUL ACTION: EXCELLENT POSSESSION PLAY! (+0.3 Rating)`);
@@ -557,11 +706,25 @@ export function MatchEngine() {
       }));
       setMomentum(m => Math.max(-10, m - 2));
       setCommentaryLogs(prev => [
-        { minute: activeDecision.minute, text: getFlavorText('miss', p.lastName, '', opt.text), type: 'info' },
+        { minute: activeDecision.minute, text: getFlavorText('miss', p.lastName, '', opt.text, p.position), type: 'info' },
         ...prev
       ]);
       setLastActionResult(`⚠️ ATTEMPT UNSUCCESSFUL: Dispossessed / Saved (-0.2 Rating)`);
     }
+
+    // Record Key Turning Point for Decision
+    setTurningPoints(prev => [
+      ...prev,
+      {
+        id: `tp_${activeDecision.minute}_dec_${Date.now()}`,
+        minute: activeDecision.minute,
+        title: `Key Decision: ${activeDecision.title}`,
+        description: `Chosen option: "${opt.text}" (${opt.risk} Risk). Result: ${isSuccess ? 'SUCCESSFUL EXECUTION' : 'UNSUCCESSFUL / BLOCKED'}.`,
+        impact: isSuccess ? (opt.attrKey === 'finishing' ? 'GOAL' : 'CRITICAL') : 'MAJOR',
+        team: 'PLAYER',
+        playerInvolved: `${p.firstName} ${p.lastName}`
+      }
+    ]);
 
     // Close decision & resume simulation
     setActiveDecision(null);
@@ -576,8 +739,9 @@ export function MatchEngine() {
 
     const remainingMinutes = 90 - minute;
     if (remainingMinutes > 0) {
-      if (Math.random() < 0.4) extraUserGoals += 1;
-      if (Math.random() < 0.3) extraOppGoals += 1;
+      const timeRatio = remainingMinutes / 90;
+      if (Math.random() < 0.4 * timeRatio) extraUserGoals += 1;
+      if (Math.random() < 0.3 * timeRatio) extraOppGoals += 1;
     }
 
     setUserScore(s => s + extraUserGoals);
@@ -617,19 +781,43 @@ export function MatchEngine() {
     if (userScore > oppScore) matchOutcome = 'WON';
     else if (userScore < oppScore) matchOutcome = 'LOST';
 
-    // Trust & Fan Gains
+    // Trust & Reputation Gains
     let trustChange = totalTrustBonus;
     if (matchOutcome === 'WON') trustChange += 3;
     else if (matchOutcome === 'LOST') trustChange -= 2;
 
     const newTrust = Math.max(0, Math.min(100, p.trust + trustChange));
-    let newFans = p.fans + (playerStats.goals * 6) + (playerStats.assists * 4) + (playerStats.rating >= 7.5 ? 8 : 2);
 
-    // Interview Impact
-    if (interviewAnswer === 0) newFans += 5; // Fan favorite response
-    if (interviewAnswer === 1) trustChange += 3; // Manager loyal response
+    // Calculate position-aware reputation & fan gain
+    const repGains = calculateMatchReputationGain(
+      p,
+      {
+        rating: playerStats.rating,
+        goals: playerStats.goals,
+        assists: playerStats.assists,
+        tackles: playerStats.tackles,
+        saves: playerStats.saves,
+        passesCompleted: playerStats.passesCompleted,
+        passesAttempted: playerStats.passesAttempted,
+        cleanSheet: oppScore === 0,
+        minutes: playerStats.minutes
+      },
+      matchOutcome
+    );
 
-    newFans = Math.max(0, Math.min(100, newFans));
+    let newFans = Math.max(0, Math.min(100, p.fans + repGains.fanGain + (interviewAnswer === 0 ? 5 : 0)));
+
+    const playerWithRep = updateReputationAndPerception(
+      p,
+      {
+        world: repGains.worldDelta,
+        media: repGains.mediaDelta,
+        peer: repGains.peerDelta
+      },
+      `Matchday vs ${oppClub.name} (${playerStats.rating} rating)`,
+      state.currentWeek,
+      state.currentDay
+    );
 
     // Contract bonus earnings
     let appBonus = 0;
@@ -694,9 +882,9 @@ export function MatchEngine() {
       };
       inboxList.unshift({
         id: `injury_report_${Date.now()}`,
-        sender: 'DR. SARAH JENKINS (CLUB MEDICAL)',
+        sender: getCanonicalSender(state, 'PHYSIO'),
         subject: `🏥 MEDICAL REPORT: ${matchInjury.name}`,
-        content: `Dr. Sarah Jenkins: "Following today's fixture, ${p.firstName} ${p.lastName} sustained a ${matchInjury.severity.toLowerCase()} ${matchInjury.name}. Estimated recovery timeline is ${matchInjury.weeks} weeks under strict clinical rehabilitation."`,
+        content: `${getClubStaff(state).physio.fullName}: "Following today's fixture, ${p.firstName} ${p.lastName} sustained a ${matchInjury.severity.toLowerCase()} ${matchInjury.name}. Estimated recovery timeline is ${matchInjury.weeks} weeks under strict clinical rehabilitation."`,
         read: false,
         type: 'OTHER',
         timestamp: `${state.currentDay} 18:00`,
@@ -706,7 +894,7 @@ export function MatchEngine() {
 
     // Save state
     setPlayer({
-      ...p,
+      ...playerWithRep.player,
       trust: newTrust,
       fans: newFans,
       fatigue: newFatigue,
@@ -730,7 +918,7 @@ export function MatchEngine() {
     setInbox(inboxList);
 
     // Return to Hub and advance calendar day
-    setScreen('HUB');
+    setScreen('HUB', true);
     advanceDay(true);
   };
 
@@ -1204,11 +1392,20 @@ export function MatchEngine() {
               🚨 MATCH INJURY SUSTAINED: {matchInjury.name} ({matchInjury.severity})
             </span>
             <p className="text-xs text-white/80 leading-relaxed font-sans">
-              Dr. Sarah Jenkins: "{p.lastName} sustained a {matchInjury.severity.toLowerCase()} {matchInjury.name} during match action. Estimated recovery timeline is {matchInjury.weeks} weeks under strict clinical rehabilitation."
+              {getClubStaff(state).physio.fullName}: "{p.lastName} sustained a {matchInjury.severity.toLowerCase()} {matchInjury.name} during match action. Estimated recovery timeline is {matchInjury.weeks} weeks under strict clinical rehabilitation."
             </p>
           </div>
         </div>
       )}
+
+      {/* Match Summary Log & Key Turning Points Section */}
+      <div className="mb-6">
+        <TurningPointsReview
+          turningPoints={turningPoints}
+          playerClubName={userClub.name}
+          opponentClubName={oppClub.name}
+        />
+      </div>
 
       {/* Recharts Pitch Heatmap & Spatial Activity Card */}
       <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 mb-6 shadow-xl">
@@ -1310,14 +1507,40 @@ export function MatchEngine() {
                   <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">MINUTES</span>
                   <span className="text-lg font-black text-white">{playerStats.minutes}'</span>
                 </div>
-                <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
-                  <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">GOALS</span>
-                  <span className="text-lg font-black text-[#00FF88]">{playerStats.goals}</span>
-                </div>
-                <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
-                  <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">ASSISTS</span>
-                  <span className="text-lg font-black text-[#00FF88]">{playerStats.assists}</span>
-                </div>
+                {getPositionGroup(p.position || 'ST') === 'GK' ? (
+                  <>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">SAVES</span>
+                      <span className="text-lg font-black text-[#00FF88]">{playerStats.saves || 0}</span>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">CLEAN SHEET</span>
+                      <span className="text-lg font-black text-[#00FF88]">{oppScore === 0 ? 'YES' : 'NO'}</span>
+                    </div>
+                  </>
+                ) : getPositionGroup(p.position || 'ST') === 'DEFENDER' ? (
+                  <>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">TACKLES</span>
+                      <span className="text-lg font-black text-[#00FF88]">{playerStats.tackles}</span>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">G / A</span>
+                      <span className="text-lg font-black text-[#00FF88]">{playerStats.goals + playerStats.assists}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">GOALS</span>
+                      <span className="text-lg font-black text-[#00FF88]">{playerStats.goals}</span>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                      <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">ASSISTS</span>
+                      <span className="text-lg font-black text-[#00FF88]">{playerStats.assists}</span>
+                    </div>
+                  </>
+                )}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
                   <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">PASS ACC.</span>
                   <span className="text-lg font-black text-white">

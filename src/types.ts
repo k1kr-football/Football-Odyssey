@@ -550,6 +550,18 @@ export interface Player {
     performanceBonus: number;
     originalTrust: number;
   };
+  customAvatarUrl?: string;
+  avatarConfig?: {
+    hairStyle?: string;
+    facialHair?: string;
+    skinTone?: string;
+    kitStyle?: string;
+    bgStyle?: string;
+    cardTitle?: string;
+    customPrompt?: string;
+  };
+  dailyObjectives?: DailyObjective[];
+  lastDailyObjectiveDate?: string;
   decisionMemory?: {
     id: string;
     week: number;
@@ -790,6 +802,7 @@ export interface Fixture {
   playerRating?: number; // e.g. 7.2
   playerGoals?: number;
   playerAssists?: number;
+  turningPoints?: TurningPointEvent[];
 }
 
 export interface LeagueTableEntry {
@@ -843,6 +856,35 @@ export interface WeeklyTrainingPlan {
   intensities: Record<DayOfWeek, 'L' | 'N' | 'H'>;
 }
 
+export interface DailyObjective {
+  id: string;
+  title: string;
+  description: string;
+  category: 'DRILLS' | 'TACTICAL' | 'FITNESS' | 'RECOVERY' | 'BONDING' | 'MENTAL';
+  timeLimited?: boolean;
+  statBoost: {
+    attribute?: keyof Attributes;
+    amount?: number;
+    sharpness?: number;
+    morale?: number;
+    trust?: number;
+    fatigue?: number;
+  };
+  durationText: string;
+  completed: boolean;
+  dateAssigned: string;
+}
+
+export interface TurningPointEvent {
+  id: string;
+  minute: number;
+  title: string;
+  description: string;
+  impact: 'CRITICAL' | 'MAJOR' | 'GOAL' | 'RED_CARD' | 'VAR' | 'TACTICAL';
+  team?: 'PLAYER' | 'OPPOSITION' | 'NEUTRAL';
+  playerInvolved?: string;
+}
+
 export interface Quest {
   id: string;
   title: string;
@@ -875,6 +917,7 @@ export interface MatchEngineState {
   teamMomentum: number; // -10 to +10
   playerMomentum: number; // -10 to +10
   logs: { minute: number; text: string; type: 'info' | 'highlight' | 'goal_player' | 'goal_opp' }[];
+  turningPoints?: TurningPointEvent[];
   weather?: WeatherCondition;
   pitch?: PitchCondition;
   formation?: MatchFormation;
@@ -1024,6 +1067,8 @@ export interface ActiveRehabProcess {
   weeksElapsed: number;
   currentStage: 'REST' | 'LIGHT_REHAB' | 'FULL_TRAINING' | 'MATCH_FITNESS';
   stages: RehabStage[];
+  treatmentSelected?: boolean;
+  treatmentType?: 'SURGERY' | 'CONSERVATIVE' | 'INJECTION';
   pacingChoice?: 'PUSH_HARD' | 'RECOMMENDED' | 'CAUTIOUS';
   reInjuryRisk: number; // 0-100 percentage
   relapseCount: number;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { Mic, Radio, Award, AlertCircle, ArrowRight, MessageSquare } from 'lucide-react';
 import { getReputationTags } from '../utils/reputation';
+import { sfxEngine } from '../utils/sfxEngine';
 
 export function MediaMinigame() {
  const { state, setPlayer, advanceDay, setScreen } = useGame();
@@ -87,6 +88,12 @@ export function MediaMinigame() {
  const handleChoice = (opt: typeof scenarios[0]['options'][0]) => {
   let updatedPlayer = { ...p };
   const effect = opt.effect as any;
+
+  if (effect.mediaPerception > 0 || effect.trust > 0 || effect.fans > 0) {
+    sfxEngine.play('MINIGAME_SUCCESS');
+  } else {
+    sfxEngine.play('MINIGAME_FAIL');
+  }
   
   if (effect.aggression) {
    setAggression(a => Math.max(0, Math.min(100, a + (effect.aggression || 0))));

@@ -4,6 +4,7 @@ import { Screen } from '../store/GameContext';
 import { User, Mail, Dumbbell, Users, Calendar, Trophy, LogOut, Home, LineChart, Heart, ArrowLeftRight, Coins, BookOpen, Briefcase } from 'lucide-react';
 import { TeamLogo } from './TeamLogo';
 import { CLUBS } from '../data/teams';
+import { isDecisionRequired } from '../utils/notifications';
 
 const navItems: { id: Screen; label: string; icon: React.ReactNode; requiresPattern?: 'matchday' }[] = [
  { id: 'HUB', label: 'HOME', icon: <Home size={18} /> },
@@ -28,6 +29,9 @@ export function Sidebar() {
 
  const isMatchLocked = state.screen === 'MATCH' || state.screen === 'TRIAL_MATCH';
  const unreadCount = state.inbox ? state.inbox.filter((m: any) => !m.read).length : 0;
+ const hasPendingDecision = state.inbox ? state.inbox.some((m: any) => isDecisionRequired(m)) : false;
+ const isAdvanceBlocked = hasPendingDecision;
+
  const todaysCalendarEntry = state.seasonCalendar?.find(
   e => e.week === state.currentWeek && e.day === state.currentDay
  );
@@ -70,13 +74,22 @@ export function Sidebar() {
     {visibleNavItems.map((item) => {
      const isActive = state.screen === item.id;
      const isMatchItem = item.id === 'MATCH';
+     const isInboxItem = item.id === 'INBOX';
      const isDisabled = (item.requiresPattern === 'matchday' && !isMatchday) || (isMatchLocked && !isMatchItem && state.screen !== item.id);
      
+     const isInboxBlocked = isInboxItem && isAdvanceBlocked;
+
      let customStyle = 'border-transparent text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95';
      if (isDisabled) {
       customStyle = 'opacity-25 cursor-not-allowed border-transparent text-white/20';
      } else if (isActive) {
-      customStyle = 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88] shadow-lg shadow-[#00FF88]/5 scale-105';
+      if (isInboxBlocked) {
+       customStyle = 'bg-red-500/10 border-red-500 text-red-500 shadow-lg shadow-red-500/20 scale-105';
+      } else {
+       customStyle = 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88] shadow-lg shadow-[#00FF88]/5 scale-105';
+      }
+     } else if (isInboxBlocked) {
+      customStyle = 'bg-red-500/20 border-red-500/80 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse scale-105 cursor-pointer';
      } else if (isMatchItem && isMatchday) {
       customStyle = 'bg-[#00FF88]/20 border-[#00FF88] text-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.3)] animate-pulse scale-105 cursor-pointer';
      }
@@ -85,20 +98,28 @@ export function Sidebar() {
       <button
        key={item.id}
        onClick={() => {
-        if (!isDisabled) setScreen(item.id);
+        if (!isDisabled) {
+         if (isInboxItem) {
+          setScreen('INBOX', true);
+         } else {
+          setScreen(item.id);
+         }
+        }
        }}
        disabled={isDisabled}
-       title={isMatchLocked ? 'MATCH ENGINE LOCKED IN' : isMatchItem ? (isMatchday ? 'PLAY MATCHDAY FIXTURE' : 'MATCHDAY (SAT ONLY)') : item.label}
+       title={isMatchLocked ? 'MATCH ENGINE LOCKED IN' : isMatchItem ? (isMatchday ? 'PLAY MATCHDAY FIXTURE' : 'MATCHDAY (SAT ONLY)') : isInboxBlocked ? 'INBOX (ACTION REQUIRED - DAY ADVANCE BLOCKED)' : item.label}
        className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer shrink-0 border ${customStyle}`}
       >
        {/* Icon wrapper to ensure 20px size */}
-       <div className="transform transition-transform scale-110">
+       <div className={`transform transition-transform scale-110 ${isInboxBlocked ? 'text-red-500' : ''}`}>
         {React.cloneElement(item.icon as React.ReactElement, { size: 20 } as any)}
        </div>
 
        {/* Unread count badge */}
        {!isMatchLocked && item.id === 'INBOX' && unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-black animate-pulse">
+        <span className={`absolute -top-1 -right-1 text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-black animate-pulse ${
+         isInboxBlocked ? 'bg-red-500 text-white' : 'bg-red-500 text-white'
+        }`}>
          {unreadCount}
         </span>
        )}

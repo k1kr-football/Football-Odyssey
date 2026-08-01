@@ -1,4 +1,20 @@
-export type MatchEventCategory = 'goal_user' | 'goal_opp' | 'assist' | 'key_pass' | 'tackle' | 'skill' | 'miss' | 'chance_opp' | 'chance_user' | 'foul' | 'shot';
+export type MatchEventCategory = 
+  | 'goal_user' 
+  | 'goal_opp' 
+  | 'assist' 
+  | 'key_pass' 
+  | 'tackle' 
+  | 'skill' 
+  | 'miss' 
+  | 'chance_opp' 
+  | 'chance_user' 
+  | 'foul' 
+  | 'shot'
+  | 'save'
+  | 'distribution'
+  | 'claim_cross'
+  | 'one_on_one_save'
+  | 'clean_sheet';
 
 const commentaryPools: Record<MatchEventCategory, string[]> = {
   goal_user: [
@@ -88,8 +104,43 @@ const commentaryPools: Record<MatchEventCategory, string[]> = {
     `{player} creates space and fires a shot!`,
     `Ambitious effort by {player}!`,
     `{player} pulls the trigger!`
+  ],
+  save: [
+    `STUNNING SAVE! {player} dives full-length to tip the shot past the post!`,
+    `DENIED! {player} displays lightning reflexes to palm the ball away!`,
+    `Incredible shot-stopping! {player} stands tall and pushes it clear!`,
+    `WHAT A SAVE by {player}! Pure instinct keeping the ball out of the net!`,
+    `Crucial intervention! {player} reacts instantly to deny a certain goal!`
+  ],
+  distribution: [
+    `GREAT DISTRIBUTION! {player} spots the winger and launches a pinpoint 60-yard throw!`,
+    `DISTRIBUTION MASTERCLASS! {player} acts as an extra outfield player with a line-breaking pass!`,
+    `QUICK THINKING! {player} catches the ball and instantly launches a booming kick!`,
+    `Sublime footwork by {player}, coolly spreading play to the flank under pressure.`
+  ],
+  claim_cross: [
+    `HIGH CLAIM! {player} rises above everyone to pluck the cross out of the air!`,
+    `COMMANDING PRESENCE! {player} comes off their line and punches the corner clear!`,
+    `TOTAL AUTHORITY! {player} snatches the dangerous cross cleanly.`,
+    `DOMINANT BOX CONTROL! {player} claims the high ball with ease to calm down defense.`
+  ],
+  one_on_one_save: [
+    `HEROIC 1-ON-1 SAVE! {player} charges out and smothers the striker's effort!`,
+    `NOT TODAY! {player} spreads wide and makes a massive block in the 1-on-1 duel!`,
+    `SENSATIONAL BRAVERY! {player} dives at the attacker's feet to strip the ball cleanly!`,
+    `BATTLE OF WITS WON! {player} makes a stunning 1-on-1 save keeping the match level!`
+  ],
+  clean_sheet: [
+    `WALL OF GRANITE! {player} commands the penalty area to earn a spotless clean sheet!`,
+    `UNBEATABLE TODAY! {player} leads the backline to secure a clean sheet victory!`
   ]
 };
+
+const gkSkillLines = [
+  `CHEEKY FOOTWORK! {player} calmly sidesteps the pressing striker inside their own box!`,
+  `COMPOSED KEEPER! {player} pulls off a Cruyff turn on the goal line under heavy pressure!`,
+  `QUICK REFLEXES! {player} dummies the striker and clears cleanly!`
+];
 
 const usedHistory: Record<string, string[]> = {};
 
@@ -97,8 +148,17 @@ export function getFlavorText(
   category: MatchEventCategory,
   playerName: string = '',
   teamName: string = '',
-  detail: string = ''
+  detail: string = '',
+  position?: string
 ): string {
+  const isGK = position && position.toUpperCase() === 'GK';
+
+  // If GK and category is 'skill', use goalkeeper footwork lines
+  if (isGK && category === 'skill') {
+    const line = gkSkillLines[Math.floor(Math.random() * gkSkillLines.length)];
+    return line.replace(/\{player\}/g, playerName).replace(/\{detail\}/g, detail);
+  }
+
   const pool = commentaryPools[category];
   if (!pool || pool.length === 0) return '';
 

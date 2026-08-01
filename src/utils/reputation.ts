@@ -1,4 +1,5 @@
 import { Player } from '../types';
+import { getPositionGroup } from './positionMatchDecisions';
 
 export interface ReputationTag {
   id: string;
@@ -295,5 +296,107 @@ export function calculateSquadChemistry(player: Player): number {
   else if (player.hierarchyRole === 'Core') chemistry += 3;
 
   return Math.max(10, Math.min(100, chemistry));
+}
+
+/**
+ * Position-aware calculation of post-match reputation gain (World Rep, Media Perception, Peer Respect, Fan Gain).
+ * Ensures defensive excellence (clean sheets, tackles, saves) earns comparable reputation to attacking output.
+ */
+export function calculateMatchReputationGain(
+  player: Player,
+  stats: {
+    rating: number;
+    goals: number;
+    assists: number;
+    tackles: number;
+    saves?: number;
+    passesCompleted: number;
+    passesAttempted: number;
+    cleanSheet?: boolean;
+    minutes: number;
+  },
+  matchOutcome: 'WON' | 'DREW' | 'LOST'
+): { worldDelta: number; mediaDelta: number; peerDelta: number; fanGain: number } {
+  const posGroup = getPositionGroup(player.position || 'ST');
+  let fanGain = 0;
+  let worldDelta = 0;
+  let mediaDelta = 0;
+  let peerDelta = 0;
+
+  // Rating Base Gain
+  if (stats.rating >= 8.5) {
+    fanGain += 10;
+    worldDelta += 2;
+    mediaDelta += 3;
+    peerDelta += 2;
+  } else if (stats.rating >= 7.5) {
+    fanGain += 6;
+    worldDelta += 1;
+    mediaDelta += 1;
+    peerDelta += 1;
+  } else if (stats.rating >= 6.5) {
+    fanGain += 3;
+  } else if (stats.rating < 5.8) {
+    mediaDelta -= 1;
+    peerDelta -= 1;
+  }
+
+  // Outcome Bonus
+  if (matchOutcome === 'WON') {
+    fanGain += 2;
+    peerDelta += 1;
+  }
+
+  // Position-Specific Weighted Contributions
+  if (posGroup === 'GK') {
+    const saves = stats.saves || 0;
+    fanGain += saves * 2;
+    if (saves >= 5) {
+      mediaDelta += 2;
+      worldDelta += 1;
+      peerDelta += 1;
+    }
+    if (stats.cleanSheet) {
+      fanGain += 8;
+      worldDelta += 2;
+      mediaDelta += 2;
+      peerDelta += 2;
+    }
+  } else if (posGroup === 'DEFENDER') {
+    if (stats.cleanSheet) {
+      fanGain += 7;
+      worldDelta += 2;
+      mediaDelta += 2;
+      peerDelta += 2;
+    }
+    if (stats.tackles >= 4) {
+      fanGain += 4;
+      peerDelta += 2;
+      mediaDelta += 1;
+    }
+    // Attack contributions for defenders get high rewards
+    fanGain += stats.goals * 8 + stats.assists * 6;
+    if (stats.goals > 0) worldDelta += 2;
+  } else if (posGroup === 'MIDFIELDER') {
+    if (stats.passesCompleted >= 30) {
+      fanGain += 3;
+      peerDelta += 1;
+    }
+    if (stats.tackles >= 3) {
+      fanGain += 3;
+      peerDelta += 1;
+    }
+    fanGain += stats.goals * 6 + stats.assists * 5;
+    if (stats.goals + stats.assists >= 2) worldDelta += 2;
+  } else {
+    // Attacking Mid / Winger & Striker
+    fanGain += stats.goals * 6 + stats.assists * 4;
+    if (stats.goals >= 2) {
+      worldDelta += 2;
+      mediaDelta += 2;
+    }
+  }
+
+  return { worldDelta, mediaDelta, peerDelta, fanGain };
 }
 

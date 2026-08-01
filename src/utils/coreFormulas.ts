@@ -121,7 +121,12 @@ export const CoreFormulas = {
 
     // Potential ceiling
     if (currentStat >= potential) return 0; // Hard cap
-    if (potential - currentStat <= 3) multiplier *= 0.5; // Diminishing returns approaching potential
+    const potentialDiff = potential - currentStat;
+    if (potentialDiff <= 8) {
+      // Smooth diminishing returns starting 8 points away
+      // At 8 points: ~0.88x, at 1 point: ~0.11x
+      multiplier *= Math.max(0.1, (potentialDiff / 9));
+    }
 
     // Weekly cap
     if (weeklyStatCapHit) multiplier *= 0.2; // Diminishing returns for spamming one stat
@@ -152,36 +157,32 @@ export const CoreFormulas = {
     difficultyTier: 'CASUAL' | 'STANDARD' | 'REALISTIC',
     age: number
   ): number => {
-    let risk = 0.01; // Base 1% chance per event/match segment
+    let risk = 0.002; // Base 0.2% chance per event/match segment (compounds to ~2% per match)
     
     // Fatigue modifier
-    risk += (fatigue / 100) * 0.05;
+    risk += (fatigue / 100) * 0.008;
 
     // Susceptibility modifier
-    risk += (susceptibilityLevel - 3) * 0.01;
+    risk += (susceptibilityLevel - 3) * 0.002;
 
     // Age
-    if (age > 30) risk += 0.02;
+    if (age > 30) risk += 0.003;
 
     // Context
-    risk += matchContextRisk * 0.05;
+    risk += matchContextRisk * 0.005;
 
     // Difficulty
     if (difficultyTier === 'REALISTIC') risk *= 1.3;
-    if (difficultyTier === 'CASUAL') risk *= 0.7;
+    if (difficultyTier === 'CASUAL') risk *= 0.5;
 
-    return Math.max(0.001, risk);
+    return Math.max(0.0005, risk);
   },
 
   // Financial
   calculateWageOffer: (ovr: number, clubTier: 'ELITE' | 'TITLE_CONTENDER' | 'UPPER_MID_TABLE' | 'MID_TABLE' | 'RELEGATION_BATTLE' | 'LOWER_LEAGUE', reputation: number): number => {
-    // Base weekly wage in £
-    let base = 1000;
-    if (ovr > 85) base = 100000;
-    else if (ovr > 80) base = 60000;
-    else if (ovr > 75) base = 30000;
-    else if (ovr > 70) base = 15000;
-    else if (ovr > 65) base = 5000;
+    // Base weekly wage in £ - Continuous exponential growth curve
+    // OVR 65 ~ 5k, OVR 70 ~ 10k, OVR 75 ~ 21k, OVR 80 ~ 45k, OVR 85 ~ 95k, OVR 90 ~ 200k
+    let base = 500 * Math.exp((Math.max(50, ovr) - 50) * 0.15);
 
     // Tier multiplier
     let tierMult = 1.0;
@@ -196,14 +197,15 @@ export const CoreFormulas = {
   },
 
   calculateTransferFee: (ovr: number, age: number, yearsLeftOnContract: number, buyerTier: string): number => {
-    // Value in millions £
-    let baseVal = 1.0;
-    if (ovr > 90) baseVal = 100;
-    else if (ovr > 85) baseVal = 60;
-    else if (ovr > 80) baseVal = 30;
-    else if (ovr > 75) baseVal = 15;
-    else if (ovr > 70) baseVal = 5;
-    else if (ovr > 65) baseVal = 2;
+    // Value in millions £ - Continuous exponential growth
+    // OVR 65 ~ 2.4M, OVR 70 ~ 4.9M, OVR 75 ~ 9.9M, OVR 80 ~ 20M, OVR 85 ~ 40M
+    let baseVal = 0.3 * Math.exp((Math.max(50, ovr) - 50) * 0.14);
+
+    // Elite scarcity multiplier (steeper curve for 88+ generational talents)
+    if (ovr > 88) {
+      const elitePoints = ovr - 88;
+      baseVal *= Math.pow(1.15, elitePoints);
+    }
 
     // Age curve
     if (age < 21) baseVal *= 1.5;

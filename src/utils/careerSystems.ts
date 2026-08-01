@@ -254,7 +254,7 @@ export function updateProgressionState(
     next.gate = 'ESTABLISHED';
     newGate = 'ESTABLISHED';
     gateUnlockedMessage = '📈 PROGRESSION GATE UNLOCKED: ESTABLISHED! You are no longer just a hot prospect—you are a proven senior professional. You are a regular on the national scout sheets.';
-  } else if (next.gate === 'RECOGNITION' && ovr >= 73 && apps >= 60 && next.goalsAndAssists >= 10) {
+  } else if (next.gate === 'RECOGNITION' && ovr >= 73 && apps >= 60 && (next.goalsAndAssists >= 10 || avgRating >= 7.1)) {
     next.gate = 'BREAKTHROUGH';
     newGate = 'BREAKTHROUGH';
     gateUnlockedMessage = '🚀 PROGRESSION GATE UNLOCKED: BREAKTHROUGH! The world is starting to realize what you can do. Mid-to-high tier clubs are actively scouting you, and first endorsement inquiries are arriving.';
@@ -281,7 +281,7 @@ export function updateProgressionState(
   } else if (next.gate === 'RECOGNITION') {
     const ovrPct = Math.min(100, (ovr / 73) * 100);
     const appsPct = Math.min(100, (apps / 60) * 100);
-    const gaPct = Math.min(100, (next.goalsAndAssists / 10) * 100);
+    const gaPct = Math.min(100, Math.max((next.goalsAndAssists / 10) * 100, (avgRating / 7.1) * 100));
     progress = Math.round((ovrPct * 0.4) + (appsPct * 0.3) + (gaPct * 0.3));
   } else if (next.gate === 'BREAKTHROUGH') {
     const ovrPct = Math.min(100, (ovr / 79) * 100);

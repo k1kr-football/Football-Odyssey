@@ -1,4 +1,5 @@
 import { Player, ActiveRehabProcess, RehabStage, MentalFatigueDetails, TimelineEvent } from '../types';
+import { getClubStaff, getCanonicalSender } from './clubStaff';
 
 /**
  * Evaluates Mental Fatigue status and returns penalties and factors.
@@ -243,6 +244,7 @@ export function initializeActiveRehab(
     weeksElapsed: 0,
     currentStage: stages[0].id,
     stages,
+    treatmentSelected: false,
     reInjuryRisk: 5,
     relapseCount: 0,
     medicalAdvice,
@@ -250,16 +252,20 @@ export function initializeActiveRehab(
   };
 }
 
-function getStageAdvice(stageId: 'REST' | 'LIGHT_REHAB' | 'FULL_TRAINING' | 'MATCH_FITNESS', injuryName: string): string {
+function getStageAdvice(
+  stageId: 'REST' | 'LIGHT_REHAB' | 'FULL_TRAINING' | 'MATCH_FITNESS',
+  injuryName: string,
+  physioName: string = 'Dr. Alex Vance'
+): string {
   switch (stageId) {
     case 'REST':
-      return `Dr. Sarah Jenkins: "Focus entirely on swelling reduction and ice therapy for your ${injuryName}. Do not test the joint prematurely."`;
+      return `${physioName}: "Focus entirely on swelling reduction and ice therapy for your ${injuryName}. Do not test the joint prematurely."`;
     case 'LIGHT_REHAB':
-      return `Dr. Sarah Jenkins: "Tissue regeneration is progressing well. We are moving into low-impact hydrotherapy to rebuild muscle fiber stability."`;
+      return `${physioName}: "Tissue regeneration is progressing well. We are moving into low-impact hydrotherapy to rebuild muscle fiber stability."`;
     case 'FULL_TRAINING':
-      return `Dr. Sarah Jenkins: "You are cleared for non-contact squad drills. Listen to your body and report any stiffness immediately."`;
+      return `${physioName}: "You are cleared for non-contact squad drills. Listen to your body and report any stiffness immediately."`;
     case 'MATCH_FITNESS':
-      return `Dr. Sarah Jenkins: "Final stage before competitive match clearance. We need to verify full explosive output under controlled contact."`;
+      return `${physioName}: "Final stage before competitive match clearance. We need to verify full explosive output under controlled contact."`;
   }
 }
 
@@ -268,13 +274,18 @@ function getStageAdvice(stageId: 'REST' | 'LIGHT_REHAB' | 'FULL_TRAINING' | 'MAT
  */
 export function processWeeklyRehabStep(
   player: Player,
-  pacingChoice: 'PUSH_HARD' | 'RECOMMENDED' | 'CAUTIOUS'
+  pacingChoice: 'PUSH_HARD' | 'RECOMMENDED' | 'CAUTIOUS',
+  state?: any
 ): {
   updatedPlayer: Player;
   inboxMessages: any[];
   timelineEvents: TimelineEvent[];
   resultSummary: string;
 } {
+  const staff = getClubStaff(state);
+  const physioName = staff.physio.fullName;
+  const physioSender = getCanonicalSender(state, 'PHYSIO');
+
   if (!player.isInjured || !player.rehabProcess) {
     // If injured but process missing, initialize now
     const process = initializeActiveRehab(player.injuryName || 'Muscle Strain', player.injuryWeeksLeft || 2);
@@ -283,7 +294,8 @@ export function processWeeklyRehabStep(
 
   let process: ActiveRehabProcess = JSON.parse(JSON.stringify(player.rehabProcess!));
   let weeksToAdd = 1.0;
-  let riskPercent = 5;
+  let baseRisk = process.reInjuryRisk || 5;
+  let riskPercent = baseRisk;
   let sharpnessDelta = 0;
   let inboxMessages: any[] = [];
   let timelineEvents: TimelineEvent[] = [];
@@ -292,18 +304,19 @@ export function processWeeklyRehabStep(
 
   if (pacingChoice === 'PUSH_HARD') {
     weeksToAdd = 1.6;
-    riskPercent = 38 + (player.fatigue > 50 ? 12 : 0);
-    // Roll relapse
-    if (Math.random() * 100 < riskPercent) {
-      sufferedRelapse = true;
-    }
+    riskPercent = baseRisk + 33 + (player.fatigue > 50 ? 12 : 0);
   } else if (pacingChoice === 'RECOMMENDED') {
     weeksToAdd = 1.0;
-    riskPercent = 4;
+    riskPercent = baseRisk;
   } else if (pacingChoice === 'CAUTIOUS') {
     weeksToAdd = 0.85;
-    riskPercent = 1;
+    riskPercent = Math.max(1, baseRisk - 5);
     sharpnessDelta = 8;
+  }
+
+  // Roll relapse
+  if (Math.random() * 100 < riskPercent) {
+    sufferedRelapse = true;
   }
 
   if (sufferedRelapse) {
@@ -315,13 +328,13 @@ export function processWeeklyRehabStep(
     
     inboxMessages.push({
       id: `relapse_${Date.now()}`,
-      sender: 'MEDICAL CHIEF',
+      sender: physioSender,
       subject: `🚨 MEDICAL SETBACK: ${process.injuryName}`,
-      content: `Dr. Sarah Jenkins: "We warned you against rushing the rehab protocol. High-intensity loading caused a relapse in your ${process.injuryName}. We are forced to extend your recovery timeline by 2 weeks."`,
+      content: `${physioName}: "We warned you against rushing the rehab protocol. High-intensity loading caused a relapse in your ${process.injuryName}. We are forced to extend your recovery timeline by 2 weeks."`,
       read: false,
       type: 'MEDICAL',
       timestamp: 'MON 09:00',
-      choices: [{ text: 'Understood, Dr. Jenkins.', type: 'ack' }]
+      choices: [{ text: 'Understood, Doctor.', type: 'ack' }]
     });
 
     process.history.push({
@@ -365,13 +378,13 @@ export function processWeeklyRehabStep(
     currentStageIdx += 1;
     const newStage = process.stages[currentStageIdx];
     process.currentStage = newStage.id;
-    process.medicalAdvice = getStageAdvice(newStage.id, process.injuryName);
+    process.medicalAdvice = getStageAdvice(newStage.id, process.injuryName, physioName);
 
     inboxMessages.push({
       id: `stage_clearance_${Date.now()}`,
-      sender: 'MEDICAL CHIEF',
+      sender: physioSender,
       subject: `📋 STAGE CLEARANCE: ${newStage.name}`,
-      content: `Dr. Sarah Jenkins: "Great news! Your physical tests pass all criteria. You are now cleared to advance from ${oldStage.name} to Stage ${currentStageIdx + 1}: ${newStage.name}."`,
+      content: `${physioName}: "Great news! Your physical tests pass all criteria. You are now cleared to advance from ${oldStage.name} to Stage ${currentStageIdx + 1}: ${newStage.name}."`,
       read: false,
       type: 'MEDICAL',
       timestamp: 'MON 09:00',
@@ -415,9 +428,9 @@ export function processWeeklyRehabStep(
 
       inboxMessages.push({
         id: `full_clearance_praise_${Date.now()}`,
-        sender: 'PHYSICAL PERFORMANCE TEAM',
+        sender: physioSender,
         subject: `🏆 FULL MEDICAL CLEARANCE: Return to Pitch`,
-        content: `Dr. Sarah Jenkins: "You have passed all biomechanical, explosive power, and pitch-agility tests. You are 100% cleared for competitive first-team selection!"`,
+        content: `${physioName}: "You have passed all biomechanical, explosive power, and pitch-agility tests. You are 100% cleared for competitive first-team selection!"`,
         read: false,
         type: 'MEDICAL',
         timestamp: 'MON 09:00',
@@ -427,9 +440,9 @@ export function processWeeklyRehabStep(
       updatedPlayer.mediaPerception = Math.max(0, updatedPlayer.mediaPerception - 5);
       inboxMessages.push({
         id: `full_clearance_relapse_note_${Date.now()}`,
-        sender: 'MEDICAL CHIEF',
+        sender: physioSender,
         subject: `📋 MEDICAL CLEARANCE: Cleared After Relapses`,
-        content: `Dr. Sarah Jenkins: "You are finally cleared for selection, though the relapses made the process longer than necessary. Take care of your body."`,
+        content: `${physioName}: "You are finally cleared for selection, though the relapses made the process longer than necessary. Take care of your body."`,
         read: false,
         type: 'MEDICAL',
         timestamp: 'MON 09:00',

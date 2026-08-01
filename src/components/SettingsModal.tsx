@@ -1,7 +1,8 @@
-import React from 'react';
-import { X, Volume2, Monitor, Keyboard, Gamepad2, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Volume2, Monitor, Keyboard, Gamepad2, AlertCircle, Sparkles } from 'lucide-react';
 import { useGame } from '../store/GameContext';
 import { AppSettings } from '../types';
+import { LyriaMusicStudioModal } from './LyriaMusicStudioModal';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -9,6 +10,8 @@ interface SettingsModalProps {
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
   const { settings, updateSettings, resetData } = useGame();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [showStudio, setShowStudio] = useState(false);
 
   const handleToggle = (key: keyof AppSettings) => {
     updateSettings({ [key]: !settings[key] });
@@ -28,9 +31,16 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   const handleReset = () => {
-    if (window.confirm("Are you sure you want to completely reset all saves and settings? This cannot be undone.")) {
-      resetData();
-    }
+    setConfirmReset(true);
+  };
+
+  const executeReset = () => {
+    resetData();
+    setConfirmReset(false);
+  };
+
+  const cancelReset = () => {
+    setConfirmReset(false);
   };
 
   return (
@@ -48,9 +58,17 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="p-6 overflow-y-auto flex-1 text-white/80 space-y-8 font-mono">
           
           <section className="space-y-4">
-            <h3 className="text-sm font-bold text-[#00FF88] uppercase tracking-widest border-b border-[#00FF88]/20 pb-2 flex items-center gap-2">
-              <Volume2 size={16} /> Audio
-            </h3>
+            <div className="flex justify-between items-center border-b border-[#00FF88]/20 pb-2">
+              <h3 className="text-sm font-bold text-[#00FF88] uppercase tracking-widest flex items-center gap-2">
+                <Volume2 size={16} /> Audio
+              </h3>
+              <button
+                onClick={() => setShowStudio(true)}
+                className="px-3 py-1 bg-[#00FF88]/10 border border-[#00FF88]/40 hover:bg-[#00FF88]/20 text-[#00FF88] text-xs font-bold rounded flex items-center gap-1.5 transition-all"
+              >
+                <Sparkles size={12} /> Lyria 3 Music & SFX Studio
+              </button>
+            </div>
             <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
               <span>Master Volume</span>
               <input type="range" className="accent-[#00FF88]" min="0" max="100" value={settings.masterVolume} onChange={(e) => updateSettings({ masterVolume: parseInt(e.target.value) })} />
@@ -122,14 +140,27 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             </h3>
             <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-red-500/10">
               <span className="text-red-400">Reset All Data</span>
-              <button onClick={handleReset} className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 font-bold uppercase text-xs rounded transition-colors">
-                Reset
-              </button>
+              {confirmReset ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-red-400 font-bold uppercase mr-2">Are you sure?</span>
+                  <button onClick={executeReset} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold uppercase text-xs rounded transition-colors">
+                    Yes, Reset
+                  </button>
+                  <button onClick={cancelReset} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold uppercase text-xs rounded transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleReset} className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 font-bold uppercase text-xs rounded transition-colors">
+                  Reset
+                </button>
+              )}
             </div>
           </section>
 
         </div>
       </div>
+      {showStudio && <LyriaMusicStudioModal onClose={() => setShowStudio(false)} />}
     </div>
   );
 }

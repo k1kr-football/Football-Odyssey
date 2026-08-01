@@ -70,6 +70,27 @@ export const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
  const primaryColor = club?.primaryColor || '#0052CC';
  const secondaryColor = club?.secondaryColor || '#FFFFFF';
 
+ if (type === 'player' && state.player?.customAvatarUrl) {
+  return (
+   <div 
+    className={`relative rounded-full flex-shrink-0 select-none overflow-hidden ${className}`}
+    style={{ 
+     width: size, 
+     height: size,
+     border: showBorder ? `2px solid ${primaryColor}` : 'none',
+     boxShadow: showBorder ? `0 0 12px ${primaryColor}40` : 'none',
+    }}
+   >
+    <img 
+     src={state.player.customAvatarUrl} 
+     alt={name || `${state.player.firstName} ${state.player.lastName}`} 
+     referrerPolicy="no-referrer" 
+     className="w-full h-full object-cover"
+    />
+   </div>
+  );
+ }
+
  // Nationality determination
  const explicitNation = nationality || '';
  let category: 'African' | 'Asian' | 'Latin' | 'European' = 'European';

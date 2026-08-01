@@ -28,6 +28,7 @@ import { MainMenu } from './screens/MainMenu';
 import { Glossary } from './screens/Glossary';
 import { getTeamColors } from './utils/teamColors';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AudioManager } from './components/AudioManager';
 
 function GameRouter() {
   const { state, setScreen } = useGame();
@@ -91,6 +92,7 @@ function GameRouter() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
+      <AudioManager />
       <MainLayout>
         <ErrorBoundary onReset={handleReset}>
           {renderActiveScreen()}

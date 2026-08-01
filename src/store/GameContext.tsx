@@ -35,6 +35,7 @@ import { checkFinancialTierUp } from '../utils/financialProgression';
 import { processWeeklyPhysicalUpdate, getRecoveryDetails } from '../utils/recoveryTiers';
 import { processWeeklyMentalFatigue, getMentalFatigueLevel, initializeActiveRehab, processWeeklyRehabStep, applyLifestyleMentalFatigueRecovery } from '../utils/wellbeingEngine';
 import { checkAndTriggerDynamicEvent, DYNAMIC_EVENT_POOL } from '../utils/dynamicEvents';
+import { getClubStaff, getCanonicalSender, getPrimaryJournalist, buildMemoryThreadText } from '../utils/clubStaff';
 
 export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT';
 
@@ -75,6 +76,7 @@ export interface GameState {
     family: any[];
   };
   generatedClubs?: Record<string, any>;
+  clubStaff?: any;
   difficulty?: 'CASUAL' | 'STANDARD' | 'REALISTIC';
   activeCutscene: string | null;
   unlockedCutscenes: any[];
@@ -87,7 +89,7 @@ interface GameContextType {
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   resetData: () => void;
   state: GameState;
-  setScreen: (screen: Screen) => void;
+  setScreen: (screen: Screen, force?: boolean) => void;
   setPlayer: (player: Player) => void;
   startCareer: (player: Player, difficulty: 'CASUAL' | 'STANDARD' | 'REALISTIC') => void;
   advanceDay: (force?: boolean) => void;
@@ -159,8 +161,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const { generateEvent } = useEventManager();
 
-  const setScreen = (screen: Screen) => setState(s => {
-    if ((s.screen === 'MATCH' || s.screen === 'TRIAL_MATCH') && screen !== s.screen && screen !== 'MATCH' && screen !== 'TRIAL_MATCH') {
+  const setScreen = (screen: Screen, force?: boolean) => setState(s => {
+    if (!force && (s.screen === 'MATCH' || s.screen === 'TRIAL_MATCH') && screen !== s.screen && screen !== 'MATCH' && screen !== 'TRIAL_MATCH') {
       return s; // Lock-in: Cannot navigate away while match is running
     }
     return { ...s, screen };
@@ -2049,7 +2051,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                    updatedPlayerTemp.injuryWeeksLeft || 2
                  );
                }
-               const rehabRes = processWeeklyRehabStep(updatedPlayerTemp, 'RECOMMENDED');
+               const rehabRes = processWeeklyRehabStep(updatedPlayerTemp, 'RECOMMENDED', s);
                updatedPlayerTemp = rehabRes.updatedPlayer;
                if (rehabRes.inboxMessages.length > 0) {
                  newInboxTemp.push(...rehabRes.inboxMessages);
@@ -2135,7 +2137,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                  
                  newInbox.push({
                    id: `aging_report_${Date.now()}`,
-                   sender: 'CHIEF PHYSIO',
+                   sender: getCanonicalSender(s, 'PHYSIO'),
                    subject: 'Weekly Physical Assessment',
                    content: alertMessage,
                    read: false,
@@ -2336,7 +2338,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
            if (Math.random() < 0.3) {
              const isJournalist = Math.random() > 0.5;
-             const handle = isJournalist ? '@RomanoHere' : '@FanBanterFC';
+             const handle = isJournalist ? `@${getPrimaryJournalist(s, 0).lastName}Media (${getPrimaryJournalist(s, 0).publication})` : '@FanBanterFC';
              const content = isJournalist 
                 ? `Hearing murmurs about your client behind the scenes. Interesting developments ahead?` 
                 : `Mate, what is going on with you lately? Looks like you're running in mud out there 😭`;
@@ -2371,7 +2373,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                const isTransferWindowSoon = nextWeek === 50 || nextWeek === 24 || isTransferWindow;
                const unhappy = currentMorale < 40 || (s.player.relationships?.manager ?? 50) < 40;
                let rumorSubject = 'Training Incident?';
-               let rumorText = `Reports suggest a bust-up in training involving you. Care to comment?`;
+               let rumorText = `${getPrimaryJournalist(s, 1).firstName} ${getPrimaryJournalist(s, 1).lastName} (${getPrimaryJournalist(s, 1).publication}): "Reports suggest a bust-up in training involving you. Care to comment?"${buildMemoryThreadText(s, 'JOURNALIST')}`;
                
                if (isTransferWindowSoon && (unhappy || s.player.transferListed)) {
                    rumorSubject = 'Transfer Request Incoming?';
@@ -2386,7 +2388,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                
                newInbox.push({
                    id: `rumor_${Date.now()}`,
-                   sender: 'THE RUMOR MILL',
+                   sender: getCanonicalSender(s, 'JOURNALIST', 1),
                    subject: rumorSubject,
                    content: rumorText,
                    read: false,

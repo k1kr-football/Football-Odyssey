@@ -1483,3 +1483,338 @@ export const BACKSTORY_EXPANSIONS: Record<BackstoryType, BackstoryExpansionConfi
     ]
   }
 };
+export interface ActChapterChoice {
+  id: string;
+  label: string;
+  text: string;
+  consequencesText: string;
+  significance: 'MODERATE' | 'MAJOR' | 'DEFINING';
+  decisionMemoryText: string;
+}
+
+export interface OriginActChapter {
+  id: string;
+  title: string;
+  act: 1 | 2 | 3;
+  triggerCondition: string;
+  sceneText: string;
+  choices: ActChapterChoice[];
+}
+
+export interface OriginNarrativeArc {
+  origin: string; // BackstoryType
+  act1: OriginActChapter[];
+  act2: OriginActChapter[];
+  act3: OriginActChapter[];
+  outline?: {
+    act1Summary: string;
+    act2Summary: string;
+    act3Summary: string;
+    resolutionRange: string;
+  };
+}
+export const ORIGIN_NARRATIVE_ARCS: Record<string, OriginNarrativeArc> = {
+  FALLEN_PRODIGY: {
+    origin: 'FALLEN_PRODIGY',
+    act1: [
+      {
+        id: 'fp_a1_c1',
+        title: 'The First Real Tackle',
+        act: 1,
+        triggerCondition: 'Triggered upon making first competitive appearance (not trial).',
+        sceneText: 'The whistle blows. Five minutes into your debut, a rugged holding midfielder leaves his studs in on your knee—the same knee that stole two years of your life. The crack echoes. You fall. The stadium holds its breath. As you sit up, you realize... it holds. The joint is stable. The ghost is challenged, but the Driving Question remains: [Driving Question]',
+        choices: [
+          {
+            id: 'fp_a1_c1_a',
+            label: 'Jump up and confront him.',
+            text: 'Let the adrenaline take over. Show them you aren\'t fragile anymore.',
+            consequencesText: '+10 Form, +5 Teammate Relation, -2 Manager Trust (Hot-headed).',
+            significance: 'MODERATE',
+            decisionMemoryText: 'Reacted with fire when the reconstructed knee was tested in your debut.'
+          },
+          {
+            id: 'fp_a1_c1_b',
+            label: 'Smile and get back into position.',
+            text: 'Ice in your veins. The surgery worked. You are ready to play football again.',
+            consequencesText: '+5 Form, +5 Manager Trust, +5 Media Perception.',
+            significance: 'MODERATE',
+            decisionMemoryText: 'Remained stoic and completely unfazed after the first big tackle on your bad knee.'
+          }
+        ]
+      },
+      {
+        id: 'fp_a1_c2',
+        title: 'The Post-Match Ice Bath',
+        act: 1,
+        triggerCondition: 'Triggered after the first string of 3+ consecutive match appearances without injury.',
+        sceneText: 'The physio hands you a bag of ice. "How is it?" he asks. For the first time in years, the ache is just normal fatigue, not a warning siren. You look at your phone. A text from your old youth coach, the one who said you were done: "Saw the highlights. Not bad." Your mentor/rival [Mentor/Rival Name] also weighed in publicly.',
+        choices: [
+          {
+            id: 'fp_a1_c2_a',
+            label: 'Ignore the noise, focus on the ice.',
+            text: 'Keep your circle small. This is about physical survival, not vengeance.',
+            consequencesText: 'Mental Fatigue significantly reduced. -5 Media Perception.',
+            significance: 'MAJOR',
+            decisionMemoryText: 'Prioritized physical longevity over settling scores with old youth coaches.'
+          },
+          {
+            id: 'fp_a1_c2_b',
+            label: 'Send a screenshot to your agent.',
+            text: 'Time to leverage this. You want a better contract. You earned this comeback.',
+            consequencesText: 'Agent begins demanding a new contract (+Wage potential). +10 Media Perception.',
+            significance: 'MAJOR',
+            decisionMemoryText: 'Used early comeback momentum to immediately push for better financial compensation.'
+          }
+        ]
+      }
+    ],
+    act2: [
+      {
+        id: 'fp_a2_c1',
+        title: 'The Medical Department\'s Warning',
+        act: 2,
+        triggerCondition: 'Triggered upon reaching Established or Star tier, or taking a major Role Specialization.',
+        sceneText: 'You are now an established name. The manager wants to build the tactical system around you. But the Head of Medical pulls you into a private meeting. "The scans show fluid buildup. If you play the full 90 every week in this intense role, the knee will degrade. You need to manage your minutes, or risk a catastrophic relapse." [Driving Question]',
+        choices: [
+          {
+            id: 'fp_a2_c1_a',
+            label: 'Defy the medical team. Play every minute.',
+            text: 'You didn\'t come back to sit on the bench. You will risk the relapse for glory.',
+            consequencesText: '+15 Form, +10 Manager Trust. Injury Susceptibility massively increased.',
+            significance: 'MAJOR',
+            decisionMemoryText: 'Ignored medical advice to play every minute at the peak of your career.'
+          },
+          {
+            id: 'fp_a2_c1_b',
+            label: 'Adapt your game. Become a deep-lying playmaker.',
+            text: 'Change your Role Specialization. Let the ball do the running.',
+            consequencesText: 'Role Specialization shifts to deep-lying/less mobile. Pace/Stamina cap drops, Passing/Vision boosts. Injury Susceptibility stabilized.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Evolved your playstyle to protect your body, prioritizing longevity over explosive highlights.'
+          }
+        ]
+      }
+    ],
+    act3: [
+      {
+        id: 'fp_a3_c1',
+        title: 'The Final Verdict',
+        act: 3,
+        triggerCondition: 'Triggered upon reaching Icon tier or Age 32+.',
+        sceneText: 'The twilight of your career. The media is writing your retrospective. A prominent journalist asks you point-blank in a sit-down interview: "Looking back at the injury that almost ended it before it began... was it a curse, or the making of you?" This is the resolution to: [Driving Question]',
+        choices: [
+          {
+            id: 'fp_a3_c1_a',
+            label: '"It made me who I am."',
+            text: 'Embrace the journey. The pain forged a stronger mentality.',
+            consequencesText: 'Massive World Reputation boost. Legacy secured as an inspirational figure.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Publicly embraced your early-career injury as the defining crucible that forged your success.'
+          },
+          {
+            id: 'fp_a3_c1_b',
+            label: '"I proved them all wrong."',
+            text: 'Let the vindication show. You defied the skeptics through sheer willpower.',
+            consequencesText: 'Huge boost to Peer Respect. You are feared and respected. Minor hit to Media Perception for arrogance.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Used your career retrospective to take a final victory lap over the doctors and scouts who doubted you.'
+          }
+        ]
+      }
+    ]
+  },
+  THE_REFUGEE: {
+    origin: 'THE_REFUGEE',
+    act1: [
+      {
+        id: 'ref_a1_c1',
+        title: 'The First Paycheck',
+        act: 1,
+        triggerCondition: 'Triggered upon signing first professional contract / earning first real wage.',
+        sceneText: 'You stare at your bank balance on your phone. It is more money than your family saw in a year back home. The temptation is to send it all back immediately, but your agent advises you to invest in a nutritionist and better housing to secure your long-term athletic future. [Driving Question]',
+        choices: [
+          {
+            id: 'ref_a1_c1_a',
+            label: 'Wire 90% of it to your family.',
+            text: 'This is why you play. Their immediate comfort is worth more than sports science.',
+            consequencesText: 'Family Relationship maxed. Mental Fatigue drops. Physical decay risk slightly increased due to poor recovery setup.',
+            significance: 'MODERATE',
+            decisionMemoryText: 'Sent your entire first professional paycheck home to support your family.'
+          },
+          {
+            id: 'ref_a1_c1_b',
+            label: 'Invest in your athletic setup.',
+            text: 'To truly help them, you must reach the elite tier. You need your body to be perfect.',
+            consequencesText: 'Gains 1 tier in Recovery Facilities. Family Relationship slightly strains. Training gains boosted.',
+            significance: 'MODERATE',
+            decisionMemoryText: 'Prioritized investing your early wages into your own athletic recovery to secure long-term success.'
+          }
+        ]
+      }
+    ],
+    act2: [
+      {
+        id: 'ref_a2_c1',
+        title: 'The Eligibility Call',
+        act: 2,
+        triggerCondition: 'Triggered upon reaching Star tier and entering a major International cycle.',
+        sceneText: 'Your phone rings. It\'s the head coach of your host nation—the country that gave you sanctuary. They want to call you up for the qualifiers. Ten minutes later, your birth nation\'s federation calls. They are rebuilding, and they want you to be the face of their footballing renaissance. The dual representation question is here. [Driving Question]',
+        choices: [
+          {
+            id: 'ref_a2_c1_a',
+            label: 'Accept the host nation call-up.',
+            text: 'Repay the country that gave you safety and a platform.',
+            consequencesText: 'Locks international eligibility to host nation. Massive boost to local fan base and domestic sponsorships.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Pledged international allegiance to your adopted host nation in gratitude for sanctuary.'
+          },
+          {
+            id: 'ref_a2_c1_b',
+            label: 'Accept the birth nation call-up.',
+            text: 'Honor your roots. Be a beacon of hope for those back home.',
+            consequencesText: 'Locks international eligibility to birth nation. Massive boost to World Reputation and international respect. Minor local media backlash.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Chose to represent the nation of your birth, becoming a global symbol of hope.'
+          }
+        ]
+      }
+    ],
+    act3: [
+      {
+        id: 'ref_a3_c1',
+        title: 'The Foundation',
+        act: 3,
+        triggerCondition: 'Triggered upon reaching Icon tier or Age 32+.',
+        sceneText: 'Your playing days are winding down. A major global NGO approaches you to start a football foundation bearing your name. They want to build academies, either in the neighborhood where you found refuge, or back in the war-torn region you fled. [Driving Question]',
+        choices: [
+          {
+            id: 'ref_a3_c1_a',
+            label: 'Build it in the neighborhood that took you in.',
+            text: 'Cement your legacy in the community that raised you in exile.',
+            consequencesText: 'Unlocks "Local Legend" retirement ending. Maximum club/city affinity.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Established your legacy foundation in the local neighborhoods that sheltered you.'
+          },
+          {
+            id: 'ref_a3_c1_b',
+            label: 'Build it back in your birth country.',
+            text: 'Give the next generation the chances you had to flee to find.',
+            consequencesText: 'Unlocks "Global Ambassador" retirement ending. Maximum World Reputation.',
+            significance: 'DEFINING',
+            decisionMemoryText: 'Dedicated your wealth and legacy to building football academies in your war-torn homeland.'
+          }
+        ]
+      }
+    ]
+  },
+  STREET_PRODIGY: {
+    origin: 'STREET_PRODIGY',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1 (Breaking In): Triggered by first competitive starts. Focuses on the clash between raw street flair and rigid professional tactics. Choices involve defying the manager for a highlight reel moment or conforming to tactical discipline.',
+      act2Summary: 'Act 2 (Establishing Yourself): Triggered at Star tier. Focuses on the entourage. Childhood friends want to be on the payroll. Choices involve keeping the old crew close (loyalty, but media drama) or cutting ties for a corporate agency (clean image, but emotional isolation).',
+      act3Summary: 'Act 3 (Legacy-Defining): Triggered at age 32+. Resolves whether you remained an entertainer or became a ruthless winner. Legacy options include retiring as a beloved cult hero trickster or a decorated, disciplined captain.',
+      resolutionRange: 'Ranges from "Loved by the streets, zero trophies" to "Decorated champion who lost their flair".'
+    }
+  },
+  LATE_BLOOMER: {
+    origin: 'LATE_BLOOMER',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: First top-flight match. Dealing with imposter syndrome and the physical shock of elite pacing compared to part-time football.',
+      act2Summary: 'Act 2: First major contract negotiation. The tension of maximizing earning window vs. playing for a prestigious, demanding club, knowing time is short.',
+      act3Summary: 'Act 3: Age 34+. The body breaks down. Do you drop back down the leagues for the love of the game, or retire at the top to protect the fairytale narrative?',
+      resolutionRange: 'Ranges from "Secured the bag and retired early" to "Played until 40 in the lower leagues".'
+    }
+  },
+  ACADEMY_GRADUATE: {
+    origin: 'ACADEMY_GRADUATE',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The loan spell dilemma. Accept a gritty loan to build character, or demand to stay and fight for a spot in a crowded elite midfield.',
+      act2Summary: 'Act 2: The boyhood club vs. foreign giants. When a massive bid comes in, do you remain a one-club icon or chase Champions League glory abroad?',
+      act3Summary: 'Act 3: Mentoring the next generation. A young wonderkid arrives to take your spot. Do you freeze them out, or teach them the academy way?',
+      resolutionRange: 'Ranges from "One-Club Legend" to "Mercenary Superstar".'
+    }
+  },
+  FROM_SCRATCH: {
+    origin: 'FROM_SCRATCH',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: Earning the first contract out of a public trial. Facing sheer physical exhaustion and the reality of non-league facilities.',
+      act2Summary: 'Act 2: The media narrative. Journalists discover your total lack of pedigree. Do you lean into the underdog story, or resent the constant questions about your past?',
+      act3Summary: 'Act 3: The autobiography. Framing your impossible rise. Are you a testament to hard work, or a freak statistical anomaly?',
+      resolutionRange: 'Ranges from "Inspirational Everyman" to "Intensely private professional".'
+    }
+  },
+  EXILE: {
+    origin: 'EXILE',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: First return to the country you were exiled from (e.g. continental competition). Dealing with hostile crowds and media smear campaigns.',
+      act2Summary: 'Act 2: The apology demand. Your old national federation offers a truce if you publicly apologize. Do you swallow pride for international football, or stand your ground?',
+      act3Summary: 'Act 3: Forgiveness vs. Spite. At the end of your career, do you let go of the anger that fueled you, or carry the grudge into retirement?',
+      resolutionRange: 'Ranges from "Reconciled Hero" to "Unforgiving Outcast".'
+    }
+  },
+  NON_LEAGUE: {
+    origin: 'NON_LEAGUE',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: Surviving the step up. The tactical complexity of professional football is overwhelming. Do you stick to your physical, direct non-league roots, or try to reinvent yourself?',
+      act2Summary: 'Act 2: The financial culture shock. Dealing with wealthy teammates who don\'t understand the value of money. Do you assimilate or remain the grounded dressing-room enforcer?',
+      act3Summary: 'Act 3: Buying your old club. You have the wealth to save the non-league side where you started. Do you become an owner-player, or leave the past behind?',
+      resolutionRange: 'Ranges from "Non-league savior" to "Fully assimilated elite".'
+    }
+  },
+  ACADEMY_PRODIGY: {
+    origin: 'ACADEMY_PRODIGY',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The hype train. Dealing with massive early expectations. Do you feed the media hype or shut down social media entirely?',
+      act2Summary: 'Act 2: The plateau. The first season where you don\'t improve. Panic sets in. Do you fire your staff, or trust the process?',
+      act3Summary: 'Act 3: The Golden Ball. Whether you achieved the ultimate individual prize or fell short, how do you define a career that was supposed to be perfect?',
+      resolutionRange: 'Ranges from "Fulfilled the Prophecy" to "The Greatest What-If".'
+    }
+  },
+  WONDERKID: {
+    origin: 'WONDERKID',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The bidding war. Every top club wants you at age 18. Do you choose guaranteed playing time at a mid-tier club, or take the massive payday at a superclub where you might be benched?',
+      act2Summary: 'Act 2: Burnout. The physical toll of playing 60 games a season as a teenager hits. Managing injuries and mental exhaustion.',
+      act3Summary: 'Act 3: The next wonderkid. You are now 33. The media has found the "next you." Do you pass the torch gracefully or fight to keep your crown?',
+      resolutionRange: 'Ranges from "Generational Great" to "Burned out at 25".'
+    }
+  },
+  NEPOTISM_CASE: {
+    origin: 'NEPOTISM_CASE',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The locker room freeze-out. Senior players refuse to pass to you, assuming you are only there because of your family name. Do you snap back, or win them over with work rate?',
+      act2Summary: 'Act 2: The transfer request. Do you deliberately leave your family\'s sphere of influence to prove yourself abroad, or stay and inherit the club captaincy?',
+      act3Summary: 'Act 3: Surpassing the legacy. Have you eclipsed your famous father/uncle, or are you just a footnote in their biography?',
+      resolutionRange: 'Ranges from "Escaped the Shadow" to "The Heir Apparent".'
+    }
+  },
+  LATE_REPLACEMENT: {
+    origin: 'LATE_REPLACEMENT',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The guilt of opportunity. The player whose injury/misfortune gave you a spot returns to fitness. Do you ruthlessly keep them out of the team, or step aside?',
+      act2Summary: 'Act 2: Proving it wasn\'t a fluke. The second season syndrome hits hard. The element of surprise is gone. Reinventing your game to stay relevant.',
+      act3Summary: 'Act 3: The mentor role. You are now the veteran, and a lucky youngster takes your spot through a fluke. The cycle completes.',
+      resolutionRange: 'Ranges from "Opportunist Survivor" to "Legitimate Legend".'
+    }
+  },
+  SECOND_SPORT_CONVERT: {
+    origin: 'SECOND_SPORT_CONVERT',
+    act1: [], act2: [], act3: [],
+    outline: {
+      act1Summary: 'Act 1: The technical deficit. Your raw athleticism is elite, but your touch lets you down. Do you spend extra hours with the technical coaches, or rely purely on physical dominance?',
+      act2Summary: 'Act 2: The cross-sport endorsement. Sponsors from your old sport want to use your unique story. Does it distract from your football focus?',
+      act3Summary: 'Act 3: The dual-sport legacy. Will you be remembered as a freak athlete who played football, or a true footballer who happened to play another sport first?',
+      resolutionRange: 'Ranges from "Physical Phenomenon" to "Master Footballer".'
+    }
+  }
+};

@@ -16,6 +16,7 @@ export function MainMenu() {
   
   const [showSettings, setShowSettings] = useState(false);
   const [showSlots, setShowSlots] = useState(false);
+  const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
 
   useEffect(() => {
     const slots = [1, 2, 3].map(slot => {
@@ -45,10 +46,19 @@ export function MainMenu() {
 
   const handleDeleteSlot = (slot: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`Are you sure you want to delete Save Slot ${slot}?`)) {
-      localStorage.removeItem(`rtg_careersave_${slot}`);
-      setSaveSlots(prev => prev.map(s => s.slot === slot ? { slot, data: null } : s));
-    }
+    setDeleteConfirmSlot(slot);
+  };
+
+  const confirmDelete = (slot: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    localStorage.removeItem(`rtg_careersave_${slot}`);
+    setSaveSlots(prev => prev.map(s => s.slot === slot ? { slot, data: null } : s));
+    setDeleteConfirmSlot(null);
+  };
+
+  const cancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmSlot(null);
   };
 
   return (
@@ -168,7 +178,23 @@ export function MainMenu() {
                     </div>
                   </div>
                   
-                  {data && (
+                  {data && deleteConfirmSlot === slot ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-400 text-xs font-bold mr-2">DELETE?</span>
+                      <button
+                        onClick={(e) => confirmDelete(slot, e)}
+                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={cancelDelete}
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-colors"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  ) : data && (
                     <button
                       onClick={(e) => handleDeleteSlot(slot, e)}
                       className="p-3 text-white/30 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors opacity-0 group-hover:opacity-100"

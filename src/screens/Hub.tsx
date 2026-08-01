@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../store/GameContext';
 import { ProgressBar } from '../components/ProgressBar';
-import { Mail, ArrowRight, ShieldAlert, User, Calendar, Stethoscope, AlertTriangle, Flame, Briefcase, Award, TrendingUp, Activity, Clock } from 'lucide-react';
+import { Mail, ArrowRight, ShieldAlert, User, Calendar, Stethoscope, AlertTriangle, Flame, Briefcase, Award, TrendingUp, Activity, Clock, CheckCircle2, Camera, Globe } from 'lucide-react';
 import { CLUBS } from '../data/teams';
 import { TeamLogo } from '../components/TeamLogo';
 import { CharacterPortrait } from '../components/CharacterPortrait';
+import { AvatarGeneratorModal } from '../components/AvatarGeneratorModal';
+import { DailyQuestsWidget } from '../components/DailyQuestsWidget';
+import { CareerDepthWidget } from '../components/CareerDepthWidget';
+import { RealWorldNewsWidget } from '../components/RealWorldNewsWidget';
+import { InboxDigest } from '../components/InboxDigest';
 import { getClubSquad } from '../data/sheetSquads';
 import { GlossaryTooltip, FirstEncounterCallout } from '../components/GlossaryTooltip';
 import { getRoleById, getManagerTacticalFit } from '../data/roles';
 import { DayOfWeek } from "../types";
 import { getFormattedCalendarDate } from "../utils/careerSystems";
 import { getTransferWindowPacingState, getClubTier, getGatingStatus } from '../utils/transfers';
+import { isDecisionRequired } from '../utils/notifications';
+import { getClubStaff, getCanonicalSender, resolveSenderIdentity } from '../utils/clubStaff';
 
 export function Hub() {
  const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing } = useGame();
- const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING'>('MANAGER');
+ const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING' | 'WORLD_NEWS'>('MANAGER');
  const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
  const currentDayIdx = days.indexOf(state.currentDay);
  let nextDay = state.currentDay;
@@ -28,11 +35,19 @@ export function Hub() {
  }
  const nextDateStr = getFormattedCalendarDate(nextWeek, nextDay);
 
- const outstandingCriticalItems = state.inbox.filter((msg: any) => msg.priority === 'CRITICAL' && !msg.read);
- const criticalCount = outstandingCriticalItems.length;
- const isAdvanceBlocked = criticalCount > 0;
+ const pendingDecisionItems = state.inbox ? state.inbox.filter((msg: any) => isDecisionRequired(msg)) : [];
+ const unreadItems = state.inbox ? state.inbox.filter((msg: any) => !msg.read) : [];
+ const isAdvanceBlocked = pendingDecisionItems.length > 0;
+ const criticalCount = pendingDecisionItems.length > 0 ? pendingDecisionItems.length : unreadItems.filter((msg: any) => msg.priority === 'CRITICAL').length;
 
  const [deadlineSeconds, setDeadlineSeconds] = useState(43200); // 12 hours mock countdown
+ const [scheduleTab, setScheduleTab] = useState<'FLOW' | 'INBOX' | 'ACTIONS'>('FLOW');
+
+ useEffect(() => {
+   if (pendingDecisionItems.length > 0 && scheduleTab === 'FLOW') {
+     setScheduleTab('ACTIONS');
+   }
+ }, [pendingDecisionItems.length]);
 
  useEffect(() => {
      let interval: any;
@@ -328,8 +343,105 @@ export function Hub() {
  const fanTier = getFanTier(player.fans);
  const formHistory = player.stateFlags?.openThreads?.formHistory || ['W', 'W', 'D', 'L', 'W'];
 
+ const [showInjuryModal, setShowInjuryModal] = useState(false);
+ const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+
+ useEffect(() => {
+   if (player?.isInjured && player?.rehabProcess && !player.rehabProcess.treatmentSelected) {
+     setShowInjuryModal(true);
+   } else {
+     setShowInjuryModal(false);
+   }
+ }, [player?.isInjured, player?.rehabProcess?.treatmentSelected]);
+
+ const handleSelectTreatment = (type: 'SURGERY' | 'CONSERVATIVE' | 'INJECTION') => {
+   if (!player || !player.rehabProcess) return;
+
+   let updatedPlayer = { ...player };
+   updatedPlayer.rehabProcess = { ...updatedPlayer.rehabProcess, treatmentSelected: true, treatmentType: type };
+   
+   if (type === 'SURGERY') {
+     updatedPlayer.rehabProcess.totalWeeksEstimated = Math.max(1, Math.floor(updatedPlayer.rehabProcess.totalWeeksEstimated * 0.6));
+     updatedPlayer.attributes = {
+       ...updatedPlayer.attributes,
+       pace: Math.max(1, updatedPlayer.attributes.pace - 2),
+       agility: Math.max(1, updatedPlayer.attributes.agility - 2)
+     };
+     updatedPlayer.rehabProcess.reInjuryRisk = 2;
+   } else if (type === 'CONSERVATIVE') {
+     updatedPlayer.rehabProcess.totalWeeksEstimated = Math.ceil(updatedPlayer.rehabProcess.totalWeeksEstimated * 1.5);
+     updatedPlayer.rehabProcess.reInjuryRisk = 5;
+   } else if (type === 'INJECTION') {
+     updatedPlayer.rehabProcess.totalWeeksEstimated = Math.max(1, Math.floor(updatedPlayer.rehabProcess.totalWeeksEstimated * 0.4));
+     updatedPlayer.rehabProcess.reInjuryRisk = 30;
+   }
+   
+   updatedPlayer.timeline = [
+     {
+       id: `treatment_${Date.now()}`,
+       week: state.currentWeek,
+       day: state.currentDay,
+       type: 'INJURY',
+       title: `Selected ${type.charAt(0) + type.slice(1).toLowerCase()} Treatment`,
+       description: `Opted for the ${type.toLowerCase()} recovery path for ${updatedPlayer.rehabProcess.injuryName}.`
+     },
+     ...(updatedPlayer.timeline || [])
+   ];
+
+   setPlayer(updatedPlayer);
+   setShowInjuryModal(false);
+ };
+
  return (
  <div className="flex flex-col gap-6 w-full font-sans text-sm pb-12">
+  {showInjuryModal && player?.rehabProcess && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-[#111111] border border-red-500/30 rounded-xl p-8 max-w-2xl w-full shadow-2xl relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Stethoscope className="text-red-400 w-8 h-8" />
+            <h2 className="text-red-400 font-black uppercase tracking-tight text-3xl">Injury Management</h2>
+          </div>
+          <p className="text-white/70 mb-6 leading-relaxed">
+            You have sustained a <strong>{player.rehabProcess.injuryName}</strong>. The club's medical staff requires you to select a recovery path. This choice will affect your downtime and your long-term athletic profile.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <button onClick={() => handleSelectTreatment('SURGERY')} className="group flex flex-col p-4 bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-white/10 rounded-lg text-left transition-all">
+              <span className="text-red-400 font-bold uppercase tracking-wider text-sm mb-1">Specialized Surgery</span>
+              <span className="text-white/60 text-xs mb-3 flex-1">Invasive repair for the fastest structural fix.</span>
+              <div className="text-[10px] uppercase font-mono tracking-wider space-y-1">
+                <div className="text-emerald-400">⚡ Fast Recovery (-40% time)</div>
+                <div className="text-red-400">⚠ Stat Penalty (-2 Pace/Agility)</div>
+                <div className="text-emerald-400">🛡️ Minimal Relapse Risk</div>
+              </div>
+            </button>
+
+            <button onClick={() => handleSelectTreatment('CONSERVATIVE')} className="group flex flex-col p-4 bg-white/5 border border-white/10 hover:border-[#38bdf8]/50 hover:bg-white/10 rounded-lg text-left transition-all">
+              <span className="text-[#38bdf8] font-bold uppercase tracking-wider text-sm mb-1">Conservative Rehab</span>
+              <span className="text-white/60 text-xs mb-3 flex-1">Natural healing process with physical therapy.</span>
+              <div className="text-[10px] uppercase font-mono tracking-wider space-y-1">
+                <div className="text-amber-400">⏳ Slow Recovery (+50% time)</div>
+                <div className="text-emerald-400">✨ No Stat Penalties</div>
+                <div className="text-emerald-400">🛡️ Low Relapse Risk</div>
+              </div>
+            </button>
+
+            <button onClick={() => handleSelectTreatment('INJECTION')} className="group flex flex-col p-4 bg-white/5 border border-white/10 hover:border-amber-500/50 hover:bg-white/10 rounded-lg text-left transition-all">
+              <span className="text-amber-400 font-bold uppercase tracking-wider text-sm mb-1">Experimental Injections</span>
+              <span className="text-white/60 text-xs mb-3 flex-1">Pain-blocking and rapid inflammation reduction.</span>
+              <div className="text-[10px] uppercase font-mono tracking-wider space-y-1">
+                <div className="text-emerald-400">⚡ Very Fast (-60% time)</div>
+                <div className="text-emerald-400">✨ No Immediate Stat Penalty</div>
+                <div className="text-red-400">⚠ High Relapse Risk (30%)</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
   {isDeadlineDay && (
      <div className="bg-red-900/40 border border-red-500/50 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -357,12 +469,26 @@ export function Hub() {
   <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-[#00FF88]/5 rounded-full blur-3xl pointer-events-none"></div>
 
   <div className="flex items-center gap-5 relative z-10">
+   {/* Player Profile Avatar with Studio Edit Button */}
+   <div className="relative group cursor-pointer shrink-0" onClick={() => setIsAvatarModalOpen(true)}>
+    <CharacterPortrait
+     type="player"
+     name={`${player.firstName} ${player.lastName}`}
+     nationality={player.nationality}
+     size={68}
+     showBorder={true}
+    />
+    <div className="absolute -bottom-1 -right-1 bg-teal-500 text-black p-1.5 rounded-full border border-black shadow-lg group-hover:scale-110 transition-transform">
+     <Camera size={12} />
+    </div>
+   </div>
+
    <TeamLogo
    symbol={club.symbol}
    name={club.name}
    primaryColor={club.primaryColor}
    secondaryColor={club.secondaryColor}
-   size={72}
+   size={68}
    className="flex-shrink-0"
    />
    <div>
@@ -377,16 +503,22 @@ export function Hub() {
     )}
    </div>
    
-   <h1 className="text-white text-3xl font-black uppercase tracking-tight mb-1">
-    {club.name}
+   <h1 className="text-white text-2xl sm:text-3xl font-black uppercase tracking-tight mb-1">
+    {player.firstName} {player.lastName} &bull; <span className="text-white/60">{club.name}</span>
    </h1>
    <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
-    {club.country} &middot; Tier: {club.tier} &middot; OVR: {club.ovr}
+    {player.position} &middot; OVR: {player.ovr} &middot; {club.country} &middot; Tier: {club.tier}
    </p>
    </div>
   </div>
 
   <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 relative z-10 w-full md:w-auto">
+   <button
+     onClick={() => setIsAvatarModalOpen(true)}
+     className="bg-teal-500/20 border border-teal-500/40 hover:bg-teal-500 hover:text-black text-teal-300 px-4 py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+   >
+     <Camera size={14} /> AVATAR STUDIO
+   </button>
    <div className="flex flex-col gap-1 w-full md:w-48 glass-panel px-4 py-3 rounded-lg justify-center">
     <div className="text-[9px] font-bold text-white/50 uppercase tracking-widest flex justify-between">
     <span>Fan Status: {fanTier.title}</span>
@@ -428,9 +560,15 @@ export function Hub() {
     <FirstEncounterCallout term="Squad Chemistry" />
   </div>
 
+  {/* Daily Objectives & Quests System */}
+  <DailyQuestsWidget />
+
+  {/* Pro Football Manager & Career Depth Center */}
+  <CareerDepthWidget />
+
   {/* Active Critical Alert Banners */}
   {(() => {
-    const criticalMessages = (state.inbox || []).filter(msg => !msg.read && msg.priority === 'CRITICAL');
+    const criticalMessages = (state.inbox || []).filter(msg => isDecisionRequired(msg));
     if (criticalMessages.length === 0) return null;
     
     return (
@@ -441,7 +579,7 @@ export function Hub() {
               <span className="text-xl">🚨</span>
               <div>
                 <span className="text-red-400 text-[9px] font-mono font-black uppercase tracking-widest block">
-                  CRITICAL ACTION REQUIRED &bull; {msg.sender.toUpperCase()}
+                  ACTION REQUIRED &bull; {resolveSenderIdentity(state, msg.sender, msg.id).toUpperCase()}
                 </span>
                 <p className="text-white text-xs font-mono mt-0.5 font-bold uppercase tracking-wide">
                   {msg.subject}
@@ -450,9 +588,9 @@ export function Hub() {
             </div>
             <button 
               onClick={() => {
-                setScreen('INBOX');
+                setScreen('INBOX', true);
               }}
-              className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all shrink-0 shadow-lg shadow-red-500/20"
+              className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all shrink-0 shadow-lg shadow-red-500/20 cursor-pointer"
             >
               Resolve Now
             </button>
@@ -558,7 +696,7 @@ export function Hub() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10 w-full text-left">
        <div className="md:col-span-2 bg-[#080d12]/90 border-l-4 border-[#38bdf8] p-4 rounded-r-xl font-mono text-xs text-[#d0f0ff] leading-relaxed">
         <div className="text-[#38bdf8] text-[9px] font-bold uppercase tracking-widest mb-1 font-sans flex items-center gap-2">
-         <Activity size={12} /> Lead Physio Assessment (Dr. Sarah Jenkins)
+         <Activity size={12} /> Lead Physio Assessment ({getClubStaff(state).physio.fullName})
         </div>
         <p className="italic">"{player.rehabProcess?.medicalAdvice || "Focus on controlled physical therapy and avoid sudden explosive load."}"</p>
        </div>
@@ -700,7 +838,7 @@ export function Hub() {
       }
       const notification = {
         id: Date.now().toString(),
-        sender: "Coach Clement (Assistant Coach)",
+        sender: getCanonicalSender(state, 'ASSISTANT'),
         subject: "Omission Fitness Report",
         content: "Excellent response to your squad omission today. You stayed back at the facility and put in an intense physical shift. Your sharpness and determination have been recorded and sent to the manager.",
         read: false,
@@ -852,52 +990,10 @@ export function Hub() {
     </div>
     )
    ) : (
-    <div className="premium-card rounded-xl flex-1 flex flex-col items-center justify-center text-center p-8">
-    <div className="text-[#555] pb-6 flex flex-col items-center">
-     <Flame size={48} className="text-[#00FF88]/30 mb-3 animate-pulse" />
-     <h3 className="text-white font-black text-lg uppercase tracking-wider mb-2">Schedule Flow</h3>
-     <p className="text-white/50 text-[11px] max-w-sm mb-0 font-mono uppercase tracking-wider leading-relaxed">No scheduled club matches today. Use the time to progress your calendar, participate in training drills, or check inbox communications.</p>
-    </div>
-    <div className="relative group">
-    <button 
-     onClick={() => !isAdvanceBlocked && advanceDay()}
-     disabled={isAdvanceBlocked}
-     className={`relative px-12 py-4 font-black uppercase tracking-widest text-xs flex flex-col items-center gap-1.5 rounded-lg transition-all duration-300
-      ${isAdvanceBlocked 
-        ? "bg-transparent border-2 border-white/10 text-white/30 cursor-not-allowed" 
-        : "bg-transparent border-2 border-[#00FF88] text-[#00FF88] hover:bg-[#00FF88]/10 hover:shadow-[0_0_20px_rgba(0,255,136,0.25)]"}
-     `}
-    >
-     <div className="flex items-center gap-3">
-      Advance Calendar <ArrowRight size={14} className={isAdvanceBlocked ? 'opacity-50' : 'opacity-100'}/>
-     </div>
-     <div className={`text-[10px] font-mono tracking-wider ${isAdvanceBlocked ? 'text-white/20' : 'text-[#00FF88]/70'} transition-colors`}>
-      Next: {nextDay}, {nextDateStr}
-     </div>
-    </button>
-    
-    {isAdvanceBlocked && (
-     <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-      <span className="relative flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-20"></span>
-       <span className="relative inline-flex rounded-full bg-[#1a0a0a] border border-red-500 text-red-400 text-[9px] font-bold px-2.5 py-0.5 uppercase tracking-widest shadow-lg flex items-center gap-1.5">
-        <AlertTriangle size={10} /> ⚠ {criticalCount} pending
-       </span>
-      </span>
-     </div>
-    )}
-
-    {isAdvanceBlocked && (
-     <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 flex flex-col items-center">
-      <div className="w-2 h-2 border-t border-l border-white/10 bg-[#111] rotate-45 -mb-1"></div>
-      <div className="bg-[#111] border border-white/10 text-white/70 text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg flex flex-col items-center gap-1 shadow-2xl backdrop-blur-md">
-       <span className="text-red-400 font-bold">Action Required</span>
-       <span className="text-white/50 text-[9px]">Check your inbox to resolve critical items.</span>
-      </div>
-     </div>
-    )}
-   </div>
-    </div>
+    <InboxDigest 
+     onOpenFullInbox={() => setScreen('INBOX', true)} 
+     onAdvanceDay={advanceDay} 
+    />
    )}
    </div>
    
@@ -1149,34 +1245,76 @@ export function Hub() {
    </div>
    
    {/* Quick Inbox Digest Card */}
-   <button 
-   onClick={() => setScreen('INBOX')}
-   className="premium-card hover:border-[#00FF88] rounded-xl p-5 flex flex-col transition-all text-left relative overflow-hidden group shadow-md"
+   <div 
+   className={`premium-card rounded-xl p-5 flex flex-col transition-all text-left relative overflow-hidden group shadow-md ${
+     isAdvanceBlocked 
+       ? 'border-2 border-red-500/80 bg-red-500/10 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)]' 
+       : 'hover:border-[#00FF88]'
+   }`}
    >
    <div className="flex items-center justify-between w-full mb-3 pb-2 border-b border-white/10">
     <div className="flex items-center gap-2">
-    <Mail size={14} className="text-white/50 group-hover:text-[#00FF88] transition-colors" />
-    <span className="text-white text-xs font-black uppercase tracking-widest">Inbox Digest</span>
+     <Mail size={14} className={isAdvanceBlocked ? 'text-red-500 animate-pulse' : 'text-white/50 group-hover:text-[#00FF88] transition-colors'} />
+     <span className={`text-xs font-black uppercase tracking-widest ${isAdvanceBlocked ? 'text-red-500 font-mono font-black' : 'text-white'}`}>
+       Inbox Digest {isAdvanceBlocked && '(ACTION REQUIRED)'}
+     </span>
     </div>
     {unreadMessages.length > 0 && (
-    <span className="bg-[#00FF88] text-black text-[10px] font-black px-2 py-0.5 rounded font-mono">
-     {unreadMessages.length} New
-    </span>
+     <span className={`text-[10px] font-black px-2 py-0.5 rounded font-mono ${
+       isAdvanceBlocked ? 'bg-red-500 text-white animate-pulse' : 'bg-[#00FF88] text-black'
+     }`}>
+      {unreadMessages.length} New
+     </span>
     )}
    </div>
 
    <div className="space-y-2 w-full">
     {unreadMessages.slice(0, 2).map((msg, idx) => (
-    <div key={idx} className="bg-[#141414] p-3 border-l-2 border-[#00FF88] text-left rounded">
-     <div className="text-[9px] text-white/50 font-bold uppercase tracking-widest mb-1">{msg.sender}</div>
-     <div className="text-white text-[10px] truncate uppercase font-mono">{msg.subject}</div>
+    <div key={idx} className="bg-[#141414] p-3 border-l-2 border-[#00FF88] text-left rounded flex items-center justify-between">
+     <div className="truncate pr-2">
+      <div className="text-[9px] text-white/50 font-bold uppercase tracking-widest mb-0.5">{msg.sender}</div>
+      <div className="text-white text-[10px] truncate uppercase font-mono">{msg.subject}</div>
+     </div>
+     <button
+      onClick={() => {
+        if (isDecisionRequired(msg)) {
+          setScheduleTab('ACTIONS');
+        } else {
+          setScheduleTab('INBOX');
+        }
+      }}
+      className="text-[9px] font-mono text-[#00FF88] hover:underline uppercase shrink-0 font-bold cursor-pointer"
+     >
+      Inspect
+     </button>
     </div>
     ))}
     {unreadMessages.length === 0 && (
     <div className="text-[#555] text-[10px] uppercase tracking-widest italic font-mono">No unread letters.</div>
     )}
    </div>
-   </button>
+
+   <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+    <button
+     onClick={() => {
+      if (isAdvanceBlocked) {
+       setScheduleTab('ACTIONS');
+      } else {
+       setScheduleTab('INBOX');
+      }
+     }}
+     className="text-[10px] font-mono font-bold text-white/70 hover:text-[#00FF88] uppercase transition-colors cursor-pointer"
+    >
+     Focus Command Flow &rarr;
+    </button>
+    <button
+     onClick={() => setScreen('INBOX', true)}
+     className="text-[10px] font-mono font-black text-[#00FF88] hover:underline uppercase cursor-pointer"
+    >
+     Full Mailbox &rarr;
+    </button>
+   </div>
+   </div>
 
   </div>
 
@@ -1208,6 +1346,12 @@ export function Hub() {
     className={`px-4 py-2 rounded text-[10px] font-mono font-black uppercase tracking-wider transition-colors ${activeFeedTab === 'SCOUTING' ? 'bg-[#00FF88] text-black' : 'text-white/50 hover:text-white'}`}
    >
     Scout Report
+   </button>
+   <button
+    onClick={() => setActiveFeedTab('WORLD_NEWS')}
+    className={`px-4 py-2 rounded text-[10px] font-mono font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 ${activeFeedTab === 'WORLD_NEWS' ? 'bg-teal-400 text-black font-black' : 'text-teal-400/70 hover:text-teal-300'}`}
+   >
+    <Globe size={12} className="animate-pulse" /> World Press Wire
    </button>
    </div>
   </div>
@@ -1545,6 +1689,17 @@ export function Hub() {
   )}
   </div>
 
+  {activeFeedTab === 'WORLD_NEWS' && (
+    <div className="mt-4">
+      <RealWorldNewsWidget />
+    </div>
+  )}
+
+  {/* Custom Player Avatar Generator Modal */}
+  <AvatarGeneratorModal
+    isOpen={isAvatarModalOpen}
+    onClose={() => setIsAvatarModalOpen(false)}
+  />
  </div>
  );
 }

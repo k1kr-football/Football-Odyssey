@@ -423,7 +423,7 @@ export function TrialMatch() {
 
  setPlayer(finalPlayer);
  setInbox(finalInbox);
- setScreen('HUB');
+ setScreen('HUB', true);
  };
 
  const rating = parseFloat(matchRating.toFixed(1));
