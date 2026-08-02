@@ -8,7 +8,6 @@ import { getPhilosophyFitText } from '../utils/managerPhilosophy';
 import { negotiateTransfer, getClubInterestScore, getGatingStatus, getClubTier, generateDeadlineDayOffers, simulateDeadlineDayTicking } from '../utils/transfers';
 import { TransferOffer } from '../types';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
-import { SuggestSigningModal } from '../components/SuggestSigningModal';
 import { MedicalCheckModal } from '../components/MedicalCheckModal';
 
 export function Transfers() {
@@ -19,7 +18,7 @@ export function Transfers() {
  const [negotiatingOffer, setNegotiatingOffer] = useState<string | null>(null);
  const [pendingMedicalOffer, setPendingMedicalOffer] = useState<string | null>(null);
  const [isMedicalModalOpen, setIsMedicalModalOpen] = useState(false);
- const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
+ 
  
  // Custom inquiry states
  const [inquiryClub, setInquiryClub] = useState<string | null>(null);
@@ -747,12 +746,7 @@ export function Transfers() {
 
   {/* Transfer Window Banner & DoF Action */}
   <div className="flex items-center gap-3">
-   <button
-    onClick={() => setIsSuggestModalOpen(true)}
-    className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-black font-extrabold rounded-lg text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer"
-   >
-    <Lightbulb size={14} /> Suggest Signing (DoF)
-   </button>
+   
 
    <div className={`px-4 py-2 rounded-lg font-bold border flex items-center gap-2 ${isTransferWindow ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50' : 'bg-zinc-950/20 text-zinc-400 border-zinc-900'}`}>
     <Calendar size={14} />
@@ -1206,7 +1200,7 @@ export function Transfers() {
   </div>
   )}
 
-  <SuggestSigningModal isOpen={isSuggestModalOpen} onClose={() => setIsSuggestModalOpen(false)} />
+  
   <MedicalCheckModal 
     isOpen={isMedicalModalOpen} 
     offer={player.transferOffers.find(o => o.id === pendingMedicalOffer) || null} 

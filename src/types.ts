@@ -465,6 +465,8 @@ export interface Player {
     reputationHistory?: any[];
     skippedTrainingThisWeek?: boolean;
     retired?: boolean;
+    agentFocus?: 'TRANSFER' | 'LOYALTY' | 'WAGES' | 'BONUSES' | 'PR_HYPE' | 'FOOTBALL' | string;
+    lastAgentMeetingWeek?: number;
     highestFinancialTier?: string;
     intlStatus?: 'Uncapped' | 'Youth' | 'Senior Fringe' | 'Senior Regular' | 'Senior Captain' | 'Retired';
     intlCampaign?: 'Qualifiers' | 'Tournament' | 'None';

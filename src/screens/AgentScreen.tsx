@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
+import { AgentMeetingModal } from '../components/AgentMeetingModal';
 import { 
   Briefcase, Award, TrendingUp, Shield, Star, CheckCircle2, 
   DollarSign, Users, PhoneCall, MessageSquare, Sparkles, 
@@ -99,6 +100,7 @@ export function AgentScreen() {
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MARKET' | 'ACTIONS'>('OVERVIEW');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
   if (!player) return null;
 
@@ -161,7 +163,11 @@ export function AgentScreen() {
       return;
     }
 
-    const contractBoost = currentAgentObj.skills.contractBoost;
+    let contractBoost = currentAgentObj.skills.contractBoost;
+    if (player.stateFlags?.agentFocus === 'WAGES') {
+        contractBoost += 20;
+    }
+
     const wageIncrease = Math.round(player.contract.wage * (0.15 + contractBoost * 0.003));
     const newWage = player.contract.wage + wageIncrease;
 
@@ -212,12 +218,18 @@ export function AgentScreen() {
   };
 
   const handleActionPRShield = () => {
-    const newMedia = Math.min(100, player.mediaPerception + 15);
+    let boost = 15;
+    if (player.stateFlags?.agentFocus === 'PR_HYPE') {
+        boost += 10;
+    } else if (player.stateFlags?.agentFocus === 'FOOTBALL') {
+        boost -= 5;
+    }
+    const newMedia = Math.min(100, player.mediaPerception + boost);
     setPlayer({
       ...player,
       mediaPerception: newMedia
     });
-    triggerNotification(`🛡️ Media shield active! Public perception improved by +15.`);
+    triggerNotification(`🛡️ Media campaign active! Public perception improved by +${boost}.`);
   };
 
   return (
@@ -454,6 +466,7 @@ export function AgentScreen() {
         )}
 
         {activeTab === 'ACTIONS' && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Action 1: Demand Contract Upgrade */}
             <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
@@ -619,8 +632,36 @@ export function AgentScreen() {
               </button>
             </div>
           </div>
+            
+            {/* Action 3: Schedule Agent Meeting */}
+            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl md:col-span-2">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+                    <MessageSquare size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold uppercase text-white">Strategic Agent Meeting</h3>
+                    <p className="text-xs text-white/50 font-mono mt-0.5">Discuss career ambitions, PR strategy, and demands</p>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-white/70 font-sans leading-relaxed mb-6">
+                  Sit down with your representative to define your roadmap. Aligning your goals helps your agent make the right moves behind the scenes for transfers, contracts, and public perception.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsMeetingModalOpen(true)}
+                className="w-full py-3 bg-blue-500 text-white hover:bg-blue-400 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-500/20"
+              >
+                Schedule Meeting
+              </button>
+            </div>
+          </>
         )}
       </div>
+      <AgentMeetingModal isOpen={isMeetingModalOpen} onClose={() => setIsMeetingModalOpen(false)} />
     </div>
   );
 }

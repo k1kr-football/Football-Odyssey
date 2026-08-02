@@ -3,6 +3,7 @@ import { Club, DayOfWeek, Position, SubPosition, InboxMessage, ProgressionGate, 
 import { CLUBS } from '../data/teams';
 import { NATIONALITY_NAMES } from '../data/playerNames';
 import { getClubSquad } from '../data/sheetSquads';
+import { REAL_PLAYER_PROFILES } from '../data/realPlayerProfiles';
 import { STORY_ARCS } from '../data/storyArcs';
 import { getMentalFatigueLevel } from './wellbeingEngine';
 
@@ -751,15 +752,28 @@ export function generateAllClubsRosters(engine?: UnifiedNPCEngine): Record<strin
       
       let name = '';
       let ovr = avgStarterOvr;
+      let potential = Math.min(99, ovr + Math.floor(Math.random() * 10));
       const sheetPlayer = sheetPlayers.shift();
       if (sheetPlayer && sheetPlayer.name) {
          name = sheetPlayer.name;
          ovr = sheetPlayer.ovr;
+         const profile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === name.toLowerCase());
+         if (profile) {
+           ovr = profile.ovr;
+           potential = profile.potential;
+         }
       }
 
       if (!name) {
           const npc = e.generatePlayer('TEAMMATE', nat, ovr, 18 + Math.floor(Math.random() * 15), pos, club.symbol);
           name = `${npc.firstName} ${npc.lastName}`;
+          ovr = npc.ovr;
+          potential = npc.potential;
+      } else {
+          const profile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === name.toLowerCase());
+          if (profile) {
+            potential = profile.potential;
+          }
       }
 
       return {
@@ -768,7 +782,7 @@ export function generateAllClubsRosters(engine?: UnifiedNPCEngine): Record<strin
         nationality: nat,
         position: pos,
         ovr: ovr,
-        potential: Math.min(99, ovr + Math.floor(Math.random() * 10)),
+        potential: potential,
         age: 18 + Math.floor(Math.random() * 16),
         archetype: 'PROFESSIONAL'
       };

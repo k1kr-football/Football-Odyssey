@@ -1,4 +1,5 @@
 import { Attributes, PlayerRoleSpecialization, Player } from '../types';
+import { REAL_PLAYER_PROFILES } from '../data/realPlayerProfiles';
 
 export type NPCType = 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'AGENT' | 'JOURNALIST' | 'MANAGER' | 'YOUTH';
 export type NPCPersonalityArchetype = 'DEMANDING' | 'SUPPORTIVE' | 'CALCULATING' | 'VOLATILE' | 'PROFESSIONAL' | 'CHARISMATIC' | 'SKEPTICAL' | 'MENTOR' | 'ENIGMATIC' | 'JOKER';
@@ -122,13 +123,30 @@ export class UnifiedNPCEngine {
     return { firstName: 'Player', lastName: `${Math.floor(Math.random() * 10000)}` };
   }
 
-  generatePlayer(type: 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'YOUTH', nationality: string, targetOVR: number, age: number, position: string, clubSymbol?: string): PlayerNPC {
-    const { firstName, lastName } = this.generateUniqueName(nationality);
+  generatePlayer(type: 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'YOUTH', nationality: string, targetOVR: number, age: number, position: string, clubSymbol?: string, explicitName?: { firstName: string, lastName: string }): PlayerNPC {
+    let firstName: string;
+    let lastName: string;
+
+    if (explicitName) {
+      firstName = explicitName.firstName;
+      lastName = explicitName.lastName;
+    } else {
+      const generated = this.generateUniqueName(nationality);
+      firstName = generated.firstName;
+      lastName = generated.lastName;
+    }
+
+    const fullName = `${firstName} ${lastName}`;
+    const realProfile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === fullName.toLowerCase());
+
+    const finalOVR = realProfile ? realProfile.ovr : targetOVR;
+    const finalPotential = realProfile ? realProfile.potential : Math.min(99, finalOVR + Math.floor(Math.random() * 15));
+    const finalPosition = realProfile ? realProfile.position : position;
     
     const personalities: NPCPersonalityArchetype[] = ['PROFESSIONAL', 'VOLATILE', 'SUPPORTIVE', 'DEMANDING', 'CHARISMATIC'];
     const personality = personalities[Math.floor(Math.random() * personalities.length)];
 
-    const attrBase = Math.max(10, Math.min(99, targetOVR - 10 + Math.floor(Math.random() * 15)));
+    const attrBase = Math.max(10, Math.min(99, finalOVR - 10 + Math.floor(Math.random() * 15)));
     const attributes: Attributes = {
       pace: attrBase, passing: attrBase, dribbling: attrBase,
       finishing: attrBase, heading: attrBase, shortPassing: attrBase, longPassing: attrBase, ballControl: attrBase,
@@ -144,9 +162,9 @@ export class UnifiedNPCEngine {
       lastName,
       nationality,
       personality,
-      position,
-      ovr: targetOVR,
-      potential: Math.min(99, targetOVR + Math.floor(Math.random() * 15)),
+      position: finalPosition,
+      ovr: finalOVR,
+      potential: finalPotential,
       age,
       attributes,
       clubSymbol

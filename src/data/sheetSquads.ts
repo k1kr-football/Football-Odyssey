@@ -1,4 +1,5 @@
 import { CLUBS } from './teams';
+import { FM_SHEET_SQUADS } from './fmSheetSquads';
 
 export interface SheetPlayer {
   name: string;
@@ -10,7 +11,7 @@ export interface ClubSquad {
   players: SheetPlayer[];
 }
 
-export const SHEET_SQUADS: Record<string, ClubSquad> = {
+const CURATED_SHEET_SQUADS: Record<string, ClubSquad> = {
   "Arsenal": {
     manager: "Mikel Arteta",
     players: [
@@ -2945,6 +2946,11 @@ export const SHEET_SQUADS: Record<string, ClubSquad> = {
       { name: "Antoine Rabillard", ovr: 68 }
     ]
   }
+};
+
+export const SHEET_SQUADS: Record<string, ClubSquad> = {
+  ...FM_SHEET_SQUADS,
+  ...CURATED_SHEET_SQUADS
 };
 
 function normalizeClubString(str: string): string {

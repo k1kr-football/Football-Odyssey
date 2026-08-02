@@ -7,7 +7,6 @@ import { TeamLogo } from '../components/TeamLogo';
 import { CharacterPortrait } from '../components/CharacterPortrait';
 import { AvatarGeneratorModal } from '../components/AvatarGeneratorModal';
 import { DailyQuestsWidget } from '../components/DailyQuestsWidget';
-import { CareerDepthWidget } from '../components/CareerDepthWidget';
 import { RealWorldNewsWidget } from '../components/RealWorldNewsWidget';
 import { InboxDigest } from '../components/InboxDigest';
 import { getClubSquad } from '../data/sheetSquads';
@@ -19,14 +18,14 @@ import { getTransferWindowPacingState, getClubTier, getGatingStatus } from '../u
 import { isDecisionRequired } from '../utils/notifications';
 import { getClubStaff, getCanonicalSender, resolveSenderIdentity } from '../utils/clubStaff';
 import { ManagerMeetingModal } from '../components/ManagerMeetingModal';
-import { SuggestSigningModal } from '../components/SuggestSigningModal';
 import { MessageSquare, Lightbulb } from 'lucide-react';
+import { TeamFormD3Chart } from '../components/TeamFormD3Chart';
 
 export function Hub() {
  const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing } = useGame();
  const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING' | 'WORLD_NEWS'>('MANAGER');
  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState<boolean>(false);
- const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
+ 
  const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
  const currentDayIdx = days.indexOf(state.currentDay);
  let nextDay = state.currentDay;
@@ -568,8 +567,10 @@ export function Hub() {
   {/* Daily Objectives & Quests System */}
   <DailyQuestsWidget />
 
-  {/* Pro Football Manager & Career Depth Center */}
-  <CareerDepthWidget />
+  {/* D3 Team Form & Performance Momentum Visualizer */}
+  <TeamFormD3Chart player={player} />
+
+  
 
   {/* Active Critical Alert Banners */}
   {(() => {
@@ -1400,7 +1401,7 @@ export function Hub() {
        <MessageSquare size={12} /> Meeting
       </button>
       <button
-       onClick={() => setIsSuggestModalOpen(true)}
+       
        className="px-3 py-1.5 bg-amber-400 text-black font-extrabold text-[10px] rounded-lg uppercase tracking-wider hover:bg-amber-300 transition-all flex items-center gap-1.5 shadow"
       >
        <Lightbulb size={12} /> Suggest Target
@@ -1728,10 +1729,7 @@ export function Hub() {
     onClose={() => setIsMeetingModalOpen(false)}
   />
 
-  <SuggestSigningModal
-    isOpen={isSuggestModalOpen}
-    onClose={() => setIsSuggestModalOpen(false)}
-  />
+  
  </div>
  );
 }

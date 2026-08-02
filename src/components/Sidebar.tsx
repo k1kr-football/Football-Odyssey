@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGame } from '../store/GameContext';
 import { Screen } from '../store/GameContext';
-import { User, Mail, Dumbbell, Users, Calendar, Trophy, LogOut, Home, LineChart, Heart, ArrowLeftRight, Coins, BookOpen, Briefcase } from 'lucide-react';
+import { User, Mail, MessageSquare, Dumbbell, Users, Calendar, Trophy, LogOut, Home, LineChart, Heart, ArrowLeftRight, Coins, BookOpen, Briefcase, ShieldAlert } from 'lucide-react';
 import { TeamLogo } from './TeamLogo';
 import { CLUBS } from '../data/teams';
 import { isDecisionRequired } from '../utils/notifications';
@@ -10,7 +10,9 @@ const navItems: { id: Screen; label: string; icon: React.ReactNode; requiresPatt
  { id: 'HUB', label: 'HOME', icon: <Home size={18} /> },
  { id: 'MATCH', label: 'MATCHDAY FIXTURE', icon: <Trophy size={18} />, requiresPattern: 'matchday' },
  { id: 'INBOX', label: 'INBOX', icon: <Mail size={18} /> },
+ { id: 'MESSAGES', label: 'CHATS', icon: <MessageSquare size={18} /> },
  { id: 'TEAM', label: 'SQUAD', icon: <Users size={18} /> },
+ { id: 'CLUB', label: 'CLUB', icon: <ShieldAlert size={18} /> },
  { id: 'TRAINING', label: 'TRAINING', icon: <Dumbbell size={18} /> },
  { id: 'SOCIAL', label: 'SOCIAL', icon: <Heart size={18} /> },
  { id: 'TRANSFERS', label: 'TRANSFERS', icon: <ArrowLeftRight size={18} /> },

@@ -5,6 +5,7 @@ import { CLUBS, RIVALRIES } from '../data/teams';
 import { getClubStandings } from '../utils/seasonObjectives';
 import { TeamLogo } from '../components/TeamLogo';
 import { getFormattedCalendarDate } from '../utils/careerSystems';
+import { TeamFormD3Chart } from '../components/TeamFormD3Chart';
 
 export function Schedule() {
  const { state, setScreen } = useGame();
@@ -12,7 +13,7 @@ export function Schedule() {
  if (!state.player) return null;
 
  const [expandedMonths, setExpandedMonths] = useState<Record<number, boolean>>({ 1: true, 2: true });
- const [activeTab, setActiveTab] = useState<'TABLE' | 'SQUAD' | 'TOTW' | 'POTM'>('TABLE');
+ const [activeTab, setActiveTab] = useState<'TABLE' | 'SQUAD' | 'TOTW' | 'POTM' | 'FORM'>('TABLE');
  const [selectedTOTWIndex, setSelectedTOTWIndex] = useState<number>(0);
 
  const toggleMonth = (m: number) => {
@@ -327,6 +328,12 @@ export function Schedule() {
     className={`px-3 py-1 rounded transition-colors uppercase font-bold tracking-wider flex items-center gap-1 ${activeTab === 'POTM' ? 'bg-yellow-400 text-black' : 'text-white/50 hover:text-white'}`}
    >
     <Trophy size={11} /> POTM
+   </button>
+   <button
+    onClick={() => setActiveTab('FORM')}
+    className={`px-3 py-1 rounded transition-colors uppercase font-bold tracking-wider flex items-center gap-1 ${activeTab === 'FORM' ? 'bg-emerald-500 text-black' : 'text-white/50 hover:text-white'}`}
+   >
+    <Flame size={11} /> Team Form
    </button>
    </div>
   </div>
@@ -679,7 +686,7 @@ export function Schedule() {
       })()
      )}
     </div>
-   ) : (
+   ) : activeTab === 'POTM' ? (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
      {!state.potmHistory || state.potmHistory.length === 0 ? (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md border border-white/10">
@@ -733,6 +740,10 @@ export function Schedule() {
        ))}
       </div>
      )}
+    </div>
+   ) : (
+    <div className="flex-1 overflow-y-auto">
+     <TeamFormD3Chart player={state.player} />
     </div>
    )}
   </div>

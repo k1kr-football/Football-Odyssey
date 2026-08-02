@@ -45,6 +45,8 @@ export function Inbox() {
 
   // Filter messages based on category
   const filteredMessages = filteredByVerbosity.filter((m) => {
+    const sender = m.sender?.toUpperCase() || "";
+    if (sender.includes("TEAMMATE") || sender.includes("CAPTAIN") || sender.includes("PROSPECT")) return false;
     if (category === "ALL") return true;
     if (category === "STAFF") return ["MANAGER", "ASSISTANT MANAGER", "SPORTING DIRECTOR", "HEAD SCOUT"].includes(m.sender?.toUpperCase());
     if (category === "AGENT") return m.sender?.toUpperCase().includes("AGENT");
@@ -98,7 +100,7 @@ export function Inbox() {
     { id: "ALL", label: "All Messages", icon: Mail, color: "text-[#00FF88]" },
     { id: "STAFF", label: "Club Management", icon: Users, color: "text-blue-400" },
     { id: "AGENT", label: "Agent & Reps", icon: Briefcase, color: "text-amber-400" },
-    { id: "TEAM", label: "Squad & Transfers", icon: Flame, color: "text-emerald-400" },
+    
     { id: "MEDICAL", label: "Medical & Rehab", icon: Stethoscope, color: "text-red-400" },
     { id: "SOCIAL", label: "Media & Rumors", icon: MessageSquare, color: "text-purple-400" },
     { id: "WORLD MEDIA", label: "World Press Wire", icon: Globe, color: "text-teal-400", badge: "LIVE" }
@@ -207,8 +209,7 @@ export function Inbox() {
               if (cat.id === "ALL") return !m.read;
               if (cat.id === "STAFF") return ["MANAGER", "ASSISTANT MANAGER", "SPORTING DIRECTOR"].includes(m.sender?.toUpperCase()) && !m.read;
               if (cat.id === "AGENT") return m.sender?.toUpperCase().includes("AGENT") && !m.read;
-              if (cat.id === "TEAM") return ["CAPTAIN", "TEAMMATE"].includes(m.sender?.toUpperCase()) && !m.read;
-              if (cat.id === "MEDICAL") return ["PHYSIO", "DOCTOR"].includes(m.sender?.toUpperCase()) && !m.read;
+                            if (cat.id === "MEDICAL") return ["PHYSIO", "DOCTOR"].includes(m.sender?.toUpperCase()) && !m.read;
               if (cat.id === "SOCIAL") return (m.type === "SOCIAL" || m.type === "RUMOR") && !m.read;
               return false;
             }).length;

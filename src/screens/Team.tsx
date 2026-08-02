@@ -38,23 +38,6 @@ export function Team() {
  const playerForm = state.player?.form || 50;
  const mentees = (state.player?.stateFlags as any)?.openThreads?.mentees || [];
  const activeMenteesCount = mentees.filter((m: any) => m.isMentored).length;
-
- const handleCallTeamMeeting = () => {
-  if (!state.player) return;
-  const currentTeammates = state.player.relationships?.teammates || 50;
-  const updatedTeammates = Math.min(100, currentTeammates + 6);
-  const updatedPlayer = {
-   ...state.player,
-   relationships: {
-    ...state.player.relationships,
-    teammates: updatedTeammates
-   }
-  };
-  setPlayer(updatedPlayer);
-  setBondingMsg("💬 Players meeting held! Squad morale and peer respect improved (+6%).");
-  setTimeout(() => setBondingMsg(null), 4000);
- };
-
  
  return (
  <div className="min-h-screen bg-black text-white p-6 pb-24 overflow-y-auto" style={{
@@ -128,13 +111,7 @@ export function Team() {
 
      {/* Team Meeting Button */}
      <div className="pt-2">
-      <button
-       onClick={handleCallTeamMeeting}
-       className="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider rounded text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
-      >
-       <MessageSquare size={14} className="text-[#00FF88]" />
-       Call Players Meeting / Bonding Session
-      </button>
+      
       {bondingMsg && (
        <div className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 p-2 rounded text-center mt-2 animate-fade-in">
         {bondingMsg}

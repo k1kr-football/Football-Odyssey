@@ -15,7 +15,7 @@ export function Career() {
  const { state, setPlayer, setInbox } = useGame();
  const player = state.player;
  if (!player) return null;
- const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'REPUTATION' | 'SOCIAL' | 'TIMELINE' | 'INTERNATIONAL' | 'LEGACY_AGENT' | 'DECISIONS'>('OVERVIEW');
+ const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'REPUTATION' | 'TIMELINE' | 'INTERNATIONAL' | 'LEGACY' | 'DECISIONS'>('OVERVIEW');
  const [postingStatus, setPostingStatus] = useState<string | null>(null);
  const [agentSuccess, setAgentSuccess] = useState<string | null>(null);
 
@@ -291,24 +291,7 @@ export function Career() {
  return (
  <div className="flex flex-col h-full gap-6">
   <div className="flex gap-4 border-b border-white/10 pb-4 shrink-0">
-  <button 
-   onClick={() => setActiveTab('OVERVIEW')}
-   className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'OVERVIEW' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
-  >
-   Overview
-  </button>
-  <button 
-   onClick={() => setActiveTab('REPUTATION')}
-   className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'REPUTATION' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
-  >
-   Reputation & Perception
-  </button>
-  <button 
-   onClick={() => setActiveTab('SOCIAL')}
-   className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'SOCIAL' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
-  >
-   Social PR Studio
-  </button>
+  
   <button 
    onClick={() => setActiveTab('TIMELINE')}
    className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'TIMELINE' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
@@ -322,8 +305,8 @@ export function Career() {
    International Cup
   </button>
   <button 
-   onClick={() => setActiveTab('LEGACY_AGENT')}
-   className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'LEGACY_AGENT' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
+   onClick={() => setActiveTab('LEGACY')}
+   className={`text-xs font-bold tracking-widest uppercase px-6 py-2 transition-colors ${activeTab === 'LEGACY' ? 'bg-[#00FF88] text-white' : 'text-white/50 hover:text-white'}`}
   >
    Legacy & Milestones
   </button>
@@ -1098,177 +1081,16 @@ export function Career() {
    </div>
   )}
 
-  {/* NEW TAB: SOCIAL PR STUDIO */}
-  {activeTab === 'SOCIAL' && (
-  <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
-   
-   {/* Post Generation Panel */}
-   <div className="w-full lg:w-[380px] premium-card p-6 rounded-xl flex flex-col justify-between shrink-0 overflow-y-auto no-scrollbar">
-   <div className="space-y-6">
-    <div>
-    <h3 className="text-white text-md font-black uppercase tracking-wider mb-1 flex items-center gap-2"><Globe className="text-[#00FF88]" size={18}/> PR Control Desk</h3>
-    <p className="text-white/50 text-[11px] leading-relaxed">Compose strategic public statements. Flexing cash boosts followers but damages team morale, while grinding and head-coach backing solidify squad alignment.</p>
-    </div>
-
-    {postingStatus && (
-    <div className="glass-panel border border-[#00FF88] text-[#00FF88] p-3 rounded text-[10px] font-mono font-bold uppercase tracking-wider animate-pulse">
-     ⚡ {postingStatus}
-    </div>
-    )}
-
-    <div className="space-y-4">
-    {/* Grind Post */}
-    <button 
-     onClick={() => handleCreatePost('GRIND')}
-     className="w-full p-4 hover:border-[#00FF88] bg-[#080808] rounded-lg text-left transition-all group flex flex-col justify-between"
-    >
-     <div className="flex justify-between items-center mb-1">
-     <span className="text-white font-black uppercase text-xs font-display">Post Training Grind</span>
-     <span className="text-red-500 text-[9px] font-mono font-bold uppercase">Consumes 10 Fatigue</span>
-     </div>
-     <p className="text-white/50 text-[10px] leading-relaxed mb-3">Share high-intensity training clips. Boosts team cohesion, manager trust, and cuts cancel risk.</p>
-     <div className="text-[9px] font-mono text-emerald-400 font-bold uppercase">+Followers | +Manager Trust | +Teammates</div>
-    </button>
-
-    {/* Flex Post */}
-    <button 
-     onClick={() => handleCreatePost('FLEX')}
-     className="w-full p-4 hover:border-[#00FF88] bg-[#080808] rounded-lg text-left transition-all group flex flex-col justify-between"
-    >
-     <div className="flex justify-between items-center mb-1">
-     <span className="text-white font-black uppercase text-xs font-display">Post Luxury Flex</span>
-     <span className="text-emerald-500 text-[9px] font-mono font-bold uppercase">+15 Morale Boost</span>
-     </div>
-     <p className="text-white/50 text-[10px] leading-relaxed mb-3">Showcase elite supercars or designer watches. Massive follower surge, but risks dressing-room jealousy.</p>
-     <div className="text-[9px] font-mono text-red-400 font-bold uppercase">++Followers | -Teammates | +Cancel Risk</div>
-    </button>
-
-    {/* Engage Post */}
-    <button 
-     onClick={() => handleCreatePost('ENGAGE')}
-     className="w-full p-4 hover:border-[#00FF88] bg-[#080808] rounded-lg text-left transition-all group flex flex-col justify-between"
-    >
-     <div className="flex justify-between items-center mb-1">
-     <span className="text-white font-black uppercase text-xs font-display">Unfiltered Fan Q&A</span>
-     <span className="text-red-500 text-[9px] font-mono font-bold uppercase">Consumes 5 Fatigue</span>
-     </div>
-     <p className="text-white/50 text-[10px] leading-relaxed mb-3">Interact unfiltered. Deeply improves fan relationship and public buzz, but raises risk of speaking blunders.</p>
-     <div className="text-[9px] font-mono text-amber-500 font-bold uppercase">+++Fans | +Followers | ++Cancel Risk</div>
-    </button>
-
-    {/* Coach Backing Post */}
-    <button 
-     onClick={() => handleCreatePost('SOLIDARITY')}
-     className="w-full p-4 hover:border-[#00FF88] bg-[#080808] rounded-lg text-left transition-all group flex flex-col justify-between"
-    >
-     <div className="flex justify-between items-center mb-1">
-     <span className="text-white font-black uppercase text-xs font-display">Coach Solidarity Statement</span>
-     <span className="text-white/40 text-[9px] font-mono uppercase">Cost: Free</span>
-     </div>
-     <p className="text-white/50 text-[10px] leading-relaxed mb-3">Publish backing of head coach. Instantly pleases the manager, but plastic fans may mock you.</p>
-     <div className="text-[9px] font-mono text-cyan-400 font-bold uppercase">++Manager Trust | +Teammates | -Fans</div>
-    </button>
-    </div>
-   </div>
-
-   {/* Social status card */}
-   <div className="bg-[#080808] p-4 rounded-xl mt-6 space-y-3 font-mono text-xs">
-    <div className="flex justify-between items-center">
-    <span className="text-white/40">Followers:</span>
-    <span className="text-white font-bold">{(social.followers || 0).toLocaleString()}</span>
-    </div>
-    <div className="flex justify-between items-center">
-    <span className="text-white/40">Cancel Risk:</span>
-    <span className={`font-bold ${social.cancelRisk > 60 ? 'text-red-500' : 'text-emerald-500'}`}>{social.cancelRisk || 0}%</span>
-    </div>
-    <div className="flex justify-between items-center">
-    <span className="text-white/40">Match Form Coeff:</span>
-    <span className="text-white font-bold">{player.form?.toFixed(1) || "6.5"} / 10</span>
-    </div>
-   </div>
-   </div>
-
-   {/* Social Media Feed View */}
-   <div className="flex-1 premium-card rounded-xl p-6 flex flex-col overflow-hidden">
-   <h3 className="text-white text-md font-black uppercase tracking-wider mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
-    <Sparkles className="text-amber-400" size={16}/> Live X-FC Feed & Fan Reaction
-   </h3>
-
-   <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
-    {activePosts.map((post: any, i: number) => (
-    <div key={post.id || i} className="bg-[#0a0a0a] p-5 rounded-xl space-y-3">
-     <div className="flex items-center gap-3">
-     <div className="w-8 h-8 rounded-full bg-[#00FF88] flex items-center justify-center text-white text-xs font-black font-mono">
-      ⚽
-     </div>
-     <div>
-      <div className="flex items-center gap-1.5">
-      <span className="text-white font-black text-xs uppercase font-display">{player.firstName} {player.lastName}</span>
-      <span className="text-blue-400 text-[10px]">✓</span>
-      </div>
-      <span className="text-white/40 text-[10px] font-mono font-bold block">@{player.lastName || 'Striker'}Official</span>
-     </div>
-     </div>
-
-     <p className="text-white text-xs font-mono leading-relaxed pl-1">{post.text}</p>
-
-     <div className="flex gap-6 font-mono text-[10px] text-[#555] border-t border-white/10/40 pt-3 pl-1">
-     <span className="flex items-center gap-1 hover:text-red-400 transition-colors cursor-pointer"><Heart size={11} className="text-red-500/80"/> {post.likes}</span>
-     <span className="flex items-center gap-1 hover:text-emerald-400 transition-colors cursor-pointer"><Repeat size={11} className="text-emerald-500/80"/> {post.retweets}</span>
-     <span className="flex items-center gap-1"><MessageSquare size={11} className="text-blue-400/80"/> {post.comments?.length || 0}</span>
-     </div>
-
-     {/* Fan Comments */}
-     {post.comments && post.comments.length > 0 && (
-     <div className="bg-[#0f0f0f] p-3 rounded-lg ml-2 space-y-2 mt-2">
-      <div className="text-[#555] text-[9px] uppercase tracking-wider font-bold mb-1">Dressing Room & Fan replies</div>
-      {post.comments.map((comment: any, cIdx: number) => (
-      <div key={cIdx} className="text-[11px] font-mono leading-relaxed border-b border-white/10/20 pb-1.5 last:border-b-0 last:pb-0">
-       <span className="text-[#00FF88] font-bold mr-1">{comment.handle}:</span>
-       <span className="text-[#bbb]">{comment.text}</span>
-      </div>
-      ))}
-     </div>
-     )}
-    </div>
-    ))}
-   </div>
-   </div>
-
-  </div>
-  )}
-
+  
   {activeTab === 'TIMELINE' && (
-   <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar premium-card p-6 lg:p-12 relative rounded-xl">
-   <div className="absolute left-[39px] top-12 bottom-12 w-0.5 bg-[#333] hidden md:block"></div>
-   
-   {player.timeline && player.timeline.length > 0 ? player.timeline.map((event, i) => (
-    <div key={i} className="flex flex-col md:flex-row gap-6 mb-8 relative z-10 group">
-     {/* Timeline dot */}
-     <div className="w-10 h-10 rounded-full glass-panel border-2 border-white/10 group-hover:border-[#00FF88] shrink-0 flex items-center justify-center transition-colors">
-     <span className="text-white/50 text-[9px] font-bold group-hover:text-[#00FF88]">W{event.week}</span>
-     </div>
-     
-     {/* Content card */}
-     <div className={`flex-1 border p-6 rounded transition-colors flex flex-col sm:flex-row gap-6 ${event.title.includes('🏆') ? 'bg-amber-950/20 border-amber-500/30 group-hover:border-amber-500/60' : 'glass-panel border-white/10 group-hover:border-[#444]'}`}>
-     <div className="text-center shrink-0 w-full sm:w-20 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-white/10 pb-4 sm:pb-0 sm:pr-6">
-      <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">{event.day}</div>
-      {event.clubSymbol && event.clubSymbol !== 'SYS' ? (
-       (() => {
-       const eventClub = CLUBS.find(c => c.symbol.toUpperCase() === event.clubSymbol?.toUpperCase());
-       return (
-        <div className="flex flex-col items-center gap-1">
-        <TeamLogo
-         symbol={event.clubSymbol}
-         name={eventClub?.name}
-         primaryColor={eventClub?.primaryColor}
-         secondaryColor={eventClub?.secondaryColor}
-         size={36}
-        />
-        <div className="text-white text-xs font-black font-mono leading-none mt-1">{event.clubSymbol}</div>
-        </div>
-       );
-       })()
+   <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative p-4 bg-zinc-950/20 rounded-xl border border-white/5">
+   <div className="absolute left-10 top-0 bottom-0 w-px bg-gradient-to-b from-white/5 via-white/20 to-transparent z-0"></div>
+   {(player.timeline && player.timeline.length > 0) ? player.timeline.slice().reverse().map((event: any, idx: number) => (
+    <div key={idx} className="relative z-10 flex gap-6 mb-8 group">
+     <div className="w-12 flex flex-col items-center shrink-0">
+      <div className="text-[10px] text-white/50 font-bold mb-2 uppercase font-mono">W{event.week}</div>
+      {event.clubSymbol ? (
+       <TeamLogo symbol={event.clubSymbol} size={32} />
       ) : (
        <div className="text-white/50 text-[9px] font-bold font-mono uppercase tracking-widest bg-white/10 px-1.5 py-0.5 rounded mt-1">SYSTEM</div>
       )}
@@ -1279,7 +1101,6 @@ export function Career() {
       </div>
       <div className={`font-bold text-md mb-1 ${event.title.includes('🏆') ? 'text-amber-500' : 'text-white'}`}>{event.title}</div>
       <div className="text-[#aaa] text-xs leading-relaxed">{event.description}</div>
-     </div>
      </div>
     </div>
    )) : (
@@ -1362,7 +1183,7 @@ export function Career() {
    </div>
   )}
 
-  {activeTab === 'LEGACY_AGENT' && (
+  {activeTab === 'LEGACY' && (
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar animate-fade-in">
     {/* 1. STADIUM & MILESTONE BADGES */}
     <div className="premium-card p-6 rounded-xl flex flex-col gap-6">

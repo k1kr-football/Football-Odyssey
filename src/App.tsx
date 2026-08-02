@@ -11,6 +11,7 @@ const PlayerCreation = lazy(() => import('./screens/PlayerCreation').then(module
 const TrialMatch = lazy(() => import('./screens/TrialMatch').then(module => ({ default: module.TrialMatch })));
 const Profile = lazy(() => import('./screens/Profile').then(module => ({ default: module.Profile })));
 const Inbox = lazy(() => import('./screens/Inbox').then(module => ({ default: module.Inbox })));
+const Messages = lazy(() => import('./screens/Messages').then(module => ({ default: module.Messages })));
 const Training = lazy(() => import('./screens/Training').then(module => ({ default: module.Training })));
 const Team = lazy(() => import('./screens/Team').then(module => ({ default: module.Team })));
 const Schedule = lazy(() => import('./screens/Schedule').then(module => ({ default: module.Schedule })));
@@ -24,6 +25,7 @@ const Lifestyle = lazy(() => import('./screens/Lifestyle').then(module => ({ def
 const Social = lazy(() => import('./screens/Social').then(module => ({ default: module.Social })));
 const Finances = lazy(() => import('./screens/Finances').then(module => ({ default: module.Finances })));
 const AgentScreen = lazy(() => import('./screens/AgentScreen').then(module => ({ default: module.AgentScreen })));
+const Club = lazy(() => import('./screens/Club').then(module => ({ default: module.Club })));
 const Glossary = lazy(() => import('./screens/Glossary').then(module => ({ default: module.Glossary })));
 const AwardsCeremony = lazy(() => import('./screens/AwardsCeremony').then(module => ({ default: module.AwardsCeremony })));
 
@@ -88,6 +90,8 @@ function GameRouter() {
         return <Profile />;
       case 'INBOX':
         return <Inbox />;
+      case 'MESSAGES':
+        return <Messages />;
       case 'TRAINING':
         return <Training />;
       case 'TEAM':
@@ -114,6 +118,8 @@ function GameRouter() {
         return <Finances />;
       case 'AGENT':
         return <AgentScreen />;
+      case 'CLUB':
+        return <Club />;
       case 'GLOSSARY':
         return <Glossary />;
       case 'AWARDS_CEREMONY':

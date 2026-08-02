@@ -49,7 +49,7 @@ import {
   SeasonAwardsSummary
 } from '../utils/leagueAwards';
 
-export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT' | 'AWARDS_CEREMONY';
+export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT' | 'AWARDS_CEREMONY' | 'CLUB' | 'MESSAGES';
 
 export interface GameState {
   screen: Screen;
@@ -1344,7 +1344,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                    read: false,
                    type: 'DM',
                    timestamp: `${currentDayStr} 08:30`,
-                   choices: [{ text: 'Let\'s focus.', type: 'ack' }]
+                   choices: [{ text: "Let's focus.", type: 'ack' }]
                 });
              }
              else if (effect.type === 'MENTOR_GROWTH') {
@@ -1372,7 +1372,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                    read: false,
                    type: 'DM',
                    timestamp: `${currentDayStr} 12:00`,
-                   choices: [{ text: 'I\'ll talk to him.', type: 'ack' }]
+                   choices: [{ text: "I'll talk to him.", type: 'ack' }]
                 });
              }
           });
