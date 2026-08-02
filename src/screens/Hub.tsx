@@ -18,10 +18,15 @@ import { getFormattedCalendarDate } from "../utils/careerSystems";
 import { getTransferWindowPacingState, getClubTier, getGatingStatus } from '../utils/transfers';
 import { isDecisionRequired } from '../utils/notifications';
 import { getClubStaff, getCanonicalSender, resolveSenderIdentity } from '../utils/clubStaff';
+import { ManagerMeetingModal } from '../components/ManagerMeetingModal';
+import { SuggestSigningModal } from '../components/SuggestSigningModal';
+import { MessageSquare, Lightbulb } from 'lucide-react';
 
 export function Hub() {
  const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing } = useGame();
  const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING' | 'WORLD_NEWS'>('MANAGER');
+ const [isMeetingModalOpen, setIsMeetingModalOpen] = useState<boolean>(false);
+ const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
  const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
  const currentDayIdx = days.indexOf(state.currentDay);
  let nextDay = state.currentDay;
@@ -1381,9 +1386,26 @@ export function Hub() {
     </div>
     </div>
 
-    <div className="mt-4 pt-4 border-t border-white/10/40 flex justify-between items-center">
-    <span className="text-white/40 text-[10px] font-mono uppercase tracking-wider">Coach Requirement:</span>
-    <span className="text-white text-xs font-mono font-bold">{getManagerVerdict(player.trust, player.isInjured).actionRequired}</span>
+    <div className="mt-4 pt-4 border-t border-white/10/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+     <div>
+      <span className="text-white/40 text-[10px] font-mono uppercase tracking-wider block">Coach Requirement:</span>
+      <span className="text-white text-xs font-mono font-bold">{getManagerVerdict(player.trust, player.isInjured).actionRequired}</span>
+     </div>
+
+     <div className="flex items-center gap-2">
+      <button
+       onClick={() => setIsMeetingModalOpen(true)}
+       className="px-3 py-1.5 bg-[#00FF88] text-black font-extrabold text-[10px] rounded-lg uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all flex items-center gap-1.5 shadow"
+      >
+       <MessageSquare size={12} /> Meeting
+      </button>
+      <button
+       onClick={() => setIsSuggestModalOpen(true)}
+       className="px-3 py-1.5 bg-amber-400 text-black font-extrabold text-[10px] rounded-lg uppercase tracking-wider hover:bg-amber-300 transition-all flex items-center gap-1.5 shadow"
+      >
+       <Lightbulb size={12} /> Suggest Target
+      </button>
+     </div>
     </div>
    </div>
 
@@ -1699,6 +1721,16 @@ export function Hub() {
   <AvatarGeneratorModal
     isOpen={isAvatarModalOpen}
     onClose={() => setIsAvatarModalOpen(false)}
+  />
+
+  <ManagerMeetingModal
+    isOpen={isMeetingModalOpen}
+    onClose={() => setIsMeetingModalOpen(false)}
+  />
+
+  <SuggestSigningModal
+    isOpen={isSuggestModalOpen}
+    onClose={() => setIsSuggestModalOpen(false)}
   />
  </div>
  );

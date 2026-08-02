@@ -258,6 +258,8 @@ export interface PlayerStats {
   assists: number;
   caps: number;
   intlGoals?: number;
+  cleanSheets?: number;
+  averageRating?: number;
   derbyStats?: {
     played: number;
     totalRating: number;
@@ -293,6 +295,8 @@ export type PlayerPersonality = 'Professional' | 'Ambitious' | 'Temperamental' |
 
 export interface Player {
   hierarchyRole?: 'Youth' | 'Fringe' | 'Core' | 'Vice-Captain' | 'Captain';
+  squadStatus?: SquadHierarchyTier;
+  careerHistory?: any[];
   squadChemistry?: number;
   firstName: string;
   lastName: string;
@@ -320,6 +324,7 @@ export interface Player {
   fans: number; // 0-100
   fanTier?: string;
   mediaPerception: number; // 0-100
+  reputationTags?: string[];
   storyArc?: StoryArc;
   reputation: {
     club: number; // 0-100

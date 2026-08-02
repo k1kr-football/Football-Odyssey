@@ -9,6 +9,7 @@ import { REPUTATION_TAGS, getReputationTags, getTagName } from '../utils/reputat
 import { queryDecisionMemory, deriveRelationshipMap } from '../utils/decisionMemory';
 import { MEDIA_BRAND_ACTIVITIES, executeMediaBrandActivity } from '../utils/personalBrand';
 import { generateAcademyProspects, guideAcademyProspect, AcademyProspect } from '../utils/academyLegacy';
+import { RadarChartComparison } from '../components/RadarChartComparison';
 
 export function Career() {
  const { state, setPlayer, setInbox } = useGame();
@@ -599,6 +600,10 @@ export function Career() {
    
    {/* Records & Legacy & Story Arc */}
    <div className="flex-1 premium-card p-6 rounded-xl flex flex-col overflow-y-auto no-scrollbar gap-8">
+    
+    
+    {/* RADAR CHART WIDGET */}
+    <RadarChartComparison playerAttributes={player.attributes} playerPosition={player.position} />
     
     {/* STORY ARC WIDGET */}
     {player.storyArc && (

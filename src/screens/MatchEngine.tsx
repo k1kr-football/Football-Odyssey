@@ -1,7 +1,9 @@
 import { getFlavorText } from "../utils/matchEngineUtils";
 import { generateMatchDecisions, getPositionGroup, DecisionOption, KeyDecision } from "../utils/positionMatchDecisions";
+import { RadarChartComparison } from '../components/RadarChartComparison';
 import { calculateMatchReputationGain, updateReputationAndPerception } from "../utils/reputation";
 import { sfxEngine } from "../utils/sfxEngine";
+import { musicEngine } from '../utils/musicEngine';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { Player, TurningPointEvent } from '../types';
@@ -344,6 +346,40 @@ export function MatchEngine() {
   }, [p.position]);
 
   // Start Simulation
+
+
+  // Music Engine integration
+  useEffect(() => {
+    const nextMatch = state.nextMatch;
+    const isBigMatch = nextMatch?.isBigMatch || false;
+    const matchType = nextMatch?.matchType || 'LEAGUE';
+    const pressure = nextMatch?.pressure || 5;
+
+    if (phase === 'PRE_MATCH') {
+      musicEngine.playMood('PRE_MATCH');
+    } else if (phase === 'IN_MATCH' || phase === 'HALF_TIME') {
+      if (isBigMatch || matchType === 'DERBY' || matchType === 'GRUDGE') {
+        musicEngine.playMood('DERBY_DAY');
+      } else {
+        if (momentum < -3 || pressure >= 8) {
+          musicEngine.playMood('MATCH_HIGH_PRESSURE');
+        } else {
+          musicEngine.playMood('MATCH_LOW_PRESSURE');
+        }
+      }
+    } else if (phase === 'FULL_TIME') {
+      if (userScore > oppScore) {
+        musicEngine.playMood('VICTORY');
+      } else if (userScore < oppScore) {
+        musicEngine.playMood('DEFEAT');
+      } else {
+        // Draw, just play MENU or keep current. Let's play MENU.
+        musicEngine.playMood('MENU');
+      }
+    }
+  }, [phase, momentum, state.nextMatch, userScore, oppScore]);
+
+
   const handleStartMatch = () => {
     sfxEngine.play('WHISTLE_START');
     setPhase('IN_MATCH');
@@ -899,6 +935,17 @@ export function MatchEngine() {
       fans: newFans,
       fatigue: newFatigue,
       sharpness: newSharpness,
+      stateFlags: {
+        ...playerWithRep.player.stateFlags,
+        lastMatchPerformance: {
+          rating: playerStats.rating,
+          goals: playerStats.goals,
+          assists: playerStats.assists,
+          tackles: playerStats.tackles,
+          saves: playerStats.saves,
+          cleanSheet: oppScore === 0
+        }
+      },
       stats: {
         ...p.stats,
         apps: newApps,
@@ -1478,6 +1525,12 @@ export function MatchEngine() {
             </div>
           </div>
         </div>
+      </div>
+
+      
+      {/* Grid: Player Stats & Objectives Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <RadarChartComparison playerAttributes={p.attributes} playerPosition={p.position} isMatchContext={true} />
       </div>
 
       {/* Grid: Player Stats & Objectives Status */}

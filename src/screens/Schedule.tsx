@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../store/GameContext';
-import { ChevronDown, ChevronRight, Info, Flame, Snowflake } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info, Flame, Snowflake, Award, Star, Trophy, Sparkles, Shield } from 'lucide-react';
 import { CLUBS, RIVALRIES } from '../data/teams';
 import { getClubStandings } from '../utils/seasonObjectives';
 import { TeamLogo } from '../components/TeamLogo';
@@ -12,7 +12,8 @@ export function Schedule() {
  if (!state.player) return null;
 
  const [expandedMonths, setExpandedMonths] = useState<Record<number, boolean>>({ 1: true, 2: true });
- const [activeTab, setActiveTab] = useState<'TABLE' | 'SQUAD'>('TABLE');
+ const [activeTab, setActiveTab] = useState<'TABLE' | 'SQUAD' | 'TOTW' | 'POTM'>('TABLE');
+ const [selectedTOTWIndex, setSelectedTOTWIndex] = useState<number>(0);
 
  const toggleMonth = (m: number) => {
  setExpandedMonths(prev => ({ ...prev, [m]: !prev[m] }));
@@ -299,7 +300,7 @@ export function Schedule() {
    <h2 className="text-white text-xs font-bold tracking-widest uppercase ml-2">
    {activeTab === 'TABLE' ? `League Table · ${leagueName}` : 'Match Squad Sheet 📋'}
    </h2>
-   <div className="flex gap-1.5 glass-panel p-1 rounded text-[10px] font-mono">
+   <div className="flex gap-1.5 glass-panel p-1 rounded text-[10px] font-mono flex-wrap">
    <button
     onClick={() => setActiveTab('TABLE')}
     className={`px-3 py-1 rounded transition-colors uppercase font-bold tracking-wider ${activeTab === 'TABLE' ? 'bg-[#00FF88] text-black' : 'text-white/50 hover:text-white'}`}
@@ -314,6 +315,18 @@ export function Schedule() {
     {state.nextMatch?.squadList && (
     <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block animate-pulse shrink-0"></span>
     )}
+   </button>
+   <button
+    onClick={() => setActiveTab('TOTW')}
+    className={`px-3 py-1 rounded transition-colors uppercase font-bold tracking-wider flex items-center gap-1 ${activeTab === 'TOTW' ? 'bg-amber-400 text-black' : 'text-white/50 hover:text-white'}`}
+   >
+    <Sparkles size={11} /> TOTW
+   </button>
+   <button
+    onClick={() => setActiveTab('POTM')}
+    className={`px-3 py-1 rounded transition-colors uppercase font-bold tracking-wider flex items-center gap-1 ${activeTab === 'POTM' ? 'bg-yellow-400 text-black' : 'text-white/50 hover:text-white'}`}
+   >
+    <Trophy size={11} /> POTM
    </button>
    </div>
   </div>
@@ -397,7 +410,7 @@ export function Schedule() {
     </table>
     </div>
    </>
-   ) : (
+   ) : activeTab === 'SQUAD' ? (
    <div className="flex-1 flex flex-col overflow-hidden">
     {state.nextMatch?.squadList ? (
     <div className="flex-1 flex flex-col overflow-y-auto hide-scrollbar">
@@ -577,6 +590,150 @@ export function Schedule() {
     </div>
     )}
    </div>
+   ) : activeTab === 'TOTW' ? (
+    <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+     {!state.totwHistory || state.totwHistory.length === 0 ? (
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md border border-white/10">
+       <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 text-amber-400 border border-amber-500/20">
+        <Sparkles size={24} />
+       </div>
+       <div className="text-white font-bold tracking-wide text-sm uppercase mb-1">No Team of the Week Data Yet</div>
+       <div className="text-white/40 text-xs max-w-[320px]">
+        Team of the Week is generated after every match round based on player ratings across the division. Complete match weeks to see selections!
+       </div>
+      </div>
+     ) : (
+      (() => {
+       const totwList = state.totwHistory || [];
+       const currentTOTW = totwList[selectedTOTWIndex] || totwList[totwList.length - 1];
+       return (
+        <div className="flex flex-col gap-4">
+         {/* Week Selector Dropdown / Pills */}
+         <div className="flex items-center justify-between bg-[#121418] p-3 rounded-lg border border-white/10 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+           <Sparkles className="text-amber-400" size={18} />
+           <span className="text-xs font-bold text-white uppercase tracking-wider">
+            Week {currentTOTW.week} &bull; {currentTOTW.league}
+           </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1">
+           {totwList.map((t, idx) => (
+            <button
+             key={t.id || idx}
+             onClick={() => setSelectedTOTWIndex(idx)}
+             className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+              selectedTOTWIndex === idx
+               ? 'bg-amber-400 text-black shadow-md scale-105'
+               : t.userSelected
+               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+               : 'bg-white/5 text-white/50 hover:bg-white/10'
+             }`}
+            >
+             W{t.week} {t.userSelected && '⭐'}
+            </button>
+           ))}
+          </div>
+         </div>
+
+         {currentTOTW.userSelected && (
+          <div className="p-3 bg-emerald-500/15 border border-emerald-500/40 rounded-xl flex items-center gap-2.5 text-emerald-300 text-xs font-bold">
+           <Star size={18} className="text-amber-400 fill-amber-400 shrink-0 animate-bounce" />
+           <span>YOU ARE FEATURED IN THIS TEAM OF THE WEEK! (Rating: {currentTOTW.userPlayerDetails?.matchRating || 8.2})</span>
+          </div>
+         )}
+
+         {/* 11-Player Squad Grid */}
+         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {currentTOTW.squad.map((p, pIdx) => (
+           <div
+            key={pIdx}
+            className={`p-3 rounded-xl border flex flex-col items-center text-center relative transition-all ${
+             p.isUserPlayer
+              ? 'border-emerald-400 bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105'
+              : 'border-white/10 bg-[#121418] hover:border-white/20'
+            }`}
+           >
+            <div className="flex items-center justify-between w-full text-[9px] font-mono mb-1">
+             <span className="px-1.5 py-0.5 rounded bg-white/10 font-bold text-amber-300">{p.exactPosition}</span>
+             <span className="font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded">{p.matchRating.toFixed(1)}</span>
+            </div>
+            <TeamLogo symbol={p.clubSymbol} size={32} className="my-1.5" />
+            <div className="text-xs font-bold text-white truncate w-full flex items-center justify-center gap-1">
+             {p.name}
+             {p.isUserPlayer && <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />}
+            </div>
+            <div className="text-[10px] text-white/40 truncate w-full">{p.clubName}</div>
+            {(p.goals > 0 || p.assists > 0 || p.cleanSheet) && (
+             <div className="mt-2 text-[9px] font-mono text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+              {p.goals > 0 && `⚽ ${p.goals} `}
+              {p.assists > 0 && `🅰️ ${p.assists} `}
+              {p.cleanSheet && `🛡️ Clean Sheet`}
+             </div>
+            )}
+           </div>
+          ))}
+         </div>
+        </div>
+       );
+      })()
+     )}
+    </div>
+   ) : (
+    <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+     {!state.potmHistory || state.potmHistory.length === 0 ? (
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md border border-white/10">
+       <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4 text-yellow-400 border border-yellow-500/20">
+        <Trophy size={24} />
+       </div>
+       <div className="text-white font-bold tracking-wide text-sm uppercase mb-1">No Player of the Month Awards Yet</div>
+       <div className="text-white/40 text-xs max-w-[320px]">
+        Player of the Month is awarded every 4 weeks to the highest-performing player in the league.
+       </div>
+      </div>
+     ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+       {state.potmHistory.map((potm, idx) => (
+        <div
+         key={potm.id || idx}
+         className={`p-5 rounded-2xl border flex flex-col relative overflow-hidden ${
+          potm.isUserPlayer
+           ? 'border-yellow-400/80 bg-gradient-to-br from-yellow-500/20 via-[#14161b] to-[#0f1115] shadow-[0_0_25px_rgba(234,179,8,0.2)]'
+           : 'border-white/10 bg-[#121418]'
+         }`}
+        >
+         <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+          <span className="text-[10px] font-mono text-yellow-400 uppercase tracking-widest font-bold">
+           Month {potm.month} &bull; Season {potm.season}
+          </span>
+          <span className="text-xs text-white/40 font-mono">Week {potm.week} Award</span>
+         </div>
+
+         <div className="flex items-center gap-4 my-2">
+          <TeamLogo symbol={potm.winner.clubSymbol} size={48} />
+          <div>
+           <div className="text-base font-black text-white flex items-center gap-1.5">
+            {potm.winner.name}
+            {potm.isUserPlayer && <Star size={16} className="text-yellow-400 fill-yellow-400" />}
+           </div>
+           <div className="text-xs text-white/50">{potm.winner.clubName}</div>
+           <div className="text-xs font-mono font-bold text-emerald-400 mt-1">
+            Avg Rating: {potm.winner.matchRating.toFixed(1)} &bull; ⚽ {potm.winner.goals} Goals
+           </div>
+          </div>
+         </div>
+
+         {potm.runnerUps && potm.runnerUps.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-white/5 text-[11px] text-white/50">
+           <span className="font-bold text-white/70">Runner Ups: </span>
+           {potm.runnerUps.map(r => `${r.name} (${r.clubSymbol})`).join(', ')}
+          </div>
+         )}
+        </div>
+       ))}
+      </div>
+     )}
+    </div>
    )}
   </div>
   </div>

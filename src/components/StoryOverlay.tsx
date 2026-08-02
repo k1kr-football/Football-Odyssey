@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { CUTSCENES } from '../data/cutscenes';
 import { getFormattedCalendarDate } from '../utils/careerSystems';
+import { musicEngine } from '../utils/musicEngine';
 
 export function StoryOverlay() {
   const { state, resolveCutscene } = useGame();
@@ -10,6 +11,13 @@ export function StoryOverlay() {
   
   const cutscene = CUTSCENES.find(c => c.id === state.activeCutscene);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cutscene) {
+      musicEngine.playMood('STORY_CUTSCENE');
+    }
+  }, [cutscene]);
+
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });

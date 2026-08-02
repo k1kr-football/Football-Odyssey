@@ -1,10 +1,33 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+const fs = require('fs');
+let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-import React from 'react';
+const importsToRemove = [
+  "import { PlayerCreation } from './screens/PlayerCreation';",
+  "import { TrialMatch } from './screens/TrialMatch';",
+  "import { Profile } from './screens/Profile';",
+  "import { Inbox } from './screens/Inbox';",
+  "import { Training } from './screens/Training';",
+  "import { Team } from './screens/Team';",
+  "import { Schedule } from './screens/Schedule';",
+  "import { Career } from './screens/Career';",
+  "import { Transfers } from './screens/Transfers';",
+  "import { MatchEngine } from './screens/MatchEngine';",
+  "import { PressConference } from './screens/PressConference';",
+  "import { MediaMinigame } from './screens/MediaMinigame';",
+  "import { RehabMinigame } from './screens/RehabMinigame';",
+  "import { Lifestyle } from './screens/Lifestyle';",
+  "import { Social } from './screens/Social';",
+  "import { Finances } from './screens/Finances';",
+  "import { AgentScreen } from './screens/AgentScreen';",
+  "import { Glossary } from './screens/Glossary';",
+  "import { AwardsCeremony } from './screens/AwardsCeremony';"
+];
 
+importsToRemove.forEach(imp => {
+  code = code.replace(imp, "");
+});
+
+const lazyImports = `
 import { Suspense, lazy } from 'react';
 
 const PlayerCreation = lazy(() => import('./screens/PlayerCreation').then(module => ({ default: module.PlayerCreation })));
@@ -33,112 +56,13 @@ const LoadingScreen = () => (
     <div className="text-[#00FF88] font-bold text-xs uppercase tracking-widest animate-pulse">Loading Asset...</div>
   </div>
 );
+`;
 
-import { GameProvider, useGame } from './store/GameContext';
-import { MainLayout } from './components/MainLayout';
+code = code.replace("import React from 'react';", "import React from 'react';\n" + lazyImports);
 
+code = code.replace(
+  "{renderActiveScreen()}",
+  "<Suspense fallback={<LoadingScreen>}>{renderActiveScreen()}</Suspense>"
+);
 
-import { Hub } from './screens/Hub';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { MainMenu } from './screens/MainMenu';
-
-
-import { getTeamColors } from './utils/teamColors';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { AudioManager } from './components/AudioManager';
-
-function GameRouter() {
-  const { state, setScreen } = useGame();
-
-  if (state.screen === 'MAIN_MENU') {
-    return (
-      <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
-        <MainMenu />
-      </div>
-    );
-  }
-
-  const handleReset = () => {
-    setScreen('HUB');
-  };
-
-  const renderActiveScreen = () => {
-    switch (state.screen) {
-      case 'CREATION':
-        return <PlayerCreation />;
-      case 'TRIAL_MATCH':
-        return <TrialMatch />;
-      case 'HUB':
-        return <Hub />;
-      case 'PROFILE':
-        return <Profile />;
-      case 'INBOX':
-        return <Inbox />;
-      case 'TRAINING':
-        return <Training />;
-      case 'TEAM':
-        return <Team />;
-      case 'SCHEDULE':
-        return <Schedule />;
-      case 'CAREER':
-        return <Career />;
-      case 'TRANSFERS':
-        return <Transfers />;
-      case 'MATCH':
-        return <MatchEngine />;
-      case 'PRESS':
-        return <PressConference />;
-      case 'MEDIA_MINIGAME':
-        return <MediaMinigame />;
-      case 'REHAB_MINIGAME':
-        return <RehabMinigame />;
-      case 'LIFESTYLE':
-        return <Lifestyle />;
-      case 'SOCIAL':
-        return <Social />;
-      case 'FINANCES':
-        return <Finances />;
-      case 'AGENT':
-        return <AgentScreen />;
-      case 'GLOSSARY':
-        return <Glossary />;
-      case 'AWARDS_CEREMONY':
-        return <AwardsCeremony />;
-      default:
-        return <Hub />;
-    }
-  };
-
-  return (
-    <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
-      <AudioManager />
-      <MainLayout>
-        <ErrorBoundary onReset={handleReset}>
-          <Suspense fallback={<LoadingScreen />}>{renderActiveScreen()}</Suspense>
-        </ErrorBoundary>
-      </MainLayout>
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <GameProvider>
-      <GameRouter />
-    </GameProvider>
-  );
-}
+fs.writeFileSync('src/App.tsx', code);

@@ -1,52 +1,175 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/screens/Hub.tsx', 'utf8');
+let code = fs.readFileSync('src/screens/Transfers.tsx', 'utf8');
 
-const oldButton = `<button 
-     onClick={() => advanceDay()}
-     className="bg-transparent hover:border-[#00FF88] hover:text-[#00FF88] px-12 py-4 font-black text-white uppercase tracking-widest transition-colors text-xs flex items-center gap-3 rounded-lg shadow-md"
-    >
-     Advance Calendar <ArrowRight size={14}/>
-    </button>`;
+const finalizeTransferCode = `
+ const finalizeTransfer = (offer: TransferOffer) => {
+   const club = CLUBS.find(c => c.symbol === offer.clubSymbol);
+   
+   let newFans = player.fans;
+   let newTimeline = [...(player.timeline || [])];
+   
+   if (offer.isHomecoming) {
+      newFans += 25;
+      newTimeline.push({
+        id: \`transfer_homecoming_\${Date.now()}\`,
+        week: state.currentWeek,
+        day: state.currentDay,
+        type: 'MILESTONE',
+        title: \`🏆 CAREER MILESTONE: The Homecoming\`,
+        description: \`Returned to \${club?.name}, the club where it all began. The fans are ecstatic to have you back! (+25 Fan Adoration)\`,
+        clubSymbol: offer.clubSymbol
+      });
+   }
+   
+   newTimeline.push({
+     id: \`transfer_\${Date.now()}\`,
+     week: state.currentWeek,
+     day: state.currentDay,
+     type: 'TRANSFER',
+     title: \`Transferred to \${club?.name}\`,
+     description: \`Signed a \${offer.length}-year deal worth £\${offer.wage.toLocaleString()}/week.\`,
+     clubSymbol: offer.clubSymbol
+   });
 
-const newButton = `<div className="relative group">
-    <button 
-     onClick={() => !isAdvanceBlocked && advanceDay()}
-     disabled={isAdvanceBlocked}
-     className={\`relative px-12 py-4 font-black uppercase tracking-widest text-xs flex flex-col items-center gap-1.5 rounded-lg transition-all duration-300
-      \${isAdvanceBlocked 
-        ? "bg-transparent border-2 border-white/10 text-white/30 cursor-not-allowed" 
-        : "bg-transparent border-2 border-[#00FF88] text-[#00FF88] hover:bg-[#00FF88]/10 hover:shadow-[0_0_20px_rgba(0,255,136,0.25)]"}
-     \`}
-    >
-     <div className="flex items-center gap-3">
-      Advance Calendar <ArrowRight size={14} className={isAdvanceBlocked ? 'opacity-50' : 'opacity-100'}/>
-     </div>
-     <div className={\`text-[10px] font-mono tracking-wider \${isAdvanceBlocked ? 'text-white/20' : 'text-[#00FF88]/70'} transition-colors\`}>
-      Next: {nextDay}, {nextDateStr}
-     </div>
-    </button>
-    
-    {isAdvanceBlocked && (
-     <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-      <span className="relative flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-20"></span>
-       <span className="relative inline-flex rounded-full bg-[#1a0a0a] border border-red-500 text-red-400 text-[9px] font-bold px-2.5 py-0.5 uppercase tracking-widest shadow-lg flex items-center gap-1.5">
-        <AlertTriangle size={10} /> ⚠ {criticalCount} pending
-       </span>
-      </span>
-     </div>
-    )}
+   setPlayer({ 
+    ...player, 
+    currentClubSymbol: offer.clubSymbol,
+    transferOffers: [],
+    contract: {
+    ...player.contract,
+    wage: offer.wage,
+    expires: \`June 20\${27 + offer.length}\`,
+    yearsLeft: offer.length,
+    status: 'Squad Player',
+    releaseClause: offer.releaseClause,
+    goalBonus: offer.contractBonus?.type === 'GOAL' ? offer.contractBonus.amount : player.contract.goalBonus,
+    appearanceBonus: offer.contractBonus?.type === 'APPEARANCE' ? offer.contractBonus.amount : player.contract.appearanceBonus,
+    },
+    transferListed: false,
+    fans: newFans,
+    transferRequestStatus: 'NONE',
+    timeline: newTimeline
+   });
+   setNegotiatingOffer(null);
+   setPendingMedicalOffer(null);
+   setIsMedicalModalOpen(false);
+ };
 
-    {isAdvanceBlocked && (
-     <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 flex flex-col items-center">
-      <div className="w-2 h-2 border-t border-l border-white/10 bg-[#111] rotate-45 -mb-1"></div>
-      <div className="bg-[#111] border border-white/10 text-white/70 text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg flex flex-col items-center gap-1 shadow-2xl backdrop-blur-md">
-       <span className="text-red-400 font-bold">Action Required</span>
-       <span className="text-white/50 text-[9px]">Check your inbox to resolve critical items.</span>
-      </div>
-     </div>
-    )}
-   </div>`;
+ const handleMedicalComplete = (success: boolean, newOffer?: TransferOffer) => {
+   if (success && !newOffer) {
+     // Successful medical, finalize the pending offer
+     const offer = player.transferOffers.find(o => o.id === pendingMedicalOffer);
+     if (offer) {
+       finalizeTransfer(offer);
+     } else {
+       setIsMedicalModalOpen(false);
+     }
+   } else if (newOffer) {
+     // Failed but revised offer returned
+     setPlayer({
+       ...player,
+       transferOffers: player.transferOffers.map(o => o.id === pendingMedicalOffer ? newOffer : o)
+     });
+     setIsMedicalModalOpen(false);
+     setPendingMedicalOffer(null);
+   } else {
+     // Completely failed, offer withdrawn
+     setPlayer({ ...player, transferOffers: player.transferOffers.filter(o => o.id !== pendingMedicalOffer) });
+     setInbox([
+      ...state.inbox, 
+      {
+      id: \`medical_failed_\${Date.now()}\`,
+      sender: 'AGENT',
+      subject: 'Transfer Collapsed',
+      content: \`The transfer has fallen through after you failed the medical. The club has withdrawn their offer.\`,
+      read: false,
+      type: 'NEWS',
+      timestamp: 'MON 14:00',
+      choices: []
+      }
+     ]);
+     setIsMedicalModalOpen(false);
+     setPendingMedicalOffer(null);
+   }
+ };
+`;
 
-code = code.replace(oldButton, newButton);
-fs.writeFileSync('src/screens/Hub.tsx', code);
+// Replace handleNegotiateOption ACCEPT logic
+const originalAcceptLogic = `
+  if (action === 'ACCEPT') {
+   // Transfer the player
+   const club = CLUBS.find(c => c.symbol === offer.clubSymbol);
+   
+   let newFans = player.fans;
+   let newTimeline = [...(player.timeline || [])];
+   
+   if (offer.isHomecoming) {
+      newFans += 25;
+      newTimeline.push({
+        id: \`transfer_homecoming_\${Date.now()}\`,
+        week: state.currentWeek,
+        day: state.currentDay,
+        type: 'MILESTONE',
+        title: \`🏆 CAREER MILESTONE: The Homecoming\`,
+        description: \`Returned to \${club?.name}, the club where it all began. The fans are ecstatic to have you back! (+25 Fan Adoration)\`,
+        clubSymbol: offer.clubSymbol
+      });
+   }
+   
+   newTimeline.push({
+     id: \`transfer_\${Date.now()}\`,
+     week: state.currentWeek,
+     day: state.currentDay,
+     type: 'TRANSFER',
+     title: \`Transferred to \${club?.name}\`,
+     description: \`Signed a \${offer.length}-year deal worth £\${offer.wage.toLocaleString()}/week.\`,
+     clubSymbol: offer.clubSymbol
+   });
+
+   setPlayer({ 
+    ...player, 
+    currentClubSymbol: offer.clubSymbol,
+    transferOffers: [],
+    contract: {
+    ...player.contract,
+    wage: offer.wage,
+    expires: \`June 20\${27 + offer.length}\`,
+    yearsLeft: offer.length,
+    status: 'Squad Player',
+    releaseClause: offer.releaseClause,
+    goalBonus: offer.contractBonus?.type === 'GOAL' ? offer.contractBonus.amount : player.contract.goalBonus,
+    appearanceBonus: offer.contractBonus?.type === 'APPEARANCE' ? offer.contractBonus.amount : player.contract.appearanceBonus,
+    },
+    transferListed: false,
+    fans: newFans,
+    transferRequestStatus: 'NONE',
+    timeline: newTimeline
+   });
+   setNegotiatingOffer(null);
+   return;
+  }`;
+
+const newAcceptLogic = `
+  if (action === 'ACCEPT') {
+    setPendingMedicalOffer(offer.id);
+    setIsMedicalModalOpen(true);
+    return;
+  }`;
+
+code = code.replace(originalAcceptLogic, newAcceptLogic);
+code = code.replace("const handleRejectOffer = (id: string) => {", finalizeTransferCode + "\n const handleRejectOffer = (id: string) => {");
+
+// Add Modal at the end of the file
+const renderModal = `
+  <SuggestSigningModal isOpen={isSuggestModalOpen} onClose={() => setIsSuggestModalOpen(false)} />
+  <MedicalCheckModal 
+    isOpen={isMedicalModalOpen} 
+    offer={player.transferOffers.find(o => o.id === pendingMedicalOffer) || null} 
+    onClose={() => setIsMedicalModalOpen(false)} 
+    onComplete={handleMedicalComplete} 
+  />
+ </div>
+ `;
+code = code.replace("  <SuggestSigningModal isOpen={isSuggestModalOpen} onClose={() => setIsSuggestModalOpen(false)} />\n </div>", renderModal);
+
+fs.writeFileSync('src/screens/Transfers.tsx', code);

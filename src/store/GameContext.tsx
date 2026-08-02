@@ -2,6 +2,7 @@ import { NPCRegistry, UnifiedNPCEngine } from "../utils/npcEngine";
 import { assignManagerPhilosophy } from "../utils/managerPhilosophy";
 import { CUTSCENES } from '../data/cutscenes';
 import { decayReputationAndPerception, updateReputationAndPerception } from '../utils/reputation';
+import { saveGameStateAsync, loadGameStateAsync, deleteGameStateAsync } from '../utils/storageEngine';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -36,8 +37,19 @@ import { processWeeklyPhysicalUpdate, getRecoveryDetails } from '../utils/recove
 import { processWeeklyMentalFatigue, getMentalFatigueLevel, initializeActiveRehab, processWeeklyRehabStep, applyLifestyleMentalFatigueRecovery } from '../utils/wellbeingEngine';
 import { checkAndTriggerDynamicEvent, DYNAMIC_EVENT_POOL } from '../utils/dynamicEvents';
 import { getClubStaff, getCanonicalSender, getPrimaryJournalist, buildMemoryThreadText } from '../utils/clubStaff';
+import {
+  generateWeeklyTOTW,
+  generateMonthlyPOTM,
+  generateEndofSeasonAwards,
+  applyTOTWRewards,
+  applyPOTMRewards,
+  applySeasonAwardsRewards,
+  TeamOfTheWeek,
+  PlayerOfTheMonth,
+  SeasonAwardsSummary
+} from '../utils/leagueAwards';
 
-export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT';
+export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT' | 'AWARDS_CEREMONY';
 
 export interface GameState {
   screen: Screen;
@@ -82,6 +94,10 @@ export interface GameState {
   unlockedCutscenes: any[];
   storyFlags: Record<string, any>;
   saveSlot?: number;
+  totwHistory?: TeamOfTheWeek[];
+  potmHistory?: PlayerOfTheMonth[];
+  seasonAwardsHistory?: SeasonAwardsSummary[];
+  pendingAwardsCeremony?: SeasonAwardsSummary | null;
 }
 
 interface GameContextType {
@@ -98,9 +114,9 @@ interface GameContextType {
   resolveEvent: (choiceType: string) => void;
   updateRelationship: (entity: keyof Player['relationships'], amount: number) => void;
   setInbox: (inbox: InboxMessage[]) => void;
-  loadSavedGame: (slot: number) => boolean;
+  loadSavedGame: (slot: number) => Promise<boolean>;
   newGame: (slot: number) => void;
-  saveAndQuit: () => void;
+  saveAndQuit: () => Promise<void>;
   updateCalendar: (entries: CalendarEntry[]) => void;
   updateNextMatch: (fields: any) => void;
   advanceRehabPacing: (pacingChoice: 'PUSH_HARD' | 'RECOMMENDED' | 'CAUTIOUS') => void;
@@ -153,8 +169,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const resetData = () => {
-    localStorage.clear();
+  const resetData = async () => {
+    try {
+      localStorage.clear();
+      await deleteGameStateAsync('rtg_careersave_1');
+      await deleteGameStateAsync('rtg_careersave_2');
+      await deleteGameStateAsync('rtg_careersave_3');
+    } catch (_) {}
     window.location.reload();
   };
 
@@ -1125,6 +1146,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       
       let updatedPlayerTemp = s.player;
       let newInboxTemp = [...s.inbox];
+      let totwAndPotmUpdates: { totwHistory?: TeamOfTheWeek[]; potmHistory?: PlayerOfTheMonth[] } | null = null;
+      let awardsUpdates: { seasonAwardsHistory?: SeasonAwardsSummary[]; pendingAwardsCeremony?: SeasonAwardsSummary | null; screen?: Screen } | null = null;
 
       // Release squad list 1 day before the matchday
 
@@ -1568,6 +1591,38 @@ export function GameProvider({ children }: { children: ReactNode }) {
                     updatedPlayerTemp = milestoneRes.updatedPlayer;
                     newInbox.push(...milestoneRes.inboxMessages);
                 }
+
+                // 4. Team of the Week (TOTW) Generation
+                const userLastPerf = updatedPlayerTemp.stateFlags?.lastMatchPerformance;
+                const newTOTW = generateWeeklyTOTW(newWorldState, updatedPlayerTemp, s.currentWeek, s.season, userLastPerf);
+                const prevTOTWHistory = totwAndPotmUpdates?.totwHistory || s.totwHistory || [];
+                const updatedTOTWHistory = [...prevTOTWHistory, newTOTW];
+
+                if (newTOTW.userSelected) {
+                    const totwRes = applyTOTWRewards(updatedPlayerTemp, newTOTW);
+                    updatedPlayerTemp = totwRes.updatedPlayer;
+                    newInbox.push(totwRes.inboxMsg);
+                }
+
+                let updatedPOTMHistory = totwAndPotmUpdates?.potmHistory || s.potmHistory || [];
+                // 5. Monthly Player of the Month (POTM) check (every 4 weeks)
+                if (s.currentWeek >= 4 && s.currentWeek % 4 === 0) {
+                    const monthNum = Math.floor(s.currentWeek / 4);
+                    const recentTOTWs = updatedTOTWHistory.slice(-4);
+                    const newPOTM = generateMonthlyPOTM(newWorldState, updatedPlayerTemp, monthNum, s.currentWeek, s.season, recentTOTWs);
+                    updatedPOTMHistory = [...updatedPOTMHistory, newPOTM];
+
+                    if (newPOTM.isUserPlayer) {
+                        const potmRes = applyPOTMRewards(updatedPlayerTemp, newPOTM);
+                        updatedPlayerTemp = potmRes.updatedPlayer;
+                        newInbox.push(potmRes.inboxMsg);
+                    }
+                }
+
+                totwAndPotmUpdates = {
+                    totwHistory: updatedTOTWHistory,
+                    potmHistory: updatedPOTMHistory
+                };
             }
 
             
@@ -1637,6 +1692,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
                  
                  endSeasonMsgSubject = review.title;
                  endSeasonMsgContent = review.text + `\n\nFor the upcoming Season ${newSeason}, the board has drawn up a new blueprint:\n\nNew Objective: "${updatedPlayerTemp.seasonObjective.title}"\nTarget: ${updatedPlayerTemp.seasonObjective.targetText}. Let's make this season even better!`;
+
+                 // End of Season Awards Ceremony
+                 const seasonTOTWs = ((totwAndPotmUpdates?.totwHistory) || s.totwHistory || []).filter(t => t.season === (newSeason - 1));
+                 const seasonAwards = generateEndofSeasonAwards(newWorldState, updatedPlayerTemp, (newSeason - 1), seasonTOTWs);
+                 const awardRes = applySeasonAwardsRewards(updatedPlayerTemp, seasonAwards);
+                 updatedPlayerTemp = awardRes.updatedPlayer;
+                 newInbox.push(...awardRes.inboxMsgs);
+
+                 awardsUpdates = {
+                     seasonAwardsHistory: [...(s.seasonAwardsHistory || []), seasonAwards],
+                     pendingAwardsCeremony: seasonAwards,
+                     screen: 'AWARDS_CEREMONY' as Screen
+                 };
              }
              
              newInbox.push({
@@ -2976,7 +3044,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
           seasonCalendar: newSeasonCalendar,
           season: newSeason,
           worldState: newWorldState,
-          npcRegistry: updatedNpcRegistry
+          npcRegistry: updatedNpcRegistry,
+          totwHistory: totwAndPotmUpdates ? totwAndPotmUpdates.totwHistory : s.totwHistory,
+          potmHistory: totwAndPotmUpdates ? totwAndPotmUpdates.potmHistory : s.potmHistory,
+          seasonAwardsHistory: awardsUpdates ? awardsUpdates.seasonAwardsHistory : s.seasonAwardsHistory,
+          pendingAwardsCeremony: awardsUpdates ? awardsUpdates.pendingAwardsCeremony : s.pendingAwardsCeremony,
+          screen: awardsUpdates?.screen || s.screen
         };
       }
     });
@@ -3004,21 +3077,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   React.useEffect(() => {
     if (state.player && settings.autoSave) {
-      try {
-        const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
-        localStorage.setItem(slotKey, JSON.stringify(state));
-      } catch (e) {
-        console.error("Failed to save state", e);
-      }
+      const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
+      saveGameStateAsync(slotKey, state).catch(e => {
+        console.error("Auto-save failed", e);
+      });
     }
-  }, [state]);
+  }, [state, settings.autoSave]);
 
-  const loadSavedGame = (slot: number): boolean => {
+  const loadSavedGame = async (slot: number): Promise<boolean> => {
     try {
-      const saved = localStorage.getItem(`rtg_careersave_${slot}`);
-      if (saved) {
-        let parsed = JSON.parse(saved);
-        if (parsed && parsed.player) {
+      let parsed = await loadGameStateAsync(`rtg_careersave_${slot}`);
+      if (parsed && parsed.player) {
           // Apply Save Migration & Versioning Engine
           parsed = migrateSaveData(parsed);
 
@@ -3138,7 +3207,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
           });
           return true;
         }
-      }
     } catch (e) {
       console.error("Failed to load save", e);
     }
@@ -3195,9 +3263,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(s => createLegacyContinuation(s, prospectId));
   };
 
-  const saveAndQuit = () => {
+  const saveAndQuit = async () => {
     const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
-    localStorage.setItem(slotKey, JSON.stringify(state));
+    await saveGameStateAsync(slotKey, state);
     setState(s => ({ ...s, screen: 'MAIN_MENU' }));
   };
 

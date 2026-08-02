@@ -14,54 +14,37 @@ export function AudioManager() {
 
   // Determine active music mood from game state
   useEffect(() => {
-    let targetMood: MusicMoodId = 'MENU';
+    let targetMood: MusicMoodId | null = null;
+    
+    // Screens that explicitly DO NOT have their music managed centrally,
+    // because they manage their own dynamic music states internally.
 
+    const selfManagingScreens = ['MATCH', 'TRIAL_MATCH', 'TRAINING'];
+    
     if (state.activeCutscene) {
-      targetMood = 'STORY_CUTSCENE';
-    } else {
-      switch (state.screen) {
-        case 'MAIN_MENU':
-        case 'CREATION':
-          targetMood = 'MENU';
-          break;
+      // Handled by StoryOverlay
+      return;
+    }
 
-        case 'TRAINING':
-        case 'REHAB_MINIGAME':
-        case 'MEDIA_MINIGAME':
-          targetMood = 'TRAINING';
-          break;
-
-        case 'MATCH':
-        case 'TRIAL_MATCH': {
-          const nextMatch = state.nextMatch;
-          const isDerby = nextMatch?.matchType === 'DERBY' || nextMatch?.matchType === 'FINAL' || nextMatch?.matchType === 'GRUDGE';
-          const pressure = nextMatch?.pressure || 5;
-
-          if (isDerby) {
-            targetMood = 'DERBY_DAY';
-          } else if (pressure >= 7) {
-            targetMood = 'MATCH_HIGH_PRESSURE';
-          } else {
-            targetMood = 'MATCH_LOW_PRESSURE';
-          }
-          break;
-        }
-
-        default:
-          targetMood = 'MENU';
-          break;
+    if (!selfManagingScreens.includes(state.screen)) {
+      if (state.screen === 'REHAB_MINIGAME' || state.screen === 'MEDIA_MINIGAME') {
+        targetMood = 'TRAINING';
+      } else {
+        targetMood = 'MENU';
       }
     }
 
-    musicEngine.playMood(targetMood);
-  }, [state.screen, state.activeCutscene, state.nextMatch?.pressure, state.nextMatch?.matchType]);
+
+    if (targetMood) {
+      musicEngine.playMood(targetMood);
+    }
+  }, [state.screen]);
 
   // Global SFX trigger for UI button clicks
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
-
       const interactive = target.closest('button, a, input[type="button"], input[type="submit"], [role="button"]');
       if (interactive) {
         sfxEngine.play('UI_CLICK');
@@ -69,6 +52,7 @@ export function AudioManager() {
     };
 
     window.addEventListener('click', handleGlobalClick, { capture: true });
+
     return () => {
       window.removeEventListener('click', handleGlobalClick, { capture: true });
     };

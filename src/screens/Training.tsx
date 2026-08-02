@@ -3,6 +3,8 @@ import { Player, Attributes } from "../types";
 import { useGame } from "../store/GameContext";
 import { getRolesForPosition } from "../data/roles";
 import { CoreFormulas } from "../utils/coreFormulas";
+import { musicEngine } from '../utils/musicEngine';
+import { getPositionGroup, PositionGroup } from "../utils/positionMatchDecisions";
 import {
   ArrowLeft,
   Award,
@@ -155,7 +157,7 @@ const TRAINING_INCIDENTS = [
 
 // DRILL CONFIGURATIONS
 interface DrillConfig {
-  id: 'SHOOTING' | 'PASSING' | 'DRIBBLING' | 'TACKLING';
+  id: 'SHOOTING' | 'PASSING' | 'DRIBBLING' | 'TACKLING' | 'GK_STOPPING' | 'GK_DISTRIBUTION';
   name: string;
   category: string;
   icon: any;
@@ -166,6 +168,7 @@ interface DrillConfig {
   description: string;
   minigameType: 'TIMING' | 'SEQUENCE' | 'DODGE' | 'HOLD_RELEASE';
   instructions: string;
+  positions: PositionGroup[];
 }
 
 const DRILL_CONFIGS: DrillConfig[] = [
@@ -183,7 +186,8 @@ const DRILL_CONFIGS: DrillConfig[] = [
     ],
     description: 'Time your strike inside the green target zone for maximum power and corner placement.',
     minigameType: 'TIMING',
-    instructions: 'Press STRIKE when the oscillating indicator reaches the central GREEN target zone!'
+    instructions: 'Press STRIKE when the oscillating indicator reaches the central GREEN target zone!',
+    positions: ['STRIKER', 'ATTACKING_MID_WING', 'MIDFIELDER']
   },
   {
     id: 'PASSING',
@@ -199,7 +203,8 @@ const DRILL_CONFIGS: DrillConfig[] = [
     ],
     description: 'Memorize and execute rapid directional passing sequences under intense pressure.',
     minigameType: 'SEQUENCE',
-    instructions: 'Tap the arrow directional controls in exact sequence before the time limit expires!'
+    instructions: 'Tap the arrow directional controls in exact sequence before the time limit expires!',
+    positions: ['MIDFIELDER', 'ATTACKING_MID_WING', 'DEFENDER', 'STRIKER']
   },
   {
     id: 'DRIBBLING',
@@ -215,7 +220,8 @@ const DRILL_CONFIGS: DrillConfig[] = [
     ],
     description: 'React rapidly to slalom cones and tackle challenges by dodging left, straight, or right.',
     minigameType: 'DODGE',
-    instructions: 'React and dodge to the correct clear lane (Left, Center, or Right) as cones approach!'
+    instructions: 'React and dodge to the correct clear lane (Left, Center, or Right) as cones approach!',
+    positions: ['ATTACKING_MID_WING', 'STRIKER', 'MIDFIELDER', 'DEFENDER']
   },
   {
     id: 'TACKLING',
@@ -231,7 +237,42 @@ const DRILL_CONFIGS: DrillConfig[] = [
     ],
     description: 'Charge up your tackle power gauge and execute a clean slide tackle without fouling.',
     minigameType: 'HOLD_RELEASE',
-    instructions: 'Press and hold TACKLE to charge power, then release inside the green Sweet Spot!'
+    instructions: 'Press and hold TACKLE to charge power, then release inside the green Sweet Spot!',
+    positions: ['DEFENDER', 'MIDFIELDER']
+  },
+  {
+    id: 'GK_STOPPING',
+    name: 'Shot-Stopping & Reflex Reactions',
+    category: 'Goalkeeping & Reflexes',
+    icon: Shield,
+    color: '#00E5FF',
+    accentBg: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/30',
+    targetStats: [
+      { key: 'composure', label: 'Reflexes & Composure' },
+      { key: 'positioning', label: 'GK Positioning' }
+    ],
+    description: 'Time your diving parry to push stinging strikes away from the top corners.',
+    minigameType: 'TIMING',
+    instructions: 'Press DIVE when the oscillating indicator reaches the central GREEN target zone!',
+    positions: ['GK']
+  },
+  {
+    id: 'GK_DISTRIBUTION',
+    name: 'Precision GK Distribution',
+    category: 'Goalkeeping & Distribution',
+    icon: Zap,
+    color: '#3B82F6',
+    accentBg: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+    targetStats: [
+      { key: 'passing', label: 'Kicking & Distribution' },
+      { key: 'vision', label: 'GK Vision' }
+    ],
+    description: 'Memorize long-range throwing and punting sequences to jumpstart rapid counter-attacks.',
+    minigameType: 'SEQUENCE',
+    instructions: 'Tap the arrow directional controls in exact sequence before the time limit expires!',
+    positions: ['GK']
   }
 ];
 
@@ -240,6 +281,11 @@ const ALL_DIRECTIONS: ArrowDir[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 
 export function Training() {
   const { state, setPlayer, setScreen } = useGame();
+
+  useEffect(() => {
+    musicEngine.playMood('TRAINING');
+  }, []);
+
 
   // Group Training session state
   const [isGroupSessionActive, setIsGroupSessionActive] = useState<boolean>(false);
@@ -534,7 +580,7 @@ export function Training() {
 
     // Calculate actual stat gains
     const deltas: { attr: string; gain: number | string }[] = [];
-    const difficultyTier = 'STANDARD';
+    const difficultyTier = player.difficulty || 'STANDARD';
 
     player.attributes = { ...player.attributes };
 
@@ -1130,7 +1176,7 @@ export function Training() {
 
           {/* Drills Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {DRILL_CONFIGS.map((drill) => {
+            {DRILL_CONFIGS.filter(d => d.positions.includes(getPositionGroup(state.player.position))).map((drill) => {
               const Icon = drill.icon;
               return (
                 <div 

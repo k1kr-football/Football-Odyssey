@@ -1,18 +1,14 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/screens/MatchEngine.tsx', 'utf8');
 
-if (!code.includes("import { musicEngine } from '../utils/musicEngine';")) {
-  code = code.replace(
-    "import { sfxEngine } from \"../utils/sfxEngine\";",
-    "import { sfxEngine } from \"../utils/sfxEngine\";\nimport { musicEngine } from '../utils/musicEngine';"
-  );
-}
-
-// Inside MatchEngine component:
-// We need to use effect on phase, momentum, isBigMatch, etc.
-const effectCode = `
+const replacement = `
   // Music Engine integration
   useEffect(() => {
+    const nextMatch = state.nextMatch;
+    const isBigMatch = nextMatch?.isBigMatch || false;
+    const matchType = nextMatch?.matchType || 'LEAGUE';
+    const pressure = nextMatch?.pressure || 5;
+
     if (phase === 'PRE_MATCH') {
       musicEngine.playMood('PRE_MATCH');
     } else if (phase === 'IN_MATCH' || phase === 'HALF_TIME') {
@@ -35,12 +31,12 @@ const effectCode = `
         musicEngine.playMood('MENU');
       }
     }
-  }, [phase, momentum, isBigMatch, matchType, userScore, oppScore, pressure]);
+  }, [phase, momentum, state.nextMatch, userScore, oppScore]);
 `;
 
 code = code.replace(
-  "  const handleStartMatch = () => {",
-  effectCode + "\n  const handleStartMatch = () => {"
+  /  \/\/ Music Engine integration[\s\S]*?\}, \[phase, momentum, isBigMatch, matchType, userScore, oppScore, pressure\]\);/g,
+  replacement
 );
 
 fs.writeFileSync('src/screens/MatchEngine.tsx', code);

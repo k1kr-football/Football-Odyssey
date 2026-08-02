@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { ProgressBar } from '../components/ProgressBar';
-import { Globe, ShieldAlert, Sparkles, Send, ArrowLeftRight, Check, X, Handshake, Users, DollarSign, Calendar, Flame, AlertCircle, Search } from 'lucide-react';
+import { Globe, ShieldAlert, Sparkles, Send, ArrowLeftRight, Check, X, Handshake, Users, DollarSign, Calendar, Flame, AlertCircle, Search, Lightbulb } from 'lucide-react';
 import { TeamLogo } from '../components/TeamLogo';
 import { CLUBS } from '../data/teams';
 import { getPhilosophyFitText } from '../utils/managerPhilosophy';
 import { negotiateTransfer, getClubInterestScore, getGatingStatus, getClubTier, generateDeadlineDayOffers, simulateDeadlineDayTicking } from '../utils/transfers';
 import { TransferOffer } from '../types';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
+import { SuggestSigningModal } from '../components/SuggestSigningModal';
+import { MedicalCheckModal } from '../components/MedicalCheckModal';
 
 export function Transfers() {
  const { state, setPlayer, setInbox } = useGame();
@@ -15,6 +17,9 @@ export function Transfers() {
 
  const [activeTab, setActiveTab] = useState<'OFFERS' | 'INTEREST' | 'WORLD_ACTIVITY'>('OFFERS');
  const [negotiatingOffer, setNegotiatingOffer] = useState<string | null>(null);
+ const [pendingMedicalOffer, setPendingMedicalOffer] = useState<string | null>(null);
+ const [isMedicalModalOpen, setIsMedicalModalOpen] = useState(false);
+ const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
  
  // Custom inquiry states
  const [inquiryClub, setInquiryClub] = useState<string | null>(null);
@@ -426,17 +431,8 @@ export function Transfers() {
 
  const isTransferWindow = state.currentWeek <= 9 || (state.currentWeek >= 27 && state.currentWeek <= 30);
 
- const handleRejectOffer = (id: string) => {
- setPlayer({ ...player, transferOffers: player.transferOffers.filter(o => o.id !== id) });
- if (negotiatingOffer === id) setNegotiatingOffer(null);
- };
-
- const handleNegotiateOption = (id: string, action: 'WAGE' | 'BONUS' | 'CLAUSE' | 'SHORTER' | 'ACCEPT') => {
- const offer = player.transferOffers.find(o => o.id === id);
- if (!offer) return;
  
-  if (action === 'ACCEPT') {
-   // Transfer the player
+ const finalizeTransfer = (offer: TransferOffer) => {
    const club = CLUBS.find(c => c.symbol === offer.clubSymbol);
    
    let newFans = player.fans;
@@ -485,7 +481,61 @@ export function Transfers() {
     timeline: newTimeline
    });
    setNegotiatingOffer(null);
-   return;
+   setPendingMedicalOffer(null);
+   setIsMedicalModalOpen(false);
+ };
+
+ const handleMedicalComplete = (success: boolean, newOffer?: TransferOffer) => {
+   if (success && !newOffer) {
+     // Successful medical, finalize the pending offer
+     const offer = player.transferOffers.find(o => o.id === pendingMedicalOffer);
+     if (offer) {
+       finalizeTransfer(offer);
+     } else {
+       setIsMedicalModalOpen(false);
+     }
+   } else if (newOffer) {
+     // Failed but revised offer returned
+     setPlayer({
+       ...player,
+       transferOffers: player.transferOffers.map(o => o.id === pendingMedicalOffer ? newOffer : o)
+     });
+     setIsMedicalModalOpen(false);
+     setPendingMedicalOffer(null);
+   } else {
+     // Completely failed, offer withdrawn
+     setPlayer({ ...player, transferOffers: player.transferOffers.filter(o => o.id !== pendingMedicalOffer) });
+     setInbox([
+      ...state.inbox, 
+      {
+      id: `medical_failed_${Date.now()}`,
+      sender: 'AGENT',
+      subject: 'Transfer Collapsed',
+      content: `The transfer has fallen through after you failed the medical. The club has withdrawn their offer.`,
+      read: false,
+      type: 'NEWS',
+      timestamp: 'MON 14:00',
+      choices: []
+      }
+     ]);
+     setIsMedicalModalOpen(false);
+     setPendingMedicalOffer(null);
+   }
+ };
+
+ const handleRejectOffer = (id: string) => {
+ setPlayer({ ...player, transferOffers: player.transferOffers.filter(o => o.id !== id) });
+ if (negotiatingOffer === id) setNegotiatingOffer(null);
+ };
+
+ const handleNegotiateOption = (id: string, action: 'WAGE' | 'BONUS' | 'CLAUSE' | 'SHORTER' | 'ACCEPT') => {
+ const offer = player.transferOffers.find(o => o.id === id);
+ if (!offer) return;
+ 
+  if (action === 'ACCEPT') {
+    setPendingMedicalOffer(offer.id);
+    setIsMedicalModalOpen(true);
+    return;
   }
 
  const result = negotiateTransfer(offer, player, action);
@@ -695,12 +745,21 @@ export function Transfers() {
    <p className="text-white/50 text-xs font-mono mt-1">Pitch transfer inquiries, negotiate contract terms, and review active market interest.</p>
   </div>
 
-  {/* Transfer Window Banner */}
-  <div className={`px-4 py-2 rounded-lg font-bold border flex items-center gap-2 ${isTransferWindow ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50' : 'bg-zinc-950/20 text-zinc-400 border-zinc-900'}`}>
-   <Calendar size={14} />
-   <span className="uppercase tracking-wider">
-   Transfer Window: {isTransferWindow ? 'OPEN' : 'CLOSED'}
-   </span>
+  {/* Transfer Window Banner & DoF Action */}
+  <div className="flex items-center gap-3">
+   <button
+    onClick={() => setIsSuggestModalOpen(true)}
+    className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-black font-extrabold rounded-lg text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer"
+   >
+    <Lightbulb size={14} /> Suggest Signing (DoF)
+   </button>
+
+   <div className={`px-4 py-2 rounded-lg font-bold border flex items-center gap-2 ${isTransferWindow ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50' : 'bg-zinc-950/20 text-zinc-400 border-zinc-900'}`}>
+    <Calendar size={14} />
+    <span className="uppercase tracking-wider">
+    Transfer Window: {isTransferWindow ? 'OPEN' : 'CLOSED'}
+    </span>
+   </div>
   </div>
   </div>
 
@@ -1146,6 +1205,15 @@ export function Transfers() {
    </div>
   </div>
   )}
+
+  <SuggestSigningModal isOpen={isSuggestModalOpen} onClose={() => setIsSuggestModalOpen(false)} />
+  <MedicalCheckModal 
+    isOpen={isMedicalModalOpen} 
+    offer={player.transferOffers.find(o => o.id === pendingMedicalOffer) || null} 
+    onClose={() => setIsMedicalModalOpen(false)} 
+    onComplete={handleMedicalComplete} 
+  />
  </div>
+ 
  );
 }

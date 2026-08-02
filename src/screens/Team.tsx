@@ -7,10 +7,12 @@ import { CLUBS } from '../data/teams';
 import { getClubSquad } from '../data/sheetSquads';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
 import { calculateSquadChemistry } from '../utils/reputation';
+import { ManagerMeetingModal } from '../components/ManagerMeetingModal';
 
 export function Team() {
  const { state, setPlayer } = useGame();
  const [bondingMsg, setBondingMsg] = useState<string | null>(null);
+ const [isMeetingModalOpen, setIsMeetingModalOpen] = useState<boolean>(false);
  
  const playerClubSymbol = state.player?.currentClubSymbol || 'BIR';
  const club = CLUBS.find(c => c.symbol.toUpperCase() === playerClubSymbol.toUpperCase()) || {
@@ -66,6 +68,12 @@ export function Team() {
    <div>
     <h1 className="text-3xl font-black italic tracking-tighter uppercase">{club.name}</h1>
     <p className="text-white/60 font-medium">Manager: {managerName}</p>
+    <button
+      onClick={() => setIsMeetingModalOpen(true)}
+      className="mt-2 px-4 py-2 bg-[#00FF88] text-black font-extrabold text-xs rounded-xl uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all flex items-center gap-2 shadow-lg shadow-[#00FF88]/10 cursor-pointer"
+    >
+      <MessageSquare className="w-4 h-4" /> Request Manager Meeting
+    </button>
    </div>
   </div>
 
@@ -270,6 +278,7 @@ export function Team() {
      </div>
     ))}
    </div>
+   <ManagerMeetingModal isOpen={isMeetingModalOpen} onClose={() => setIsMeetingModalOpen(false)} />
   </div>
 
   </div>

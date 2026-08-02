@@ -4,6 +4,7 @@ import { Play, Star, Settings, Trash2, Heart } from 'lucide-react';
 import gameLogo from '../assets/images/image-removebg-preview.png';
 import { SettingsModal } from '../components/SettingsModal';
 import { getFormattedCalendarDate } from '../utils/careerSystems';
+import { loadGameStateAsync, deleteGameStateAsync } from '../utils/storageEngine';
 
 export function MainMenu() {
   const { loadSavedGame, newGame } = useGame();
@@ -19,26 +20,30 @@ export function MainMenu() {
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
 
   useEffect(() => {
-    const slots = [1, 2, 3].map(slot => {
-      try {
-        const saved = localStorage.getItem(`rtg_careersave_${slot}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
+    let active = true;
+    const fetchSaveSlots = async () => {
+      const slots = await Promise.all([1, 2, 3].map(async slot => {
+        try {
+          const parsed = await loadGameStateAsync(`rtg_careersave_${slot}`);
           if (parsed && parsed.player) {
             return { slot, data: parsed };
           }
+        } catch (e) {
+          console.error(`Failed to load save slot ${slot}`, e);
         }
-      } catch (e) {
-        console.error(`Failed to load save slot ${slot}`, e);
+        return { slot, data: null };
+      }));
+      if (active) {
+        setSaveSlots(slots);
       }
-      return { slot, data: null };
-    });
-    setSaveSlots(slots);
+    };
+    fetchSaveSlots();
+    return () => { active = false; };
   }, []);
 
-  const handleSlotAction = (slot: number, data: any | null) => {
+  const handleSlotAction = async (slot: number, data: any | null) => {
     if (data) {
-      loadSavedGame(slot);
+      await loadSavedGame(slot);
     } else {
       newGame(slot);
     }
@@ -49,9 +54,9 @@ export function MainMenu() {
     setDeleteConfirmSlot(slot);
   };
 
-  const confirmDelete = (slot: number, e: React.MouseEvent) => {
+  const confirmDelete = async (slot: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.removeItem(`rtg_careersave_${slot}`);
+    await deleteGameStateAsync(`rtg_careersave_${slot}`);
     setSaveSlots(prev => prev.map(s => s.slot === slot ? { slot, data: null } : s));
     setDeleteConfirmSlot(null);
   };

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { musicEngine } from '../utils/musicEngine';
 import { useGame } from '../store/GameContext';
 import { ProgressBar } from '../components/ProgressBar';
 import { TeamLogo } from '../components/TeamLogo';
@@ -30,6 +31,16 @@ export function Profile() {
  const [timelineSearch, setTimelineSearch] = useState('');
  const [journalFilter, setJournalFilter] = useState<'ALL' | 'MILESTONE' | 'CHOICE' | 'MEDIA'>('ALL');
  const [journalSearch, setJournalSearch] = useState('');
+
+
+  useEffect(() => {
+    if (isRetired || activeTab === 'RETIREMENT') {
+      musicEngine.playMood('RETIREMENT');
+    } else {
+      musicEngine.playMood('MENU');
+    }
+  }, [isRetired, activeTab]);
+
 
  const fullTimeline = useMemo(() => {
   if (!player) return [];
