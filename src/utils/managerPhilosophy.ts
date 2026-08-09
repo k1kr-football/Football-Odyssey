@@ -1,4 +1,4 @@
-import { Player } from '../types';
+import { Player, Club } from '../types';
 
 export type ManagerPhilosophy = 'TACTICAL_RIGID' | 'FREE_FLOWING' | 'DEFENSIVE_SOLIDITY' | 'HIGH_PRESS' | 'DIRECT_PLAY';
 
@@ -8,10 +8,18 @@ export interface PhilosophyRecord {
   averageRating: number;
 }
 
-export function assignManagerPhilosophy(): ManagerPhilosophy {
+export function assignManagerPhilosophy(club?: Club | { tacticalIdentity?: string }): ManagerPhilosophy {
   const philosophies: ManagerPhilosophy[] = [
     'TACTICAL_RIGID', 'FREE_FLOWING', 'DEFENSIVE_SOLIDITY', 'HIGH_PRESS', 'DIRECT_PLAY'
   ];
+
+  if (club && club.tacticalIdentity) {
+    // 70% chance to align hired manager philosophy with the club's tactical identity
+    if (Math.random() < 0.70) {
+      return club.tacticalIdentity as ManagerPhilosophy;
+    }
+  }
+
   return philosophies[Math.floor(Math.random() * philosophies.length)];
 }
 

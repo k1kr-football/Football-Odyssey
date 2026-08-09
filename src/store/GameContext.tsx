@@ -35,6 +35,14 @@ import { tagInboxMessagePriority, isDecisionRequired } from '../utils/notificati
 import { checkFinancialTierUp } from '../utils/financialProgression';
 import { processWeeklyPhysicalUpdate, getRecoveryDetails } from '../utils/recoveryTiers';
 import { processWeeklyMentalFatigue, getMentalFatigueLevel, initializeActiveRehab, processWeeklyRehabStep, applyLifestyleMentalFatigueRecovery } from '../utils/wellbeingEngine';
+import {
+  isDayMandatory,
+  recordDailyChoice,
+  getWeeklyActionTracker,
+  applyDailyActionEffects,
+  applyWeeklyActionConsequences,
+  DailyActionType
+} from '../utils/dailyActionEngine';
 import { checkAndTriggerDynamicEvent, DYNAMIC_EVENT_POOL } from '../utils/dynamicEvents';
 import { getClubStaff, getCanonicalSender, getPrimaryJournalist, buildMemoryThreadText } from '../utils/clubStaff';
 import {
@@ -49,7 +57,7 @@ import {
   SeasonAwardsSummary
 } from '../utils/leagueAwards';
 
-export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT' | 'AWARDS_CEREMONY' | 'CLUB' | 'MESSAGES';
+export type Screen = 'MAIN_MENU' | 'CREATION' | 'TRIAL_MATCH' | 'HUB' | 'PROFILE' | 'INBOX' | 'TRAINING' | 'TEAM' | 'SCHEDULE' | 'CAREER' | 'MATCH' | 'PRESS' | 'MEDIA_MINIGAME' | 'REHAB_MINIGAME' | 'LIFESTYLE' | 'SOCIAL' | 'TRANSFERS' | 'FINANCES' | 'GLOSSARY' | 'AGENT' | 'AWARDS_CEREMONY' | 'CLUB' | 'MESSAGES' | 'OFF_SEASON';
 
 export interface GameState {
   screen: Screen;
@@ -122,6 +130,7 @@ interface GameContextType {
   advanceRehabPacing: (pacingChoice: 'PUSH_HARD' | 'RECOMMENDED' | 'CAUTIOUS') => void;
   reduceMentalFatigue: (amount: number, activityName: string) => void;
   startLegacyContinuation: (prospectId?: string) => void;
+  setDailyAction: (action: DailyActionType, targetDay?: DayOfWeek) => void;
 }
 
 const initialState: GameState = {
@@ -1145,6 +1154,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
       
       let updatedPlayerTemp = s.player;
+
+      if (updatedPlayerTemp) {
+        const currentCalendarEntry = s.seasonCalendar?.find(e => e.week === s.currentWeek && e.day === s.currentDay);
+        const isMand = isDayMandatory(currentCalendarEntry);
+        if (isMand) {
+          updatedPlayerTemp = recordDailyChoice(updatedPlayerTemp, s.currentWeek, s.currentDay, 'MANDATORY');
+        } else {
+          const tracker = getWeeklyActionTracker(updatedPlayerTemp, s.currentWeek);
+          const existingChoice = tracker.choices[s.currentDay];
+          const selectedAction: DailyActionType = (existingChoice && existingChoice !== 'MANDATORY') ? existingChoice : 'REST';
+          const actionRes = applyDailyActionEffects(updatedPlayerTemp, selectedAction, s.currentWeek, s.currentDay);
+          updatedPlayerTemp = actionRes.updatedPlayer;
+        }
+      }
       let newInboxTemp = [...s.inbox];
       let totwAndPotmUpdates: { totwHistory?: TeamOfTheWeek[]; potmHistory?: PlayerOfTheMonth[] } | null = null;
       let awardsUpdates: { seasonAwardsHistory?: SeasonAwardsSummary[]; pendingAwardsCeremony?: SeasonAwardsSummary | null; screen?: Screen } | null = null;
@@ -1914,8 +1937,28 @@ export function GameProvider({ children }: { children: ReactNode }) {
            openThreads.sponsors = signedSponsors;
 
            const sponsorIncome = ((updatedPlayerTemp.reputation?.world || 50) * 1500) || 0;
+           
+           // Staff Automation & Specialists
+           let staffExpenses = 0;
+           try {
+             const apState = JSON.parse(localStorage.getItem('football_odyssey_ap_state') || '{}');
+             if (apState.staff) {
+               if (apState.staff.nutritionist) staffExpenses += 1200;
+               if (apState.staff.privatePhysio) staffExpenses += 2500;
+               if (apState.staff.prManager) {
+                 staffExpenses += 1800;
+                 if (updatedPlayerTemp.reputation) {
+                   updatedPlayerTemp.reputation.world = Math.min(100, (updatedPlayerTemp.reputation.world || 50) + 10); // +100 Rep
+                 }
+                 if (updatedPlayerTemp.mediaPerception !== undefined) {
+                   updatedPlayerTemp.mediaPerception = Math.min(100, updatedPlayerTemp.mediaPerception + 3); // Mitigates penalties
+                 }
+               }
+             }
+           } catch (e) {}
+
            const income = (updatedPlayerTemp.contract?.wage || 0) + sponsorIncome + customSponsorIncome + propertyRentalYield;
-           const expenses = (updatedPlayerTemp.finances?.expenses?.housing || 0) + (updatedPlayerTemp.finances?.expenses?.training || 0) + (updatedPlayerTemp.finances?.expenses?.lifestyle || 0) + (updatedPlayerTemp.finances?.expenses?.family || 0);
+           const expenses = (updatedPlayerTemp.finances?.expenses?.housing || 0) + (updatedPlayerTemp.finances?.expenses?.training || 0) + (updatedPlayerTemp.finances?.expenses?.lifestyle || 0) + (updatedPlayerTemp.finances?.expenses?.family || 0) + staffExpenses;
            const netWeekly = income - expenses;
            
            let newBalance = (updatedPlayerTemp.finances?.balance || 0) + netWeekly;
@@ -2110,6 +2153,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
                pressCountThisWeek: 1,
                hasPRWeek: hasPR
              });
+
+             // 2. Process Weekly Action Consequences
+             const consequenceRes = applyWeeklyActionConsequences(updatedPlayerTemp, s.currentWeek);
+             updatedPlayerTemp = consequenceRes.updatedPlayer;
+             if (consequenceRes.warnings.length > 0) {
+               consequenceRes.warnings.forEach((warn, wIdx) => {
+                 newInboxTemp.push({
+                   id: `action_balance_warn_${Date.now()}_${wIdx}`,
+                   sender: getCanonicalSender(s, 'PHYSIO'),
+                   subject: 'Weekly Workload & Balance Report',
+                   content: warn,
+                   read: false,
+                   type: 'SPORTING',
+                   timestamp: 'MON 08:00',
+                   choices: [{ text: 'Understood', type: 'ack' }]
+                 });
+               });
+             }
 
              // 2. Process Active Rehab if Injured
              if (updatedPlayerTemp.isInjured) {
@@ -2704,10 +2765,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
               if (newWorldState?.clubs?.[s.player.currentClubSymbol]) {
                 const archetypes: import('../utils/worldSimulation').ManagerArchetype[] = ['LOYALIST', 'PRAGMATIST', 'PROJECT_BUILDER', 'VOLATILE'];
+                const activeClubObj = CLUBS.find(c => c.symbol === s.player.currentClubSymbol);
                 newWorldState.clubs[s.player.currentClubSymbol].manager = {
                   name: newManagerInfo.name,
                   archetype: archetypes[Math.floor(Math.random() * archetypes.length)],
-                  philosophy: assignManagerPhilosophy(),
+                  philosophy: assignManagerPhilosophy(activeClubObj),
                   trust: 50,
                   jobSecurity: 100,
                   tenureWeeks: 0
@@ -3263,6 +3325,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(s => createLegacyContinuation(s, prospectId));
   };
 
+  const setDailyAction = (action: DailyActionType, targetDay?: DayOfWeek) => {
+    setState(s => {
+      if (!s.player) return s;
+      const dayToUpdate = targetDay || s.currentDay;
+      const currentCalendarEntry = s.seasonCalendar?.find(e => e.week === s.currentWeek && e.day === dayToUpdate);
+      if (isDayMandatory(currentCalendarEntry)) return s;
+
+      let updatedPlayer = recordDailyChoice(s.player, s.currentWeek, dayToUpdate, action);
+
+      if (dayToUpdate === s.currentDay) {
+        const res = applyDailyActionEffects(s.player, action, s.currentWeek, dayToUpdate);
+        updatedPlayer = res.updatedPlayer;
+      }
+
+      return {
+        ...s,
+        player: updatedPlayer
+      };
+    });
+  };
+
   const saveAndQuit = async () => {
     const slotKey = state.saveSlot ? `rtg_careersave_${state.saveSlot}` : 'rtg_careersave_1';
     await saveGameStateAsync(slotKey, state);
@@ -3270,7 +3353,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <GameContext.Provider value={{ settings, updateSettings, resetData, state, setScreen, setPlayer, startCareer, advanceDay, checkCutscenes, resolveCutscene, resolveEvent, updateRelationship, setInbox, loadSavedGame, newGame, saveAndQuit, updateCalendar, updateNextMatch, advanceRehabPacing, reduceMentalFatigue, startLegacyContinuation }}>
+    <GameContext.Provider value={{ settings, updateSettings, resetData, state, setScreen, setPlayer, startCareer, advanceDay, checkCutscenes, resolveCutscene, resolveEvent, updateRelationship, setInbox, loadSavedGame, newGame, saveAndQuit, updateCalendar, updateNextMatch, advanceRehabPacing, reduceMentalFatigue, startLegacyContinuation, setDailyAction }}>
       {children}
     </GameContext.Provider>
   );

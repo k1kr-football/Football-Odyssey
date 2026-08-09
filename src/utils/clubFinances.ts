@@ -1,5 +1,6 @@
 import { Club } from '../types';
 import { CLUBS } from '../data/teams';
+import { getClubStadiumCapacity, getClubPrestigeScore } from './clubPrestige';
 
 export interface ClubFinancials {
   clubSymbol: string;
@@ -103,32 +104,39 @@ export function initializeAllClubFinances(existingFinances?: ClubFinancesMap): C
 
     const { baseWages, baseCash, baseDebt } = getClubFinancialBaseline(club);
 
-    // Initial revenue streams (estimates per week)
+    // Initial revenue streams scaled by real/derived stadium capacity and prestige score
     let tvWeekly = 400000;
-    let sponsorWeekly = 200000;
+    let baseSponsorWeekly = 200000;
     const ticketPrice = club.tier === 'Elite' ? 55 : club.tier === 'Strong' ? 40 : club.tier === 'Mid' ? 28 : club.tier === 'Lower' ? 18 : 12;
-    const weeklyMatchday = Math.round((club.stadiumCapacity || 25000) * 0.92 * ticketPrice * 0.5); // 0.5 because home games are every other week on average
+    const capacity = getClubStadiumCapacity(club);
+    const prestige = getClubPrestigeScore(club);
+    
+    const weeklyMatchday = Math.round(capacity * 0.92 * ticketPrice * 0.5); // 0.5 because home games are every other week on average
 
     const leagueName = club.league.toLowerCase();
     if (leagueName.includes('premier') || leagueName.includes('liga') || leagueName.includes('serie a') || leagueName.includes('bundesliga') || leagueName.includes('ligue 1') || leagueName.includes('série a')) {
       if (club.tier === 'Elite') {
         tvWeekly = 2200000;
-        sponsorWeekly = 1800000;
+        baseSponsorWeekly = 1800000;
       } else if (club.tier === 'Strong') {
         tvWeekly = 1300000;
-        sponsorWeekly = 900000;
+        baseSponsorWeekly = 900000;
       } else {
         tvWeekly = 800000;
-        sponsorWeekly = 400000;
+        baseSponsorWeekly = 400000;
       }
     } else if (leagueName.includes('championship') || leagueName.includes('segunda') || leagueName.includes('serie b') || leagueName.includes('2.') || leagueName.includes('ligue 2')) {
       tvWeekly = 250000;
-      sponsorWeekly = 150000;
+      baseSponsorWeekly = 150000;
     } else {
       // Tiers 3 & 4
       tvWeekly = leagueName.includes('one') ? 60000 : 30000;
-      sponsorWeekly = leagueName.includes('one') ? 40000 : 20000;
+      baseSponsorWeekly = leagueName.includes('one') ? 40000 : 20000;
     }
+
+    // Commercial/Sponsorship revenue scales with club prestige score (brand weight)
+    const sponsorMultiplier = 0.5 + (prestige / 100);
+    const sponsorWeekly = Math.round(baseSponsorWeekly * sponsorMultiplier);
 
     const transferTrading = club.tier === 'Elite' ? 400000 : club.tier === 'Strong' ? 250000 : club.tier === 'Mid' ? 120000 : 40000;
 
@@ -213,7 +221,7 @@ export function simulateClubFinancesWeekly(
     // 1. Dynamic Matchday Revenue based on Home/Away status
     let matchdayRev = 0;
     const ticketPrice = club.tier === 'Elite' ? 55 : club.tier === 'Strong' ? 40 : club.tier === 'Mid' ? 28 : club.tier === 'Lower' ? 18 : 12;
-    const capacity = club.stadiumCapacity || 25000;
+    const capacity = getClubStadiumCapacity(club);
 
     // Simulate whether this club played a home game this week
     // For the player club, we know for sure via isHomeMatch

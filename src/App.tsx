@@ -28,6 +28,7 @@ const AgentScreen = lazy(() => import('./screens/AgentScreen').then(module => ({
 const Club = lazy(() => import('./screens/Club').then(module => ({ default: module.Club })));
 const Glossary = lazy(() => import('./screens/Glossary').then(module => ({ default: module.Glossary })));
 const AwardsCeremony = lazy(() => import('./screens/AwardsCeremony').then(module => ({ default: module.AwardsCeremony })));
+const OffSeasonScreen = lazy(() => import('./screens/OffSeasonScreen').then(module => ({ default: module.OffSeasonScreen })));
 
 const LoadingScreen = () => (
   <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] bg-transparent">
@@ -124,6 +125,8 @@ function GameRouter() {
         return <Glossary />;
       case 'AWARDS_CEREMONY':
         return <AwardsCeremony />;
+      case 'OFF_SEASON':
+        return <OffSeasonScreen />;
       default:
         return <Hub />;
     }

@@ -763,6 +763,9 @@ export interface Club {
   stadiumCapacity?: number;
   primaryColor?: string;
   secondaryColor?: string;
+  prestigeScore?: number;
+  academyRating?: number;
+  tacticalIdentity?: 'TACTICAL_RIGID' | 'FREE_FLOWING' | 'DEFENSIVE_SOLIDITY' | 'HIGH_PRESS' | 'DIRECT_PLAY';
 }
 
 export type RelationshipStatus = 'WARM' | 'CORDIAL' | 'SKEPTICAL' | 'CONFLICT';

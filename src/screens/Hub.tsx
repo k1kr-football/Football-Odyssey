@@ -19,15 +19,23 @@ import { isDecisionRequired } from '../utils/notifications';
 import { getClubStaff, getCanonicalSender, resolveSenderIdentity } from '../utils/clubStaff';
 import { ManagerMeetingModal } from '../components/ManagerMeetingModal';
 import { MessageSquare, Lightbulb } from 'lucide-react';
-import { TeamFormD3Chart } from '../components/TeamFormD3Chart';
+import { WeeklyBalanceIndicator } from '../components/WeeklyBalanceIndicator';
+import { DailyActionWidget } from '../components/DailyActionWidget';
+import { useAPEngine } from '../hooks/useAPEngine';
 
 export function Hub() {
- const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing } = useGame();
+ const { state, setScreen, advanceDay, resolveEvent, setPlayer, setInbox, updateNextMatch, advanceRehabPacing, setDailyAction } = useGame();
+ const { apState } = useAPEngine();
  const [activeFeedTab, setActiveFeedTab] = useState<'MANAGER' | 'SPECULATION' | 'SCOUTING' | 'WORLD_NEWS'>('MANAGER');
  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState<boolean>(false);
  
  const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
  const currentDayIdx = days.indexOf(state.currentDay);
+ useEffect(() => {
+   if (apState.phase === 'off_season' && state.screen !== 'OFF_SEASON') {
+     setScreen('OFF_SEASON');
+   }
+ }, [apState.phase, state.screen, setScreen]);
  let nextDay = state.currentDay;
  let nextWeek = state.currentWeek;
 
@@ -511,7 +519,7 @@ export function Hub() {
     {player.firstName} {player.lastName} &bull; <span className="text-white/60">{club.name}</span>
    </h1>
    <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
-    {player.position} &middot; OVR: {player.ovr} &middot; {club.country} &middot; Tier: {club.tier}
+    {player.position} &middot; OVR {player.ovr} &middot; {player.nationality.toUpperCase()} &middot; {club.name.toUpperCase()}
    </p>
    </div>
   </div>
@@ -564,13 +572,24 @@ export function Hub() {
     <FirstEncounterCallout term="Squad Chemistry" />
   </div>
 
+  {/* Weekly Allocation & Daily Action Choice System */}
+  <WeeklyBalanceIndicator
+    player={player}
+    currentWeek={state.currentWeek}
+    currentDay={state.currentDay}
+    seasonCalendar={state.seasonCalendar}
+  />
+
+  <DailyActionWidget
+    player={player}
+    currentWeek={state.currentWeek}
+    currentDay={state.currentDay}
+    todaysCalendarEntry={state.seasonCalendar?.find(e => e.week === state.currentWeek && e.day === state.currentDay)}
+    onSelectAction={(act) => setDailyAction(act)}
+  />
+
   {/* Daily Objectives & Quests System */}
   <DailyQuestsWidget />
-
-  {/* D3 Team Form & Performance Momentum Visualizer */}
-  <TeamFormD3Chart player={player} />
-
-  
 
   {/* Active Critical Alert Banners */}
   {(() => {
@@ -1718,7 +1737,7 @@ export function Hub() {
     </div>
   )}
 
-  {/* Custom Player Avatar Generator Modal */}
+  {/* Player Portrait Studio Customizer Modal */}
   <AvatarGeneratorModal
     isOpen={isAvatarModalOpen}
     onClose={() => setIsAvatarModalOpen(false)}

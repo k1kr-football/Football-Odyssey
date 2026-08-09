@@ -96,6 +96,14 @@ export function canRequestManagerMeeting(state: GameState): { allowed: boolean; 
  * Executes a proactive manager meeting and computes manager AI reaction.
  */
 export function processManagerMeeting(state: GameState, optionId: string): MeetingResult {
+  if (!state.player) {
+    return {
+      updatedState: state,
+      managerDialog: 'There is no active player to hold this meeting for.',
+      trustChange: 0,
+      summary: 'No active career in progress.'
+    };
+  }
   const player = { ...state.player };
   const currentClubSymbol = player.currentClubSymbol;
   const worldClub = state.worldState?.clubs?.[currentClubSymbol];
@@ -304,6 +312,7 @@ export function canSuggestSigningToDoF(state: GameState): { allowed: boolean; re
 export function getSuggestedSigningCandidates(state: GameState): TargetCandidate[] {
   const candidates: TargetCandidate[] = [];
   const player = state.player;
+  if (!player) return candidates;
   const playerClub = player.currentClubSymbol;
 
   // 1. Rivals from Youth Prodigy / Positional Rivalry
@@ -384,6 +393,15 @@ export function getSuggestedSigningCandidates(state: GameState): TargetCandidate
  * - DoF/Scout assessment
  */
 export function evaluateDoFSigningSuggestion(state: GameState, target: TargetCandidate): DoFResponseResult {
+  if (!state.player) {
+    return {
+      updatedState: state,
+      status: 'DECLINED_TACTICAL',
+      dofDialog: 'There is no active player to evaluate this signing suggestion for.',
+      trustChange: 0,
+      peerRespectChange: 0
+    };
+  }
   const player = { ...state.player };
   const playerClub = player.currentClubSymbol;
   const staff = getClubStaff(state);

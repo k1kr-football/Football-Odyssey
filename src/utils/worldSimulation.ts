@@ -71,7 +71,7 @@ export function initializeWorldState(generatedClubs?: Record<string, import('./c
             manager: {
                 name: managerName,
                 archetype: arch,
-                philosophy: assignManagerPhilosophy(),
+                philosophy: assignManagerPhilosophy(club),
                 trust: 50,
                 jobSecurity: 100,
                 tenureWeeks: Math.floor(Math.random() * 50)
@@ -191,7 +191,7 @@ export function simulateWorldWeek(
             club.manager = {
                 name: newName,
                 archetype: archetypes[Math.floor(Math.random()*archetypes.length)],
-                philosophy: assignManagerPhilosophy(),
+                philosophy: assignManagerPhilosophy(club),
                 trust: 50,
                 jobSecurity: 100,
                 tenureWeeks: 0

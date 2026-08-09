@@ -67,8 +67,8 @@ export const ManagerMeetingModal: React.FC<ManagerMeetingModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-[#121620] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl text-white flex flex-col my-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-[#121620] border border-white/10 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[90vh] sm:max-h-none overflow-y-auto shadow-2xl text-white flex flex-col mt-auto sm:my-auto animate-in slide-in-from-bottom duration-200">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 border-b border-white/10 flex items-center justify-between">

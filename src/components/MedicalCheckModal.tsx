@@ -95,8 +95,8 @@ export const MedicalCheckModal: React.FC<MedicalCheckModalProps> = ({ isOpen, of
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-[#111] border border-white/10 w-full max-w-md rounded-xl overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+      <div className="bg-[#111] border border-white/10 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] sm:max-h-none overflow-y-auto shadow-2xl flex flex-col mt-auto sm:my-auto animate-in slide-in-from-bottom duration-200">
         {/* Header */}
         <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0a0a0a]">
           <h2 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2">

@@ -162,7 +162,9 @@ export function getClubInterestScore(player: Player, club: Club): number {
     if (gateStatus) return 0; // Gated clubs have 0% interest
 
     const p = initializeInterestTracking(player);
-    const savedProgress = p.stateFlags.openThreads.interestProgress?.[club.symbol];
+    // initializeInterestTracking() guarantees openThreads is populated at runtime.
+    const openThreads = p.stateFlags.openThreads!;
+    const savedProgress = openThreads.interestProgress?.[club.symbol];
     if (savedProgress !== undefined) {
         return Math.max(5, Math.min(100, Math.round(savedProgress)));
     }
@@ -194,6 +196,8 @@ export function getClubInterestScore(player: Player, club: Club): number {
 export function generateTransferOffers(player: Player, week: number, day: string): TransferOffer[] {
     const offers: TransferOffer[] = [];
     const p = initializeInterestTracking(player);
+    // initializeInterestTracking() guarantees openThreads is populated at runtime.
+    const openThreads = p.stateFlags.openThreads!;
 
     if (p.contract.yearsLeft >= 4 && Math.random() < 0.7) return []; // Recently signed
     if (p.loanInfo) return []; // On loan
@@ -202,9 +206,9 @@ export function generateTransferOffers(player: Player, week: number, day: string
     if (!currentClub) return offers;
 
     const possibleClubs = CLUBS.filter(c => c.symbol !== p.currentClubSymbol);
-    const scoutAttendance = p.stateFlags.openThreads.scoutAttendance || {};
-    const interestProgress = p.stateFlags.openThreads.interestProgress || {};
-    const targetHomeClub = p.stateFlags?.openThreads?.homecomingTour;
+    const scoutAttendance = openThreads.scoutAttendance || {};
+    const interestProgress = openThreads.interestProgress || {};
+    const targetHomeClub = openThreads.homecomingTour;
     if (targetHomeClub) {
         const homeClub = CLUBS.find(c => c.symbol === targetHomeClub);
         if (homeClub && p.currentClubSymbol !== targetHomeClub) {
@@ -220,7 +224,7 @@ export function generateTransferOffers(player: Player, week: number, day: string
             });
             
             // clear the thread
-            delete p.stateFlags.openThreads.homecomingTour;
+            delete openThreads.homecomingTour;
         }
     }
     
@@ -305,8 +309,8 @@ export function generateTransferOffers(player: Player, week: number, day: string
             });
 
             // Reset interest and scout visits so they don't spam multiple offers
-            p.stateFlags.openThreads.scoutAttendance[club.symbol] = 0;
-            p.stateFlags.openThreads.interestProgress[club.symbol] = 30; // resets to baseline
+            openThreads.scoutAttendance[club.symbol] = 0;
+            openThreads.interestProgress[club.symbol] = 30; // resets to baseline
 
             if (offers.length >= 2) break; // Max 2 generated offers at once
         }
@@ -448,4 +452,3 @@ export function simulateDeadlineDayTicking(player: Player, hoursRemaining: numbe
         mode: 'QUIET'
     };
 }
-

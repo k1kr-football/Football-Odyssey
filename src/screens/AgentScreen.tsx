@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { AgentMeetingModal } from '../components/AgentMeetingModal';
+import { AgencyStaff } from './AgencyStaff';
 import { 
   Briefcase, Award, TrendingUp, Shield, Star, CheckCircle2, 
   DollarSign, Users, PhoneCall, MessageSquare, Sparkles, 
@@ -98,7 +99,7 @@ export function AgentScreen() {
   const { state, setPlayer, setInbox } = useGame();
   const player = state.player;
 
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MARKET' | 'ACTIONS'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MARKET' | 'ACTIONS' | 'STAFF'>('OVERVIEW');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
@@ -249,7 +250,8 @@ export function AgentScreen() {
           {[
             { id: 'OVERVIEW', label: 'Current Agent' },
             { id: 'MARKET', label: 'Agency Market' },
-            { id: 'ACTIONS', label: 'Agent Services' }
+            { id: 'ACTIONS', label: 'Agent Services' },
+            { id: 'STAFF', label: 'Private Staff' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -659,6 +661,9 @@ export function AgentScreen() {
               </button>
             </div>
           </>
+        )}
+        {activeTab === 'STAFF' && (
+          <AgencyStaff />
         )}
       </div>
       <AgentMeetingModal isOpen={isMeetingModalOpen} onClose={() => setIsMeetingModalOpen(false)} />

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useGame } from "../store/GameContext";
 import {
   Mail,
@@ -20,31 +20,27 @@ import {
 import { CLUBS } from "../data/teams";
 import { resolveSenderIdentity } from "../utils/clubStaff";
 import { RealWorldNewsWidget } from "../components/RealWorldNewsWidget";
-import { isDecisionRequired } from "../utils/notifications";
+import { isDecisionRequired, processInboxMessages } from "../utils/notifications";
 
 export function Inbox() {
   const { state, setScreen, setInbox, setPlayer } = useGame();
   const [category, setCategory] = useState<string>("ALL");
   const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
   const [verbosity, setVerbosity] = useState<"ALL" | "IMPORTANT_AND_CRITICAL" | "CRITICAL_ONLY">("ALL");
-  const [digestEnabled, setDigestEnabled] = useState(false);
+  const [digestEnabled, setDigestEnabled] = useState(true);
 
   // Interactive Negotiation States
   const [negotiationPhase, setNegotiationPhase] = useState<"NONE" | "NEGOTIATE" | "SUCCESS" | "COLLAPSED">("NONE");
   const [negotiatingMsg, setNegotiatingMsg] = useState<any | null>(null);
   const [proposedWage, setProposedWage] = useState(0);
 
-  const messages = state.inbox || [];
-
-  // Filter messages based on verbosity
-  const filteredByVerbosity = messages.filter((m) => {
-    if (verbosity === "CRITICAL_ONLY") return m.priority === "CRITICAL" || isDecisionRequired(m);
-    if (verbosity === "IMPORTANT_AND_CRITICAL") return m.priority === "CRITICAL" || m.priority === "IMPORTANT" || isDecisionRequired(m);
-    return true;
-  });
+  const rawInbox = state.inbox || [];
+  const messages = useMemo(() => {
+    return processInboxMessages(rawInbox, verbosity, digestEnabled);
+  }, [rawInbox, verbosity, digestEnabled]);
 
   // Filter messages based on category
-  const filteredMessages = filteredByVerbosity.filter((m) => {
+  const filteredMessages = messages.filter((m) => {
     const sender = m.sender?.toUpperCase() || "";
     if (sender.includes("TEAMMATE") || sender.includes("CAPTAIN") || sender.includes("PROSPECT")) return false;
     if (category === "ALL") return true;
@@ -240,18 +236,33 @@ export function Inbox() {
           })}
         </div>
 
-        {/* Verbosity Selector */}
-        <div className="p-4 border-t border-white/10 bg-[#0a0a0a] space-y-2">
-          <label className="text-[10px] text-white/50 uppercase font-mono font-bold block">Feed Filter</label>
-          <select
-            value={verbosity}
-            onChange={(e) => setVerbosity(e.target.value as any)}
-            className="w-full bg-[#141414] border border-[#2f2f2f] text-white text-[10px] font-mono rounded px-2.5 py-2 focus:border-[#00FF88] focus:outline-none"
-          >
-            <option value="ALL">Show All Messages</option>
-            <option value="IMPORTANT_AND_CRITICAL">Hide Ambient News</option>
-            <option value="CRITICAL_ONLY">Critical Alerts Only</option>
-          </select>
+        {/* Verbosity Selector & Digest Mode */}
+        <div className="p-4 border-t border-white/10 bg-[#0a0a0a] space-y-3">
+          <div>
+            <label className="text-[10px] text-white/50 uppercase font-mono font-bold block mb-1">Feed Filter</label>
+            <select
+              value={verbosity}
+              onChange={(e) => setVerbosity(e.target.value as any)}
+              className="w-full bg-[#141414] border border-[#2f2f2f] text-white text-[10px] font-mono rounded px-2.5 py-2 focus:border-[#00FF88] focus:outline-none"
+            >
+              <option value="ALL">Show All Messages</option>
+              <option value="IMPORTANT_AND_CRITICAL">Hide Ambient News</option>
+              <option value="CRITICAL_ONLY">Critical Alerts Only</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[10px] text-white/50 uppercase font-mono font-bold">Digest Mode</span>
+            <button
+              onClick={() => setDigestEnabled(!digestEnabled)}
+              className={`px-2.5 py-1 rounded text-[9px] font-mono font-black uppercase transition-all ${
+                digestEnabled 
+                  ? 'bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/40' 
+                  : 'bg-white/10 text-white/50 border border-white/10'
+              }`}
+            >
+              {digestEnabled ? 'Enabled (ON)' : 'Disabled (OFF)'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -289,18 +300,18 @@ export function Inbox() {
                         isSelected ? "bg-white/10 border-l-2 border-[#00FF88]" : "hover:bg-white/5"
                       } ${!msg.read ? "bg-white/[0.02]" : ""}`}
                     >
-                      <div className="flex justify-between items-start mb-1 gap-2">
-                        <span className="text-[10px] font-mono font-bold uppercase text-[#00FF88] truncate">
+                      <div className="flex justify-between items-center mb-1.5 gap-3">
+                        <span className="text-[10px] font-mono font-bold uppercase text-[#00FF88] truncate flex-1 min-w-0">
                           {resolveSenderIdentity(state, msg.sender, msg.id)}
                         </span>
                         <span className="text-[9px] font-mono text-white/40 shrink-0">{msg.timestamp}</span>
                       </div>
 
-                      <h4 className={`text-xs font-bold font-sans line-clamp-1 mb-1 ${!msg.read ? "text-white font-black" : "text-white/70"}`}>
+                      <h4 className={`text-xs font-bold font-sans truncate mb-1 ${!msg.read ? "text-white font-black" : "text-white/70"}`}>
                         {msg.subject}
                       </h4>
 
-                      <p className="text-[11px] text-white/50 line-clamp-2 leading-relaxed">
+                      <p className="text-[11px] text-white/50 line-clamp-2 leading-relaxed overflow-hidden text-ellipsis">
                         {msg.content}
                       </p>
 

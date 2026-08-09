@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGame } from '../store/GameContext';
 import { CareerDepthWidget } from '../components/CareerDepthWidget';
+import { TeamFormD3Chart } from '../components/TeamFormD3Chart';
 import { CLUBS } from '../data/teams';
 import { TeamLogo } from '../components/TeamLogo';
 import { getClubStaff } from '../utils/clubStaff';
@@ -85,6 +86,9 @@ export function Club() {
           <div className="text-[10px] text-white/40">Oversees medical protocols and rehab.</div>
         </div>
       </div>
+
+      {/* D3 Team Form & Performance Momentum Visualizer */}
+      <TeamFormD3Chart player={player} />
 
       <CareerDepthWidget />
     </div>

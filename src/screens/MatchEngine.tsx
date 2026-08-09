@@ -4,6 +4,7 @@ import { RadarChartComparison } from '../components/RadarChartComparison';
 import { calculateMatchReputationGain, updateReputationAndPerception } from "../utils/reputation";
 import { sfxEngine } from "../utils/sfxEngine";
 import { musicEngine } from '../utils/musicEngine';
+import { generateWeatherAndPitch } from '../utils/weatherPitch';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { Player, TurningPointEvent } from '../types';
@@ -20,6 +21,9 @@ import {
   Activity, Flame, Shield, Star, Play, Pause, FastForward, Sparkles,
   Clock, Target, Compass, Crosshair, ChevronRight, MessageSquare, BarChart3, AlertCircle, RefreshCw
 } from 'lucide-react';
+import { useAPEngine } from '../hooks/useAPEngine';
+import { MatchTacticsOverlay } from '../components/MatchTacticsOverlay';
+import { PitchTacticalOption } from '../types/matchAP';
 
 interface MatchObjective {
   id: string;
@@ -32,7 +36,35 @@ interface MatchObjective {
 
 export function MatchEngine() {
   const { state, advanceDay, setScreen, setPlayer, setInbox, settings } = useGame();
+  const { apState, setApState } = useAPEngine();
   const p = state.player;
+
+  // Mid-Match Tactical Enhancements
+  const [halftimeTactic, setHalftimeTactic] = useState<'HIGH_PRESS_OVERLOAD' | 'PARK_THE_BUS' | null>(null);
+  const [touchlineTactic, setTouchlineTactic] = useState<'DEMAND_MORE' | 'PLAY_SAFE' | null>(null);
+  const [activeTactics, setActiveTactics] = useState<string[]>([]);
+
+  const handleSelectTactic = (option: PitchTacticalOption) => {
+    if (apState.currentAP < option.apCost) return;
+    setApState(s => ({ ...s, currentAP: Math.max(0, s.currentAP - option.apCost) }));
+    setActiveTactics(prev => prev.includes(option.id) ? prev : [...prev, option.id]);
+
+    if (option.id === 'ht_high_press') {
+      setHalftimeTactic('HIGH_PRESS_OVERLOAD');
+    } else if (option.id === 'ht_park_bus') {
+      setHalftimeTactic('PARK_THE_BUS');
+    } else if (option.id === 'shout_demand_more') {
+      setTouchlineTactic('DEMAND_MORE');
+    } else if (option.id === 'shout_play_safe') {
+      setTouchlineTactic('PLAY_SAFE');
+    }
+
+    setCommentaryLogs(c => [
+      { minute, text: `⚡ TACTICAL SWITCH ACTIVATED: ${option.title} — ${option.description}`, type: 'highlight' },
+      ...c
+    ]);
+  };
+
 
   if (!p) {
     return (
@@ -71,16 +103,13 @@ export function MatchEngine() {
   const [userScore, setUserScore] = useState<number>(0);
   const [oppScore, setOppScore] = useState<number>(0);
 
-  // Weather & Pitch Condition Generator
-  const weather = useMemo(() => {
-    const list = [
-      { name: '☀️ SUNNY & CLEAR', desc: 'Optimal pitch conditions for fast passing', temp: '21°C' },
-      { name: '🌧️ HEAVY RAIN', desc: 'Slippery pitch, increased shot speed & tackle risks', temp: '12°C' },
-      { name: '⛅ PARTLY CLOUDY', desc: 'Mild atmosphere, balanced conditions', temp: '16°C' },
-      { name: '❄️ CRISP COLD', desc: 'Chilly afternoon, high intensity required', temp: '6°C' }
-    ];
-    return list[Math.floor(Math.random() * list.length)];
-  }, []);
+  // Weather & Pitch Condition Generator using generateWeatherAndPitch
+  const weatherPreset = useMemo(() => {
+    const clubSym = opponentSymbol || p.currentClubSymbol || 'ARS';
+    return generateWeatherAndPitch(clubSym, state.currentWeek);
+  }, [state.currentWeek, opponentSymbol, p.currentClubSymbol]);
+
+  const { weather, pitch, tempCelsius, commentaryHook } = weatherPreset;
 
   // Procedural Match Objectives
   const objectives = useMemo<MatchObjective[]>(() => {
@@ -478,9 +507,15 @@ export function MatchEngine() {
         let addGoalsUser = 0;
         let addGoalsOpp = 0;
 
+        let oppScoreChance = 0.35;
+        if (halftimeTactic === 'PARK_THE_BUS') oppScoreChance = 0.20;
+
+        let userScoreChance = 0.30;
+        if (halftimeTactic === 'HIGH_PRESS_OVERLOAD') userScoreChance = 0.40;
+
         // Random team events
         if (Math.random() < 0.04) {
-          if (Math.random() < 0.35) {
+          if (Math.random() < oppScoreChance) {
             addGoalsOpp = 1;
             setOppScore(s => s + 1);
             setMomentum(m => Math.max(-10, m - 3));
@@ -506,7 +541,7 @@ export function MatchEngine() {
             ]);
           }
         } else if (Math.random() < 0.05) {
-          if (Math.random() < 0.30) {
+          if (Math.random() < userScoreChance) {
             addGoalsUser = 1;
             setUserScore(s => s + 1);
             setMomentum(m => Math.min(10, m + 3));
@@ -526,6 +561,15 @@ export function MatchEngine() {
                 playerInvolved: `${p.firstName} ${p.lastName}`
               }
             ]);
+          }
+        } else if (Math.random() < 0.02) {
+          // Card / Foul Event
+          const cardRisk = touchlineTactic === 'PLAY_SAFE' ? 0.05 : 0.20;
+          if (Math.random() < cardRisk) {
+             setCommentaryLogs(prev => [
+               { minute: nextMin, text: `🟨 YELLOW CARD: Reckless challenge in midfield. Referee goes to the pocket.`, type: 'highlight' },
+               ...prev
+             ]);
           }
         }
 
@@ -558,8 +602,15 @@ export function MatchEngine() {
           setStamina(s => {
             const nextStam = Math.max(5, Number((s - drain).toFixed(1)));
             
-            // Realistic Match Injury Check
-            if (!matchInjury && !isSubbedOff && nextMin >= 15 && Math.random() < (0.0002 + (100 - nextStam) * 0.000012 + (p.physicalCondition?.injurySusceptibility || 10) * 0.00003)) {
+            // Realistic Match Injury Check (incorporating weather & pitch injury risk modifiers)
+            const weatherInjuryMod = (weather.modifiers.injuryRisk || 0) * 0.0006 + (pitch.modifiers.injuryRisk || 0) * 0.0006;
+            
+            let injuryChance = 0.0002 + (100 - nextStam) * 0.000012 + (p.physicalCondition?.injurySusceptibility || 10) * 0.00003 + weatherInjuryMod;
+            if (apState.staff.privatePhysio) {
+              injuryChance *= 0.7; // -30% risk
+            }
+
+            if (!matchInjury && !isSubbedOff && nextMin >= 15 && Math.random() < injuryChance) {
               const injuries = [
                 { name: 'Hamstring Strain', weeks: 2, severity: 'MINOR' },
                 { name: 'Medial Ligament Sprain', weeks: 4, severity: 'MODERATE' },
@@ -988,7 +1039,7 @@ export function MatchEngine() {
           </div>
           <div className="text-right">
             <span className="text-xs text-white/50 block font-bold">WEEK {state.currentWeek} · {state.currentDay}</span>
-            <span className="text-xs text-[#00FF88] font-bold uppercase">{weather.name}</span>
+            <span className="text-xs text-[#00FF88] font-bold uppercase">{weather.icon} {weather.type} ({tempCelsius}°C) · {pitch.icon} {pitch.type}</span>
           </div>
         </div>
 
@@ -1256,6 +1307,21 @@ export function MatchEngine() {
           </div>
         )}
 
+        {/* Touchline Instructions */}
+        {playerStatus !== 'UNUSED' && isSubbedOn && !isSubbedOff && (
+          <MatchTacticsOverlay
+            mode="TOUCHLINE"
+            matchAPAvailable={apState.currentAP}
+            activeTactics={activeTactics}
+            userScore={userScore}
+            oppScore={oppScore}
+            userClubName={userClub.name}
+            oppClubName={oppClub.name}
+            minute={minute}
+            onSelectTactic={handleSelectTactic}
+          />
+        )}
+
         {/* Live Match Commentary Ticker */}
         <div className="flex-1 bg-[#0e0e0e] border border-white/10 rounded-2xl p-4 flex flex-col justify-between overflow-hidden">
           <span className="text-xs font-bold text-white/40 uppercase tracking-wider block mb-3">Live Commentary Feed</span>
@@ -1332,35 +1398,27 @@ export function MatchEngine() {
   // 3. HALF-TIME INTERVAL
   if (phase === 'HALF_TIME') {
     return (
-      <div className="w-full text-white flex flex-col font-mono select-none items-center justify-center py-12">
-        <div className="max-w-xl w-full bg-[#0e0e0e] border border-white/15 rounded-2xl p-6 shadow-2xl text-center">
-          <span className="text-xs text-[#00FF88] font-bold uppercase tracking-widest block mb-2">45' HALF TIME INTERVAL</span>
-          <h2 className="text-3xl font-black text-white mb-6">
-            {userClub.symbol} {userScore} - {oppScore} {oppClub.symbol}
-          </h2>
-
-          {/* Half time manager feedback */}
-          <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-6 text-left">
-            <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">MANAGER's TALK</span>
-            <p className="text-sm text-white/90">
-              {userScore > oppScore
-                ? "Excellent first half performance. Keep pressing them in their half and don't lose focus!"
-                : userScore === oppScore
-                ? "It's tight out there. Pick your moments carefully and control the midfield tempo."
-                : "We are behind. We need higher intensity and faster decision-making in the final third!"}
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              setPhase('IN_MATCH');
-              setSimSpeed(2);
-            }}
-            className="w-full bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#00FF88]/20"
-          >
-            RESUME SECOND HALF <ArrowRight size={18} />
-          </button>
-        </div>
+      <div className="w-full text-white flex flex-col font-mono select-none items-center justify-center py-6 max-w-4xl mx-auto">
+        <MatchTacticsOverlay
+          mode="HALFTIME"
+          matchAPAvailable={apState.currentAP}
+          activeTactics={activeTactics}
+          userScore={userScore}
+          oppScore={oppScore}
+          userClubName={userClub.name}
+          oppClubName={oppClub.name}
+          minute={45}
+          stats={{
+            userXg: 1.25 + (halftimeTactic === 'HIGH_PRESS_OVERLOAD' ? 0.25 : 0),
+            oppXg: halftimeTactic === 'PARK_THE_BUS' ? 0.45 : 0.85,
+            possession: 54
+          }}
+          onSelectTactic={handleSelectTactic}
+          onResumeMatch={() => {
+            setPhase('IN_MATCH');
+            setSimSpeed(2);
+          }}
+        />
       </div>
     );
   }
@@ -1705,9 +1763,9 @@ export function MatchEngine() {
           <button
             onClick={handleClaimAndExit}
             disabled={hasClaimed}
-            className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#00FF88]/20 cursor-pointer active:scale-95 disabled:opacity-50"
+            className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#00FF88]/20 cursor-pointer active:scale-95 disabled:opacity-50 min-h-[44px]"
           >
-            Collect Rewards & Exit <ArrowRight size={18} />
+            CONTINUE TO DASHBOARD <ArrowRight size={18} />
           </button>
         </div>
       </div>

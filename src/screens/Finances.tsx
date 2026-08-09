@@ -20,10 +20,12 @@ import {
 import { CLUBS } from '../data/teams';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
 import { checkAssetLock, getActiveFinancialTier, calculateNetWorth } from '../utils/financialProgression';
+import { useAPEngine } from '../hooks/useAPEngine';
 
 export function Finances() {
  const { state, setPlayer } = useGame();
- const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SPONSORS' | 'INVESTMENTS' | 'EMPIRE' | 'CLUB_FINANCES'>('OVERVIEW');
+ const { apState, toggleLifestyle } = useAPEngine();
+ const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SPONSORS' | 'INVESTMENTS' | 'EMPIRE' | 'CLUB_FINANCES' | 'LIFESTYLE'>('OVERVIEW');
  const [notification, setNotification] = useState<string | null>(null);
  
  // ShibaFC & Cryptocoin Trading limits
@@ -63,7 +65,8 @@ export function Finances() {
   payout: 3000, 
   reqRep: 15, 
   icon: '👟', 
-  clause: 'Requires 15% World Rep. Pays £3,000/w.' 
+  clause: 'Requires 15% World Rep. Pays £3,000/w. Signature Speed Boots (+2 Pace).',
+  statMod: { key: 'pace', val: 2 }
  },
  { 
   id: 'victory_swoosh', 
@@ -71,7 +74,8 @@ export function Finances() {
   payout: 10000, 
   reqRep: 35, 
   icon: '⚡', 
-  clause: 'Requires 35% World Rep. Pays £10,000/w.' 
+  clause: 'Requires 35% World Rep. Pays £10,000/w. Signature Agility Boots (+2 Dribbling).',
+  statMod: { key: 'dribbling', val: 2 }
  },
  { 
   id: 'giga_cougar', 
@@ -79,7 +83,8 @@ export function Finances() {
   payout: 30000, 
   reqRep: 55, 
   icon: '🐆', 
-  clause: 'Requires 55% World Rep. Pays £30,000/w.' 
+  clause: 'Requires 55% World Rep. Pays £30,000/w. Power Boots (+2 Shooting).',
+  statMod: { key: 'shooting', val: 2 }
  },
  { 
   id: 'luxo_chrono', 
@@ -140,8 +145,19 @@ export function Finances() {
   else if (p.mediaPerception <= 40) mediaMod = 0.75;
  }
  const sponsorIncome = Math.round((((p.reputation?.world || 50) * 1500) || 0) * mediaMod);
+ 
+ let staffExpenses = 0;
+ try {
+   const apState = JSON.parse(localStorage.getItem('football_odyssey_ap_state') || '{}');
+   if (apState.staff) {
+     if (apState.staff.nutritionist) staffExpenses += 1200;
+     if (apState.staff.privatePhysio) staffExpenses += 2500;
+     if (apState.staff.prManager) staffExpenses += 1800;
+   }
+ } catch (e) {}
+
  const totalIncome = (p.contract?.wage || 0) + sponsorIncome + customSponsorIncome + propertyRentalYield;
- const totalExpenses = (p.finances?.expenses?.housing || 0) + (p.finances?.expenses?.training || 0) + (p.finances?.expenses?.lifestyle || 0) + (p.finances?.expenses?.family || 0);
+ const totalExpenses = (p.finances?.expenses?.housing || 0) + (p.finances?.expenses?.training || 0) + (p.finances?.expenses?.lifestyle || 0) + (p.finances?.expenses?.family || 0) + staffExpenses;
  const netWeekly = totalIncome - totalExpenses;
 
  const realEstateValue = ownedProperties.reduce((sum: number, prop: any) => sum + ((prop.qty || 1) * (prop.cost || 0)), 0);
@@ -184,8 +200,19 @@ export function Finances() {
   ...(openThreads.sponsorClauses || {}),
   [dealId]: { exclusivity, socialMedia, morality }
  };
+
+ let updatedAttributes = { ...p.attributes };
+ const deal = sponsorDealsDb.find(d => d.id === dealId);
+ if (deal?.statMod) {
+   updatedAttributes = {
+     ...updatedAttributes,
+     [deal.statMod.key]: Math.min(100, (updatedAttributes[deal.statMod.key as keyof typeof updatedAttributes] || 50) + deal.statMod.val)
+   };
+ }
+
  setPlayer({
   ...p,
+  attributes: updatedAttributes,
   stateFlags: {
   ...p.stateFlags,
   openThreads: {
@@ -201,8 +228,18 @@ export function Finances() {
 
  const terminateSponsorDeal = (dealId: string) => {
  const updatedSponsors = signedSponsors.filter(id => id !== dealId && id !== dealId + '_IMPROVED');
+ let updatedAttributes = { ...p.attributes };
+ const deal = sponsorDealsDb.find(d => d.id === dealId);
+ if (deal?.statMod) {
+   updatedAttributes = {
+     ...updatedAttributes,
+     [deal.statMod.key]: Math.max(1, (updatedAttributes[deal.statMod.key as keyof typeof updatedAttributes] || 50) - deal.statMod.val)
+   };
+ }
+
  setPlayer({
   ...p,
+  attributes: updatedAttributes,
   stateFlags: {
   ...p.stateFlags,
   openThreads: {
@@ -506,11 +543,16 @@ export function Finances() {
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Total Net Worth</span>
    <span className="text-2xl font-black font-mono text-[#00FF88]">£{netWorth.toLocaleString()}</span>
   </div>
-  <div className="premium-card p-4 rounded-xl">
+  <div className="premium-card p-4 rounded-xl relative group">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Net Weekly Cashflow</span>
    <span className={`text-2xl font-black font-mono ${netWeekly >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
    {netWeekly >= 0 ? '+' : '-'}£{Math.abs(netWeekly).toLocaleString()}/w
    </span>
+   {staffExpenses > 0 && (
+     <span className="text-[9px] text-white/30 font-mono absolute bottom-2 right-4">
+       (Staff: £{staffExpenses.toLocaleString()}/wk)
+     </span>
+   )}
   </div>
   </div>
 
@@ -586,6 +628,18 @@ export function Finances() {
       <div className="flex items-center gap-2">
       <Building2 size={14} className="text-sky-400" />
       Club Boardroom
+      </div>
+     </button>
+     
+     <button
+      onClick={() => setActiveTab('LIFESTYLE')}
+      className={`px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-colors ${
+       activeTab === 'LIFESTYLE' ? 'border-fuchsia-500 text-white' : 'border-transparent text-white/40 hover:text-[#aaa]'
+      }`}
+     >
+      <div className="flex items-center gap-2">
+      <Zap size={14} className="text-fuchsia-400" />
+      Lifestyle Upgrades
       </div>
      </button>
      </div>
@@ -1222,6 +1276,122 @@ export function Finances() {
    )}
    </div>
   )}
+
+  {activeTab === 'LIFESTYLE' && (
+   <div className="animate-in fade-in zoom-in-95 duration-300">
+    <div className="flex justify-between items-end mb-6">
+     <div>
+      <h3 className="text-white text-lg font-black uppercase tracking-wider mb-1">Lifestyle & Upgrades</h3>
+      <p className="text-white/50 text-xs font-mono">Invest your wealth to gain permanent physiological and daily schedule benefits.</p>
+     </div>
+    </div>
+    
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Recovery Chamber */}
+      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.recoveryChamber ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+        <div>
+          <div className="flex justify-between items-start mb-2">
+            <h4 className="text-white font-bold text-sm uppercase">Cryo-Recovery Chamber</h4>
+            {apState.lifestyle?.recoveryChamber && <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded font-black uppercase border border-emerald-500/30">Owned</span>}
+          </div>
+          <p className="text-xs text-white/50 mb-4 line-clamp-2 font-mono">
+            State-of-the-art home recovery suite. Increases daily fatigue recovery by +5%.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            if (p.finances.balance >= 150000) {
+              setPlayer({ ...p, finances: { ...p.finances, balance: p.finances.balance - 150000 } });
+              toggleLifestyle('recoveryChamber');
+              setNotification("Cryo-Recovery Chamber purchased! +5% daily fatigue recovery.");
+            } else {
+              setNotification("Insufficient funds.");
+            }
+          }}
+          disabled={apState.lifestyle?.recoveryChamber || p.finances.balance < 150000}
+          className={`w-full py-2.5 rounded text-xs font-bold uppercase transition-colors ${
+            apState.lifestyle?.recoveryChamber 
+              ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
+              : p.finances.balance >= 150000
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+          }`}
+        >
+          {apState.lifestyle?.recoveryChamber ? 'Installed' : 'Purchase (£150,000)'}
+        </button>
+      </div>
+
+      {/* Luxury Housing */}
+      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.luxuryHousing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+        <div>
+          <div className="flex justify-between items-start mb-2">
+            <h4 className="text-white font-bold text-sm uppercase">Luxury Private Estate</h4>
+            {apState.lifestyle?.luxuryHousing && <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded font-black uppercase border border-emerald-500/30">Owned</span>}
+          </div>
+          <p className="text-xs text-white/50 mb-4 line-clamp-2 font-mono">
+            An expansive, secluded mansion. The peace of mind and space grants +1 permanent Max AP.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            if (p.finances.balance >= 2500000) {
+              setPlayer({ ...p, finances: { ...p.finances, balance: p.finances.balance - 2500000 } });
+              toggleLifestyle('luxuryHousing');
+              setNotification("Luxury Private Estate purchased! +1 Max AP.");
+            } else {
+              setNotification("Insufficient funds.");
+            }
+          }}
+          disabled={apState.lifestyle?.luxuryHousing || p.finances.balance < 2500000}
+          className={`w-full py-2.5 rounded text-xs font-bold uppercase transition-colors ${
+            apState.lifestyle?.luxuryHousing 
+              ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
+              : p.finances.balance >= 2500000
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+          }`}
+        >
+          {apState.lifestyle?.luxuryHousing ? 'Purchased' : 'Purchase (£2,500,000)'}
+        </button>
+      </div>
+      
+      {/* Private Jet */}
+      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.privateJet ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+        <div>
+          <div className="flex justify-between items-start mb-2">
+            <h4 className="text-white font-bold text-sm uppercase">Chartered Private Jet</h4>
+            {apState.lifestyle?.privateJet && <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded font-black uppercase border border-emerald-500/30">Owned</span>}
+          </div>
+          <p className="text-xs text-white/50 mb-4 line-clamp-2 font-mono">
+            Eliminates travel fatigue during away games and brand tours. Grants +1 permanent Max AP.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            if (p.finances.balance >= 8000000) {
+              setPlayer({ ...p, finances: { ...p.finances, balance: p.finances.balance - 8000000 } });
+              toggleLifestyle('privateJet');
+              setNotification("Chartered Private Jet purchased! +1 Max AP.");
+            } else {
+              setNotification("Insufficient funds.");
+            }
+          }}
+          disabled={apState.lifestyle?.privateJet || p.finances.balance < 8000000}
+          className={`w-full py-2.5 rounded text-xs font-bold uppercase transition-colors ${
+            apState.lifestyle?.privateJet 
+              ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
+              : p.finances.balance >= 8000000
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+          }`}
+        >
+          {apState.lifestyle?.privateJet ? 'Purchased' : 'Purchase (£8,000,000)'}
+        </button>
+      </div>
+    </div>
+   </div>
+  )}
+
   </div>
 
   {negotiatingDealId && (() => {

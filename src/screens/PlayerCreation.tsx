@@ -345,8 +345,8 @@ export function PlayerCreation() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0E0E0E] text-[#cccccc] font-mono overflow-y-auto w-full p-4 sm:p-6 lg:p-8">
-      <div className="max-w-[1400px] w-full mx-auto flex flex-col gap-6 lg:gap-8 h-full">
+    <div className="flex flex-col h-full bg-[#0E0E0E] text-[#cccccc] font-mono overflow-y-auto w-full p-2 sm:p-6">
+      <div className="max-w-[1400px] w-full mx-auto flex flex-col gap-3 sm:gap-6 h-full">
 
         {/* Wizard Header & Stepper */}
         <div>

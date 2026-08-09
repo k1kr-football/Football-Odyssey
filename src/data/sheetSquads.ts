@@ -2949,11 +2949,11 @@ const CURATED_SHEET_SQUADS: Record<string, ClubSquad> = {
 };
 
 export const SHEET_SQUADS: Record<string, ClubSquad> = {
-  ...FM_SHEET_SQUADS,
-  ...CURATED_SHEET_SQUADS
+  ...CURATED_SHEET_SQUADS,
+  ...FM_SHEET_SQUADS
 };
 
-function normalizeClubString(str: string): string {
+export function normalizeClubString(str: string): string {
   return str
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

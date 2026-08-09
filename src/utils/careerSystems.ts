@@ -6,6 +6,7 @@ import { getClubSquad } from '../data/sheetSquads';
 import { REAL_PLAYER_PROFILES } from '../data/realPlayerProfiles';
 import { STORY_ARCS } from '../data/storyArcs';
 import { getMentalFatigueLevel } from './wellbeingEngine';
+import { seedClubRoster } from './realPlayerSeeding';
 
 export function calculateDetailedMatchSelection(
   player: Player,
@@ -596,12 +597,16 @@ export interface GeneratedPlayer {
   nationality: string;
   archetype: string;
   potential: number;
+  isRealPlayerSeeded?: boolean;
+  dataSourceTag?: 'CURATED_REAL_DATA' | 'REAL_PROFILE_SEEDED' | 'PROCEDURAL_PENDING_REAL_DATA' | 'PROCEDURAL';
 }
 
 export interface GeneratedClub {
   symbol: string;
   name: string;
   managerName: string;
+  dataSourceTag?: 'CURATED_REAL_DATA' | 'REAL_PROFILE_SEEDED' | 'PROCEDURAL_PENDING_REAL_DATA' | 'PROCEDURAL';
+  isProceduralPendingRealData?: boolean;
   squad: {
     starters: GeneratedPlayer[];
     substitutes: GeneratedPlayer[];
@@ -714,120 +719,15 @@ export function generateSaveNPCs(engine: UnifiedNPCEngine): { agents: GeneratedN
 
 /**
  * Generates full realistic rosters for all CLUBS in the database.
+ * Seeds real players from realPlayerProfiles and sheet data at save creation,
+ * infers age from CA/PA gap, and procedurally generates Brazilian squads tagged for future swap.
  */
 export function generateAllClubsRosters(engine?: UnifiedNPCEngine): Record<string, GeneratedClub> {
   const result: Record<string, GeneratedClub> = {};
   const e = engine || new UnifiedNPCEngine();
   
   for (const club of CLUBS) {
-    let avgStarterOvr = 78;
-    let baseMin = 70;
-    let baseMax = 90;
-
-    if (club.tier === 'Elite') {
-      avgStarterOvr = 84; baseMin = 72; baseMax = 95;
-    } else if (club.tier === 'Strong') {
-      avgStarterOvr = 75; baseMin = 65; baseMax = 84;
-    } else if (club.tier === 'Mid') {
-      avgStarterOvr = 68; baseMin = 60; baseMax = 75;
-    } else {
-      avgStarterOvr = 60; baseMin = 50; baseMax = 67;
-    }
-
-    const starters: GeneratedPlayer[] = [];
-    const substitutes: GeneratedPlayer[] = [];
-    const reserves: GeneratedPlayer[] = [];
-    const youthProspects: GeneratedPlayer[] = [];
-
-    const getRandNat = () => {
-      if (Math.random() < 0.65) return club.country;
-      const otherNats = Object.keys(NATIONALITY_NAMES).filter(n => n !== club.country);
-      return otherNats[Math.floor(Math.random() * otherNats.length)];
-    };
-
-    const sheetPlayers = [...getClubSquad(club.name).players];
-
-    const createPlayer = (role: 'STARTER' | 'SUB' | 'RES' | 'YOUTH', pos: Position, index: number): GeneratedPlayer => {
-      const nat = getRandNat();
-      
-      let name = '';
-      let ovr = avgStarterOvr;
-      let potential = Math.min(99, ovr + Math.floor(Math.random() * 10));
-      const sheetPlayer = sheetPlayers.shift();
-      if (sheetPlayer && sheetPlayer.name) {
-         name = sheetPlayer.name;
-         ovr = sheetPlayer.ovr;
-         const profile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === name.toLowerCase());
-         if (profile) {
-           ovr = profile.ovr;
-           potential = profile.potential;
-         }
-      }
-
-      if (!name) {
-          const npc = e.generatePlayer('TEAMMATE', nat, ovr, 18 + Math.floor(Math.random() * 15), pos, club.symbol);
-          name = `${npc.firstName} ${npc.lastName}`;
-          ovr = npc.ovr;
-          potential = npc.potential;
-      } else {
-          const profile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === name.toLowerCase());
-          if (profile) {
-            potential = profile.potential;
-          }
-      }
-
-      return {
-        id: `${club.symbol}_${role}_${index}`,
-        name,
-        nationality: nat,
-        position: pos,
-        ovr: ovr,
-        potential: potential,
-        age: 18 + Math.floor(Math.random() * 16),
-        archetype: 'PROFESSIONAL'
-      };
-    };
-
-    const positionsPool: Position[] = ['GK', 'CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'AM', 'LW', 'RW', 'ST'];
-    
-    let startersCount = 11;
-    let subsCount = club.tier === 'Elite' ? 9 : club.tier === 'Strong' ? 8 : club.tier === 'Mid' ? 7 : 6;
-    let resCount = club.tier === 'Elite' ? 8 : club.tier === 'Strong' ? 6 : club.tier === 'Mid' ? 5 : 4;
-    let youthCount = club.tier === 'Elite' ? 5 : club.tier === 'Strong' ? 4 : club.tier === 'Mid' ? 3 : 2;
-
-    for (let i = 0; i < startersCount; i++) {
-      starters.push(createPlayer('STARTER', positionsPool[i % positionsPool.length], i));
-    }
-    for (let i = 0; i < subsCount; i++) {
-      substitutes.push(createPlayer('SUB', positionsPool[Math.floor(Math.random() * positionsPool.length)], i));
-    }
-    for (let i = 0; i < resCount; i++) {
-      reserves.push(createPlayer('RES', positionsPool[Math.floor(Math.random() * positionsPool.length)], i));
-    }
-    for (let i = 0; i < youthCount; i++) {
-      youthProspects.push(createPlayer('YOUTH', positionsPool[Math.floor(Math.random() * positionsPool.length)], i));
-    }
-
-    // Add manager
-    const sheetSquad = getClubSquad(club.name);
-    let mName = sheetSquad && sheetSquad.manager && sheetSquad.manager !== 'Gaffer' ? sheetSquad.manager : '';
-    if (!mName) {
-      const mgr = e.generateManager(club.country, club.symbol);
-      mName = `${mgr.firstName} ${mgr.lastName}`;
-    }
-
-    result[club.symbol] = {
-      symbol: club.symbol,
-      name: club.name,
-      managerName: mName,
-      squad: {
-        starters,
-        substitutes,
-        reserves,
-        youthProspects
-      },
-      starPlayers: starters.slice(0, 3).map(p => p.id)
-    };
+    result[club.symbol] = seedClubRoster(club, e);
   }
 
   return result;

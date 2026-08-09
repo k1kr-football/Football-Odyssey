@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { CLUBS } from '../data/teams';
-import { Sparkles, Wand2, RefreshCw, Check, Shield, Trophy, Award, Camera, User, Palette } from 'lucide-react';
+import { Sparkles, Check, Camera, User, Palette } from 'lucide-react';
 
 interface AvatarGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Preset AI generated images from assets
+// Preset player avatar images from local assets
 const PRESET_AVATARS = [
   {
     id: 'wonderkid',
@@ -37,37 +37,31 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
   const { state, setPlayer } = useGame();
   const player = state.player;
 
+  // State for customization
+  const [selectedType, setSelectedType] = useState<'PRESET' | 'SVG_STUDIO'>(
+    player?.customAvatarUrl ? 'PRESET' : 'SVG_STUDIO'
+  );
+  const [selectedPresetUrl, setSelectedPresetUrl] = useState<string>(
+    player?.customAvatarUrl || PRESET_AVATARS[0].url
+  );
+
+  // Custom SVG options
+  const [hairStyle, setHairStyle] = useState<string>(player?.avatarConfig?.hairStyle || 'swept');
+  const [facialHair, setFacialHair] = useState<string>(player?.avatarConfig?.facialHair || 'stubble');
+  const [skinTone, setSkinTone] = useState<string>(player?.avatarConfig?.skinTone || '#E5C19E');
+  const [kitStyle, setKitStyle] = useState<string>(player?.avatarConfig?.kitStyle || 'STRIPES');
+  const [bgStyle, setBgStyle] = useState<string>(player?.avatarConfig?.bgStyle || 'STADIUM');
+  const [showArmband, setShowArmband] = useState<boolean>(player?.hierarchyRole === 'Captain');
+
   if (!isOpen || !player) return null;
 
   const club = CLUBS.find(c => c.symbol.toUpperCase() === (player.currentClubSymbol || 'BIR').toUpperCase());
   const primaryColor = club?.primaryColor || '#0052CC';
   const secondaryColor = club?.secondaryColor || '#FFFFFF';
 
-  // State for customization
-  const [selectedType, setSelectedType] = useState<'PRESET' | 'SVG_STUDIO' | 'AI_GENERATED'>(
-    player.customAvatarUrl ? 'PRESET' : 'SVG_STUDIO'
-  );
-  const [selectedPresetUrl, setSelectedPresetUrl] = useState<string>(
-    player.customAvatarUrl || PRESET_AVATARS[0].url
-  );
-
-  // Custom SVG options
-  const [hairStyle, setHairStyle] = useState<string>(player.avatarConfig?.hairStyle || 'swept');
-  const [facialHair, setFacialHair] = useState<string>(player.avatarConfig?.facialHair || 'stubble');
-  const [skinTone, setSkinTone] = useState<string>(player.avatarConfig?.skinTone || '#E5C19E');
-  const [kitStyle, setKitStyle] = useState<string>(player.avatarConfig?.kitStyle || 'STRIPES');
-  const [bgStyle, setBgStyle] = useState<string>(player.avatarConfig?.bgStyle || 'STADIUM');
-  const [showArmband, setShowArmband] = useState<boolean>(player.hierarchyRole === 'Captain');
-  
-  // AI Status
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiMessage, setAiMessage] = useState<string | null>(null);
-  const [generatedSvgData, setGeneratedSvgData] = useState<string | null>(null);
-
-  // Helper to construct dynamic SVG Data URL
+  // Helper to construct dynamic SVG Data URL locally
   const generateSvgDataUrl = () => {
     const isCaptain = showArmband || player.hierarchyRole === 'Captain';
-    const isGold = bgStyle === 'GOLD' || player.ovr >= 85;
 
     // Background gradients
     let bgGradStart = '#111827';
@@ -178,54 +172,12 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
     return `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
   };
 
-  const handleTriggerAiGeneration = async () => {
-    setIsGenerating(true);
-    setAiMessage("Contacting AI Studio Image Engine...");
-    try {
-      const response = await fetch('/api/generate-portrait', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${player.firstName} ${player.lastName}`,
-          position: player.position,
-          clubSymbol: player.currentClubSymbol,
-          primaryColor,
-          secondaryColor,
-          ovr: player.ovr,
-          repTier: player.reputation?.world > 70 ? 'World-Class' : player.ovr > 80 ? 'Club Leader' : 'Rising Star',
-          hairStyle,
-          facialHair,
-          skinTone,
-          style: bgStyle,
-          kitStyle,
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        const generatedUrl = generateSvgDataUrl();
-        setGeneratedSvgData(generatedUrl);
-        setSelectedType('AI_GENERATED');
-        setAiMessage("AI Portrait Card synthesized successfully!");
-      } else {
-        setAiMessage("AI synthesized preset created.");
-        setGeneratedSvgData(generateSvgDataUrl());
-      }
-    } catch (err) {
-      console.error(err);
-      setGeneratedSvgData(generateSvgDataUrl());
-      setAiMessage("Generated custom avatar card locally!");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const handleSaveAvatar = () => {
     let finalUrl = '';
     if (selectedType === 'PRESET') {
       finalUrl = selectedPresetUrl;
     } else {
-      finalUrl = generatedSvgData || generateSvgDataUrl();
+      finalUrl = generateSvgDataUrl();
     }
 
     setPlayer({
@@ -253,7 +205,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
   const previewUrl =
     selectedType === 'PRESET'
       ? selectedPresetUrl
-      : generatedSvgData || generateSvgDataUrl();
+      : generateSvgDataUrl();
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -267,13 +219,13 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
             </div>
             <div>
               <h2 className="text-white text-lg font-bold font-display uppercase tracking-wider flex items-center gap-2">
-                CUSTOM PLAYER PORTRAIT STUDIO
+                PLAYER PORTRAIT STUDIO
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/40">
-                  CAREER AI
+                  OFFLINE CUSTOMIZER
                 </span>
               </h2>
               <p className="text-white/50 text-xs font-mono">
-                Generate or customize your player character's profile image based on career progression & team colors.
+                Select a preset card or customize your player character's vector profile image with club colors.
               </p>
             </div>
           </div>
@@ -288,7 +240,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
         {/* Modal Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-y-auto flex-1">
           
-          {/* Left Column: Live Card Preview & Career Stats Badge */}
+          {/* Left Column: Live Card Preview & Career Details */}
           <div className="md:col-span-5 flex flex-col items-center justify-start space-y-4 bg-[#181920] p-5 rounded-xl border border-white/5">
             <div className="text-xs font-mono text-teal-400 font-bold uppercase tracking-widest flex items-center gap-2">
               <Sparkles size={14} /> LIVE CHARACTER PREVIEW
@@ -313,7 +265,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
               </div>
             </div>
 
-            {/* Career Progression Details Banner */}
+            {/* Career Details Banner */}
             <div className="w-full bg-[#121318] p-3 rounded-lg border border-white/5 space-y-2 text-xs font-mono">
               <div className="flex justify-between text-white/60">
                 <span>Club Colors:</span>
@@ -335,29 +287,6 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                 </span>
               </div>
             </div>
-
-            {/* Generation AI Action Button */}
-            <button
-              onClick={handleTriggerAiGeneration}
-              disabled={isGenerating}
-              className="w-full py-3 px-4 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw size={16} className="animate-spin" /> SYNTHESIZING PORTRAIT...
-                </>
-              ) : (
-                <>
-                  <Wand2 size={16} /> GENERATE CUSTOM AI CARD
-                </>
-              )}
-            </button>
-
-            {aiMessage && (
-              <div className="text-[11px] font-mono text-teal-400 text-center animate-pulse">
-                {aiMessage}
-              </div>
-            )}
           </div>
 
           {/* Right Column: Customization Controls & Presets */}
@@ -373,12 +302,12 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                     : 'text-white/60 hover:text-white'
                 }`}
               >
-                AI Art Presets
+                Preset Portraits
               </button>
               <button
                 onClick={() => setSelectedType('SVG_STUDIO')}
                 className={`flex-1 py-2 text-xs font-mono font-bold uppercase rounded-md transition-all ${
-                  selectedType === 'SVG_STUDIO' || selectedType === 'AI_GENERATED'
+                  selectedType === 'SVG_STUDIO'
                     ? 'bg-teal-500 text-black shadow-md'
                     : 'text-white/60 hover:text-white'
                 }`}
@@ -387,11 +316,11 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
               </button>
             </div>
 
-            {/* Mode A: AI Art Presets */}
+            {/* Mode A: Preset Portraits */}
             {selectedType === 'PRESET' && (
               <div className="space-y-3">
                 <div className="text-xs font-mono text-white/70 font-bold">
-                  SELECT AI GENERATED PORTRAIT BASE:
+                  SELECT PLAYER PORTRAIT PRESET:
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {PRESET_AVATARS.map((preset) => (
@@ -428,7 +357,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
             )}
 
             {/* Mode B: Vector Studio Controls */}
-            {(selectedType === 'SVG_STUDIO' || selectedType === 'AI_GENERATED') && (
+            {selectedType === 'SVG_STUDIO' && (
               <div className="space-y-4 bg-[#181920] p-4 rounded-xl border border-white/5">
                 
                 {/* Hair Style */}
@@ -587,3 +516,4 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
     </div>
   );
 };
+

@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Player, Attributes } from "../types";
+import { Player, Attributes, DayOfWeek } from "../types";
 import { useGame } from "../store/GameContext";
 import { getRolesForPosition } from "../data/roles";
 import { CoreFormulas } from "../utils/coreFormulas";
 import { musicEngine } from '../utils/musicEngine';
 import { getPositionGroup, PositionGroup } from "../utils/positionMatchDecisions";
+import { DailyActionWidget } from "../components/DailyActionWidget";
+import { WeeklyBalanceIndicator } from "../components/WeeklyBalanceIndicator";
+import { ScheduleActivityModal } from "../components/ScheduleActivityModal";
+import { DailyActionType, getWeeklyActionTracker } from "../utils/dailyActionEngine";
 import {
   ArrowLeft,
   Award,
@@ -280,12 +284,14 @@ type ArrowDir = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 const ALL_DIRECTIONS: ArrowDir[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 
 export function Training() {
-  const { state, setPlayer, setScreen } = useGame();
+  const { state, setPlayer, setScreen, setDailyAction } = useGame();
 
   useEffect(() => {
     musicEngine.playMood('TRAINING');
   }, []);
 
+  // Modal for scheduling specific day focus
+  const [selectedDayForModal, setSelectedDayForModal] = useState<DayOfWeek | null>(null);
 
   // Group Training session state
   const [isGroupSessionActive, setIsGroupSessionActive] = useState<boolean>(false);
@@ -344,6 +350,7 @@ export function Training() {
       alert("You have reached your 3 individual training sessions limit for this week!");
       return;
     }
+    setDailyAction('TRAINING');
     setActiveDrill(drill);
     setRepIndex(1);
     setRepScores([]);
@@ -628,6 +635,7 @@ export function Training() {
       alert("You have reached your 3 individual training slots for this week!");
       return;
     }
+    setDailyAction('CONDITIONING');
     const player = { ...state.player! };
     player.fatigue = Math.max(0, (player.fatigue || 0) - 22);
     player.sharpness = Math.min(100, (player.sharpness || 0) + 2);
@@ -650,6 +658,7 @@ export function Training() {
   // Group Training Session Handler
   const startGroupSession = () => {
     if (weeklySessions.clubOrganized >= 1) return;
+    setDailyAction('TRAINING');
     setIsGroupSessionActive(true);
     setGroupStep(1);
     setGroupResults([]);
@@ -695,6 +704,8 @@ export function Training() {
     setShowPostResult(true);
   };
 
+  const todayEntry = state.seasonCalendar.find(c => c.week === state.currentWeek && c.day === state.currentDay);
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] text-white p-6 overflow-y-auto hide-scrollbar">
       {/* Top Navigation Header */}
@@ -705,9 +716,9 @@ export function Training() {
           </button>
           <div>
             <h1 className="text-xl font-black uppercase tracking-wider text-white flex items-center gap-2">
-              Training Grounds & Minigame Arcade
+              Training Grounds & Daily Schedule
             </h1>
-            <p className="text-xs text-white/50 font-mono mt-0.5">Sharpen technical skills, build manager trust, and manage weekly physical load.</p>
+            <p className="text-xs text-white/50 font-mono mt-0.5">Manage daily focus, technical minigames, manager trust, and weekly physical balance.</p>
           </div>
         </div>
 
@@ -734,6 +745,24 @@ export function Training() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* DAILY ACTION FOCUS & SCHEDULE INTEGRATION */}
+      <div className="mb-6 space-y-4">
+        <DailyActionWidget
+          player={state.player}
+          currentWeek={state.currentWeek}
+          currentDay={state.currentDay}
+          todaysCalendarEntry={todayEntry}
+          onSelectAction={(act) => setDailyAction(act)}
+        />
+        <WeeklyBalanceIndicator
+          player={state.player}
+          currentWeek={state.currentWeek}
+          currentDay={state.currentDay}
+          seasonCalendar={state.seasonCalendar}
+          onOpenDayModal={(day) => setSelectedDayForModal(day)}
+        />
       </div>
 
       {/* INTERACTIVE MINIGAME MODAL */}
@@ -1361,6 +1390,22 @@ export function Training() {
             <button onClick={() => setShowRetrainModal(false)} className="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase">Cancel</button>
           </div>
         </div>
+      )}
+
+      {/* SCHEDULE ACTIVITY MODAL INTEGRATION */}
+      {selectedDayForModal && (
+        <ScheduleActivityModal
+          isOpen={!!selectedDayForModal}
+          onClose={() => setSelectedDayForModal(null)}
+          day={selectedDayForModal}
+          week={state.currentWeek}
+          currentChoice={getWeeklyActionTracker(state.player, state.currentWeek).choices[selectedDayForModal]}
+          onSelectActivity={(action, day) => {
+            setDailyAction(action, day);
+            setSelectedDayForModal(null);
+          }}
+          todaysCalendarEntry={state.seasonCalendar?.find(e => e.week === state.currentWeek && e.day === selectedDayForModal)}
+        />
       )}
     </div>
   );

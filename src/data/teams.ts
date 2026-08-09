@@ -33,9 +33,12 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Elite",
-    "stadiumCapacity": 53400,
+    "stadiumCapacity": 55097,
     "primaryColor": "#6CABDD",
-    "secondaryColor": "#1C2C5B"
+    "secondaryColor": "#1C2C5B",
+    "prestigeScore": 88,
+    "academyRating": 90,
+    "tacticalIdentity": "FREE_FLOWING"
   },
   {
     "name": "Arsenal",
@@ -49,7 +52,10 @@ export const CLUBS: Club[] = [
     "transferBudget": "Elite",
     "stadiumCapacity": 60704,
     "primaryColor": "#EF0107",
-    "secondaryColor": "#063672"
+    "secondaryColor": "#063672",
+    "prestigeScore": 82,
+    "academyRating": 87,
+    "tacticalIdentity": "FREE_FLOWING"
   },
   {
     "name": "Liverpool",
@@ -63,7 +69,10 @@ export const CLUBS: Club[] = [
     "transferBudget": "Elite",
     "stadiumCapacity": 61276,
     "primaryColor": "#C8102E",
-    "secondaryColor": "#00B2A9"
+    "secondaryColor": "#00B2A9",
+    "prestigeScore": 95,
+    "academyRating": 84,
+    "tacticalIdentity": "HIGH_PRESS"
   },
   {
     "name": "Manchester United",
@@ -75,9 +84,11 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Very High",
-    "stadiumCapacity": 74310,
+    "stadiumCapacity": 74879,
     "primaryColor": "#DA291C",
-    "secondaryColor": "#FBE122"
+    "secondaryColor": "#FBE122",
+    "prestigeScore": 94,
+    "academyRating": 88
   },
   {
     "name": "Chelsea",
@@ -89,9 +100,11 @@ export const CLUBS: Club[] = [
     "reputationTier": "Continental Powerhouse",
     "wageBudget": "Very High",
     "transferBudget": "Very High",
-    "stadiumCapacity": 40341,
+    "stadiumCapacity": 42000,
     "primaryColor": "#034694",
-    "secondaryColor": "#EE242C"
+    "secondaryColor": "#EE242C",
+    "prestigeScore": 84,
+    "academyRating": 88
   },
   {
     "name": "Tottenham Hotspur",
@@ -103,9 +116,11 @@ export const CLUBS: Club[] = [
     "reputationTier": "Continental Powerhouse",
     "wageBudget": "Very High",
     "transferBudget": "Very High",
-    "stadiumCapacity": 62850,
+    "stadiumCapacity": 62303,
     "primaryColor": "#132257",
-    "secondaryColor": "#ffffff"
+    "secondaryColor": "#ffffff",
+    "prestigeScore": 68,
+    "academyRating": 80
   },
   {
     "name": "Newcastle United",
@@ -229,9 +244,11 @@ export const CLUBS: Club[] = [
     "reputationTier": "National Heavyweight",
     "wageBudget": "Medium-High",
     "transferBudget": "Medium",
-    "stadiumCapacity": 52888,
+    "stadiumCapacity": 52769,
     "primaryColor": "#7cbfa6",
-    "secondaryColor": "#7dbfa6"
+    "secondaryColor": "#7dbfa6",
+    "prestigeScore": 65,
+    "academyRating": 78
   },
   {
     "name": "Leeds United",
@@ -329,7 +346,10 @@ export const CLUBS: Club[] = [
     "transferBudget": "Medium-High",
     "stadiumCapacity": 62500,
     "primaryColor": "#d12cec",
-    "secondaryColor": "#d22cec"
+    "secondaryColor": "#d22cec",
+    "prestigeScore": 60,
+    "academyRating": 82,
+    "tacticalIdentity": "DIRECT_PLAY"
   },
   {
     "name": "Burnley",
@@ -1265,9 +1285,12 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Elite",
-    "stadiumCapacity": 78297,
+    "stadiumCapacity": 78000,
     "primaryColor": "#ffffff",
-    "secondaryColor": "#00529F"
+    "secondaryColor": "#00529F",
+    "prestigeScore": 98,
+    "academyRating": 90,
+    "tacticalIdentity": "FREE_FLOWING"
   },
   {
     "name": "Barcelona",
@@ -1279,9 +1302,12 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Elite",
-    "stadiumCapacity": 99354,
+    "stadiumCapacity": 62650,
     "primaryColor": "#004D98",
-    "secondaryColor": "#A50044"
+    "secondaryColor": "#A50044",
+    "prestigeScore": 95,
+    "academyRating": 96,
+    "tacticalIdentity": "FREE_FLOWING"
   },
   {
     "name": "Atlético Madrid",
@@ -1295,7 +1321,10 @@ export const CLUBS: Club[] = [
     "transferBudget": "Very High",
     "stadiumCapacity": 70460,
     "primaryColor": "#05b048",
-    "secondaryColor": "#06b048"
+    "secondaryColor": "#06b048",
+    "prestigeScore": 80,
+    "academyRating": 82,
+    "tacticalIdentity": "DEFENSIVE_SOLIDITY"
   },
   {
     "name": "Athletic Bilbao",
@@ -1573,9 +1602,12 @@ export const CLUBS: Club[] = [
     "reputationTier": "Continental Powerhouse",
     "wageBudget": "Very High",
     "transferBudget": "Very High",
-    "stadiumCapacity": 41507,
+    "stadiumCapacity": 41500,
     "primaryColor": "#b3f86e",
-    "secondaryColor": "#b4f86e"
+    "secondaryColor": "#b4f86e",
+    "prestigeScore": 88,
+    "academyRating": 82,
+    "tacticalIdentity": "DEFENSIVE_SOLIDITY"
   },
   {
     "name": "Napoli",
@@ -1825,9 +1857,12 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Elite",
-    "stadiumCapacity": 75000,
+    "stadiumCapacity": 75024,
     "primaryColor": "#10f86c",
-    "secondaryColor": "#11f86c"
+    "secondaryColor": "#11f86c",
+    "prestigeScore": 95,
+    "academyRating": 88,
+    "tacticalIdentity": "HIGH_PRESS"
   },
   {
     "name": "Borussia Dortmund",
@@ -1841,7 +1876,10 @@ export const CLUBS: Club[] = [
     "transferBudget": "Very High",
     "stadiumCapacity": 81365,
     "primaryColor": "#4e732f",
-    "secondaryColor": "#4f732f"
+    "secondaryColor": "#4f732f",
+    "prestigeScore": 82,
+    "academyRating": 88,
+    "tacticalIdentity": "HIGH_PRESS"
   },
   {
     "name": "RB Leipzig",
@@ -2077,9 +2115,11 @@ export const CLUBS: Club[] = [
     "reputationTier": "Global Elite",
     "wageBudget": "Elite",
     "transferBudget": "Elite",
-    "stadiumCapacity": 47929,
+    "stadiumCapacity": 47900,
     "primaryColor": "#c5f3b5",
-    "secondaryColor": "#c6f3b5"
+    "secondaryColor": "#c6f3b5",
+    "prestigeScore": 88,
+    "academyRating": 85
   },
   {
     "name": "Marseille",
@@ -2318,6 +2358,350 @@ export const CLUBS: Club[] = [
     "stadiumCapacity": 25317,
     "primaryColor": "#919bb4",
     "secondaryColor": "#929bb4"
+  },
+  // ==========================================
+  // BRAZILIAN CLUBS (Série A & Série B)
+  // Procedurally generated squads, pending real data swap-in
+  // ==========================================
+  {
+    "name": "Flamengo",
+    "symbol": "FLA",
+    "ovr": 81,
+    "tier": "Elite",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Continental Powerhouse",
+    "wageBudget": "Very High",
+    "transferBudget": "Very High",
+    "stadiumCapacity": 78838,
+    "primaryColor": "#C00000",
+    "secondaryColor": "#000000",
+    "prestigeScore": 82,
+    "academyRating": 86
+  },
+  {
+    "name": "Palmeiras",
+    "symbol": "PAL",
+    "ovr": 80,
+    "tier": "Elite",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Continental Powerhouse",
+    "wageBudget": "Very High",
+    "transferBudget": "Very High",
+    "stadiumCapacity": 43713,
+    "primaryColor": "#006437",
+    "secondaryColor": "#FFFFFF",
+    "prestigeScore": 80,
+    "academyRating": 86
+  },
+  {
+    "name": "São Paulo",
+    "symbol": "SAO",
+    "ovr": 77,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "High",
+    "transferBudget": "High",
+    "stadiumCapacity": 66795,
+    "primaryColor": "#FF0000",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Corinthians",
+    "symbol": "COR",
+    "ovr": 76,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "High",
+    "transferBudget": "High",
+    "stadiumCapacity": 49205,
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Fluminense",
+    "symbol": "FLU",
+    "ovr": 76,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium-High",
+    "transferBudget": "Medium-High",
+    "stadiumCapacity": 78838,
+    "primaryColor": "#841B2D",
+    "secondaryColor": "#006633"
+  },
+  {
+    "name": "Botafogo",
+    "symbol": "BOT",
+    "ovr": 78,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "High",
+    "transferBudget": "High",
+    "stadiumCapacity": 44661,
+    "primaryColor": "#000000",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Atlético Mineiro",
+    "symbol": "CAM",
+    "ovr": 77,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "High",
+    "transferBudget": "High",
+    "stadiumCapacity": 46000,
+    "primaryColor": "#000000",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Internacional",
+    "symbol": "INT_BR",
+    "ovr": 76,
+    "tier": "Strong",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium-High",
+    "transferBudget": "Medium-High",
+    "stadiumCapacity": 50128,
+    "primaryColor": "#E11B22",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Grêmio",
+    "symbol": "GRE",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 55662,
+    "primaryColor": "#0D80BF",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Vasco da Gama",
+    "symbol": "VAS",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 21880,
+    "primaryColor": "#000000",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Santos",
+    "symbol": "SAN",
+    "ovr": 73,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 16061,
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Cruzeiro",
+    "symbol": "CRU",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 61846,
+    "primaryColor": "#004899",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Red Bull Bragantino",
+    "symbol": "RBB",
+    "ovr": 73,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium-High",
+    "stadiumCapacity": 17022,
+    "primaryColor": "#D3010C",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Athletico Paranaense",
+    "symbol": "CAP",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 42372,
+    "primaryColor": "#CC0000",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Fortaleza",
+    "symbol": "FOR",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium",
+    "transferBudget": "Medium",
+    "stadiumCapacity": 63903,
+    "primaryColor": "#113377",
+    "secondaryColor": "#CC0000"
+  },
+  {
+    "name": "Bahia",
+    "symbol": "BAH",
+    "ovr": 74,
+    "tier": "Mid",
+    "league": "Série A",
+    "country": "Brazil",
+    "reputationTier": "Solid Top-Flight",
+    "wageBudget": "Medium-High",
+    "transferBudget": "Medium-High",
+    "stadiumCapacity": 50025,
+    "primaryColor": "#004797",
+    "secondaryColor": "#E20613"
+  },
+  {
+    "name": "Coritiba",
+    "symbol": "CFC",
+    "ovr": 66,
+    "tier": "Lower",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Institution",
+    "wageBudget": "Low",
+    "transferBudget": "Low",
+    "stadiumCapacity": 40502,
+    "primaryColor": "#00573F",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Sport Recife",
+    "symbol": "SPT",
+    "ovr": 66,
+    "tier": "Lower",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Institution",
+    "wageBudget": "Low",
+    "transferBudget": "Low",
+    "stadiumCapacity": 35000,
+    "primaryColor": "#D8232A",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Ceará",
+    "symbol": "CEA",
+    "ovr": 65,
+    "tier": "Lower",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Institution",
+    "wageBudget": "Low",
+    "transferBudget": "Low",
+    "stadiumCapacity": 63903,
+    "primaryColor": "#000000",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Goiás",
+    "symbol": "GOI",
+    "ovr": 65,
+    "tier": "Lower",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Institution",
+    "wageBudget": "Low",
+    "transferBudget": "Low",
+    "stadiumCapacity": 14525,
+    "primaryColor": "#005933",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Avaí",
+    "symbol": "AVA",
+    "ovr": 63,
+    "tier": "Lower",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Modest",
+    "wageBudget": "Low",
+    "transferBudget": "Minimal",
+    "stadiumCapacity": 17800,
+    "primaryColor": "#0070B8",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Ponte Preta",
+    "symbol": "PON",
+    "ovr": 60,
+    "tier": "Foundation",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Modest",
+    "wageBudget": "Minimal",
+    "transferBudget": "Minimal",
+    "stadiumCapacity": 19728,
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#000000"
+  },
+  {
+    "name": "Guarani",
+    "symbol": "GUA",
+    "ovr": 60,
+    "tier": "Foundation",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Modest",
+    "wageBudget": "Minimal",
+    "transferBudget": "Minimal",
+    "stadiumCapacity": 29130,
+    "primaryColor": "#006633",
+    "secondaryColor": "#FFFFFF"
+  },
+  {
+    "name": "Vila Nova",
+    "symbol": "VIL",
+    "ovr": 60,
+    "tier": "Foundation",
+    "league": "Série B",
+    "country": "Brazil",
+    "reputationTier": "Lower-League Modest",
+    "wageBudget": "Minimal",
+    "transferBudget": "Minimal",
+    "stadiumCapacity": 11788,
+    "primaryColor": "#CC0000",
+    "secondaryColor": "#FFFFFF"
   }
 ];
 

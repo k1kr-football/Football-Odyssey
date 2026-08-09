@@ -1,5 +1,7 @@
 import { Attributes, PlayerRoleSpecialization, Player } from '../types';
 import { REAL_PLAYER_PROFILES } from '../data/realPlayerProfiles';
+import { CLUBS } from '../data/teams';
+import { calculateAcademyProspectPotentialBonus } from './clubPrestige';
 
 export type NPCType = 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'AGENT' | 'JOURNALIST' | 'MANAGER' | 'YOUTH';
 export type NPCPersonalityArchetype = 'DEMANDING' | 'SUPPORTIVE' | 'CALCULATING' | 'VOLATILE' | 'PROFESSIONAL' | 'CHARISMATIC' | 'SKEPTICAL' | 'MENTOR' | 'ENIGMATIC' | 'JOKER';
@@ -120,7 +122,12 @@ export class UnifiedNPCEngine {
     }
 
     // Fallback if we run out of names
-    return { firstName: 'Player', lastName: `${Math.floor(Math.random() * 10000)}` };
+    const fallbackFirsts = ['Arthur', 'Benjamin', 'Charles', 'Dominic', 'Edward', 'Frank', 'George', 'Harrison'];
+    const fallbackLasts = ['Sterling', 'Mount', 'Foden', 'Rice', 'Grealish', 'Saka', 'Rashford', 'Bellingham'];
+    return {
+      firstName: fallbackFirsts[Math.floor(Math.random() * fallbackFirsts.length)],
+      lastName: fallbackLasts[Math.floor(Math.random() * fallbackLasts.length)]
+    };
   }
 
   generatePlayer(type: 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'YOUTH', nationality: string, targetOVR: number, age: number, position: string, clubSymbol?: string, explicitName?: { firstName: string, lastName: string }): PlayerNPC {
@@ -140,7 +147,10 @@ export class UnifiedNPCEngine {
     const realProfile = REAL_PLAYER_PROFILES.find(p => p.name.toLowerCase() === fullName.toLowerCase());
 
     const finalOVR = realProfile ? realProfile.ovr : targetOVR;
-    const finalPotential = realProfile ? realProfile.potential : Math.min(99, finalOVR + Math.floor(Math.random() * 15));
+    const clubObj = clubSymbol ? CLUBS.find(c => c.symbol === clubSymbol) : undefined;
+    const academyBonus = calculateAcademyProspectPotentialBonus(clubObj);
+    const basePotential = realProfile ? realProfile.potential : Math.min(99, finalOVR + 4 + Math.floor(Math.random() * 12));
+    const finalPotential = Math.min(99, Math.max(finalOVR + 2, basePotential + (type === 'YOUTH' ? academyBonus : Math.round(academyBonus * 0.5))));
     const finalPosition = realProfile ? realProfile.position : position;
     
     const personalities: NPCPersonalityArchetype[] = ['PROFESSIONAL', 'VOLATILE', 'SUPPORTIVE', 'DEMANDING', 'CHARISMATIC'];

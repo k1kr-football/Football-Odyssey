@@ -1,20 +1,31 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../store/GameContext';
-import { ChevronDown, ChevronRight, Info, Flame, Snowflake, Award, Star, Trophy, Sparkles, Shield } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info, Flame, Snowflake, Award, Star, Trophy, Sparkles, Shield, Calendar as CalendarIcon, Sliders, CheckCircle2 } from 'lucide-react';
 import { CLUBS, RIVALRIES } from '../data/teams';
 import { getClubStandings } from '../utils/seasonObjectives';
 import { TeamLogo } from '../components/TeamLogo';
 import { getFormattedCalendarDate } from '../utils/careerSystems';
 import { TeamFormD3Chart } from '../components/TeamFormD3Chart';
+import { WeeklyBalanceIndicator } from '../components/WeeklyBalanceIndicator';
+import { ScheduleActivityModal } from '../components/ScheduleActivityModal';
+import { getWeeklyActionTracker, isDayMandatory, DailyActionType } from '../utils/dailyActionEngine';
+import { DayOfWeek } from '../types';
 
 export function Schedule() {
- const { state, setScreen } = useGame();
+ const { state, setScreen, setDailyAction } = useGame();
  
  if (!state.player) return null;
 
  const [expandedMonths, setExpandedMonths] = useState<Record<number, boolean>>({ 1: true, 2: true });
  const [activeTab, setActiveTab] = useState<'TABLE' | 'SQUAD' | 'TOTW' | 'POTM' | 'FORM'>('TABLE');
  const [selectedTOTWIndex, setSelectedTOTWIndex] = useState<number>(0);
+ const [modalDay, setModalDay] = useState<DayOfWeek | null>(null);
+ const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+ const openModalForDay = (day: DayOfWeek) => {
+   setModalDay(day);
+   setIsModalOpen(true);
+ };
 
  const toggleMonth = (m: number) => {
  setExpandedMonths(prev => ({ ...prev, [m]: !prev[m] }));
@@ -195,6 +206,55 @@ export function Schedule() {
   <h2 className="text-[#00FF88] text-xs font-bold tracking-widest uppercase">Season Calendar</h2>
   <div className="premium-card p-6 flex-1 overflow-y-auto hide-scrollbar rounded-md">
    
+   <WeeklyBalanceIndicator
+     player={state.player}
+     currentWeek={state.currentWeek}
+     currentDay={state.currentDay}
+     seasonCalendar={state.seasonCalendar}
+     onOpenDayModal={openModalForDay}
+   />
+
+   {/* Quick non-mandatory focus prompt banner */}
+   {(() => {
+     const todayEntry = state.seasonCalendar?.find(e => e.week === state.currentWeek && e.day === state.currentDay);
+     const isTodayMand = isDayMandatory(todayEntry);
+     if (!isTodayMand) {
+       const tracker = getWeeklyActionTracker(state.player, state.currentWeek);
+       const todayChoice = tracker.choices[state.currentDay];
+       return (
+         <div className="mb-4 p-3 bg-gradient-to-r from-[#00FF88]/15 via-emerald-950/40 to-black border border-[#00FF88]/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+           <div className="flex items-center gap-2.5">
+             <div className="p-2 rounded-lg bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/30">
+               <Sliders size={18} />
+             </div>
+             <div>
+               <div className="flex items-center gap-2">
+                 <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/30">
+                   Non-Mandatory Focus ({state.currentDay})
+                 </span>
+                 {todayChoice && (
+                   <span className="text-[9px] font-mono font-bold text-emerald-300 flex items-center gap-1">
+                     <CheckCircle2 size={12} /> {todayChoice}
+                   </span>
+                 )}
+               </div>
+               <p className="text-white text-xs font-semibold mt-0.5">
+                 {todayChoice ? `Today's Activity: ${todayChoice}` : `No activity set for today (${state.currentDay})`} &bull; Click to configure training, social/PR, conditioning, or rest.
+               </p>
+             </div>
+           </div>
+           <button
+             onClick={() => openModalForDay(state.currentDay)}
+             className="px-3 py-1.5 rounded-lg bg-[#00FF88] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all shrink-0 cursor-pointer shadow-md"
+           >
+             Configure Focus
+           </button>
+         </div>
+       );
+     }
+     return null;
+   })()}
+
    <div className="space-y-4">
    {months.map((month) => (
     <div key={month.id} className=" rounded overflow-hidden">
@@ -227,10 +287,12 @@ export function Schedule() {
          onClick={() => {
            if (data.isCurrent && data.opp !== '-') {
              setScreen('MATCH');
+           } else if (data.opp === '-' || data.type === 'TRAINING') {
+             openModalForDay((data.day || 'MON') as DayOfWeek);
            }
          }}
-         className={`flex items-center p-3 text-xs transition-colors relative overflow-hidden
-          ${data.isCurrent && data.opp !== '-' ? 'cursor-pointer hover:border-[#00FF88]' : ''}
+         className={`flex items-center p-3 text-xs transition-colors relative overflow-hidden cursor-pointer hover:border-white/30
+          ${data.isCurrent && data.opp !== '-' ? 'hover:border-[#00FF88]' : ''}
           ${data.isCurrent ? 'glass-panel border-l-2 border-l-[#00FF88] -ml-[2px]' : (data.isPast ? 'opacity-40' : '')}
           ${isDerby ? 'bg-red-950/10 border-l-2 border-l-red-500 border-y border-y-red-950/40' : ''}
           ${isGrudge ? 'bg-orange-950/10 border-l-2 border-l-orange-500 border-y border-y-orange-950/40' : ''}
@@ -748,6 +810,18 @@ export function Schedule() {
    )}
   </div>
   </div>
+
+  {modalDay && (
+    <ScheduleActivityModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      day={modalDay}
+      week={state.currentWeek}
+      currentChoice={getWeeklyActionTracker(state.player, state.currentWeek).choices[modalDay]}
+      onSelectActivity={(action, day) => setDailyAction(action, day)}
+      todaysCalendarEntry={state.seasonCalendar?.find(e => e.week === state.currentWeek && e.day === modalDay)}
+    />
+  )}
  </div>
  );
 }

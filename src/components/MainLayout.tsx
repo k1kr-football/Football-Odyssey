@@ -8,6 +8,8 @@ import { StoryOverlay } from './StoryOverlay';
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { useGame } from '../store/GameContext';
+import { useAPEngine } from '../hooks/useAPEngine';
+import { APHeaderWidget } from './APHeaderWidget';
 import { getTeamColors } from '../utils/teamColors';
 import { getFormattedCalendarDate } from '../utils/careerSystems';
 import { Calendar as CalendarIcon, Award, Coins, ChevronDown, ChevronUp, RefreshCw, Star, Info, Landmark } from 'lucide-react';
@@ -15,6 +17,7 @@ import { Calendar as CalendarIcon, Award, Coins, ChevronDown, ChevronUp, Refresh
 export function MainLayout({ children }: { children: React.ReactNode }) {
  const { state, setScreen } = useGame();
  const { checkCutscenes } = useGame();
+ const { apState } = useAPEngine();
  
  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -88,16 +91,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
        </span>
       </button>
 
-      {/* OVR / Morale Pill */}
+      {/* OVR / Condition Pill */}
       <button 
        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
        className="h-8 px-2 sm:px-3 rounded-lg border border-white/5 bg-[#121212] hover:border-white/20 active:scale-95 transition-all flex items-center gap-1.5 text-left cursor-pointer"
       >
        <Award size={12} className="text-[#00FF88] shrink-0" />
-       <span className="text-white font-bold text-[10px] uppercase font-mono tracking-wider">
-        {state.player?.ovr} OVR &middot; {state.player?.morale}%
+       <span className="text-white font-bold text-[10px] uppercase font-mono tracking-wider whitespace-nowrap">
+        {state.player?.ovr} OVR &middot; {Math.max(0, 100 - (state.player?.fatigue || 20))}% COND
        </span>
       </button>
+
+      {/* AP Header Widget */}
+      <div className="hidden sm:block">
+       <APHeaderWidget apState={apState} />
+      </div>
 
       {/* Financial Pill */}
       <button 
@@ -195,7 +203,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     )}
 
     {/* Scrollable Content Area with comfortable padding */}
-    <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 relative flex flex-col min-h-0 w-full" onClick={() => isDrawerOpen && setIsDrawerOpen(false)}>
+    <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-4 md:px-6 md:py-6 relative flex flex-col min-h-0 w-full" onClick={() => isDrawerOpen && setIsDrawerOpen(false)}>
      <div className="max-w-[1200px] mx-auto w-full flex-1 flex flex-col min-h-0">
       {children}
      </div>

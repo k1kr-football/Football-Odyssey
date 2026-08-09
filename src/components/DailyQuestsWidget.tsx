@@ -1,170 +1,170 @@
 import React, { useState } from 'react';
 import { useGame } from '../store/GameContext';
-import { ensurePlayerDailyObjectives, completeDailyObjective } from '../utils/dailyQuests';
-import { DailyObjective } from '../types';
-import { Target, CheckCircle2, Clock, Zap, Sparkles, Award, Dumbbell, BookOpen, HeartPulse, Flame, Users } from 'lucide-react';
+import { useAPEngine } from '../hooks/useAPEngine';
+import { APHeaderWidget } from './APHeaderWidget';
+import { AP_ACTION_CATALOG, APAction } from '../types/apEngine';
+import { Zap, Sparkles, AlertTriangle, Dumbbell, BookOpen, HeartPulse, Flame, Users, CheckCircle2, Shield } from 'lucide-react';
 
 export const DailyQuestsWidget: React.FC = () => {
   const { state, setPlayer } = useGame();
+  const { apState, getActionCost, performAction, toggleStaff } = useAPEngine();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   if (!state.player) return null;
 
-  // Ensure daily quests exist for today
-  const dailyObjectives = ensurePlayerDailyObjectives(state);
-  const completedCount = dailyObjectives.filter((o) => o.completed).length;
-
-  const handleComplete = (obj: DailyObjective) => {
-    if (obj.completed) return;
-
-    const result = completeDailyObjective(state, obj.id);
-    if (result.success) {
-      setToastMessage(result.message);
-      // Trigger player context update to persist boosted stats
+  const handlePerform = (action: APAction) => {
+    const res = performAction(action.id);
+    if (res.success) {
+      setToastMessage(res.message || `Performed ${action.title}!`);
       setPlayer({ ...state.player! });
-
-      setTimeout(() => {
-        setToastMessage(null);
-      }, 4500);
+      setTimeout(() => setToastMessage(null), 4000);
+    } else {
+      setToastMessage(res.message || 'Unable to perform action.');
+      setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
-  const getCategoryIcon = (category: DailyObjective['category']) => {
+  const getCategoryIcon = (category: APAction['category']) => {
     switch (category) {
-      case 'DRILLS':
+      case 'training':
         return <Dumbbell size={16} className="text-teal-400" />;
-      case 'TACTICAL':
+      case 'recovery':
+        return <HeartPulse size={16} className="text-emerald-400" />;
+      case 'career':
         return <BookOpen size={16} className="text-cyan-400" />;
-      case 'RECOVERY':
-        return <HeartPulse size={16} className="text-[#00FF88]" />;
-      case 'FITNESS':
-        return <Flame size={16} className="text-amber-400" />;
-      case 'BONDING':
+      case 'team':
         return <Users size={16} className="text-purple-400" />;
+      case 'off_season':
+        return <Flame size={16} className="text-amber-400" />;
       default:
-        return <Target size={16} className="text-teal-400" />;
+        return <Zap size={16} className="text-teal-400" />;
     }
   };
+
+  // Filter actions based on phase
+  const visibleActions = AP_ACTION_CATALOG.filter(action => {
+    if (apState.phase === 'off_season') {
+      return action.category === 'off_season';
+    }
+    if (apState.phase === 'matchday') {
+      return action.category === 'recovery' || action.id === 'career_agent';
+    }
+    return action.category !== 'off_season';
+  });
 
   return (
-    <div className="bg-[#121318] border border-white/10 rounded-2xl p-5 shadow-xl font-mono">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 shrink-0">
-            <Target size={20} />
+    <div className="space-y-4 font-mono">
+      {/* Header & AP Widget */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-neutral-900/60 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block mb-1">
+            ACTION POINT ENGINE · {apState.phase.replace('_', ' ').toUpperCase()}
+          </span>
+          <h3 className="text-sm font-bold text-white">Daily Actions & Tactical Trade-Offs</h3>
+        </div>
+        <APHeaderWidget apState={apState} />
+      </div>
+
+      {/* Staff Automation Toggles */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div 
+          onClick={() => toggleStaff('nutritionist')}
+          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.nutritionist ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Shield size={16} />
+            <span className="text-xs font-bold uppercase">Nutritionist</span>
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider font-display flex items-center gap-2">
-              DAILY OBJECTIVES STUDIO
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                3 OBJECTIVES TODAY
-              </span>
-            </h3>
-            <p className="text-[11px] text-white/50">
-              Complete time-limited daily tasks to boost attributes, sharpness & morale
-            </p>
-          </div>
+          <span className="text-[10px] font-mono">{apState.staff.nutritionist ? 'ACTIVE (+10% Cond)' : 'OFF'}</span>
         </div>
 
-        {/* Completion Progress Bar */}
-        <div className="text-right shrink-0">
-          <div className="text-xs font-black text-teal-400 mb-1">
-            {completedCount} / 3 COMPLETED
+        <div 
+          onClick={() => toggleStaff('privatePhysio')}
+          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.privatePhysio ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Shield size={16} />
+            <span className="text-xs font-bold uppercase">Private Physio</span>
           </div>
-          <div className="w-24 h-2 bg-black/60 rounded-full overflow-hidden border border-white/10">
-            <div
-              className="h-full bg-gradient-to-r from-teal-500 to-emerald-400 transition-all duration-500"
-              style={{ width: `${(completedCount / 3) * 100}%` }}
-            />
+          <span className="text-[10px] font-mono">{apState.staff.privatePhysio ? 'ACTIVE (-20% Fatigue)' : 'OFF'}</span>
+        </div>
+
+        <div 
+          onClick={() => toggleStaff('prManager')}
+          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.prManager ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Shield size={16} />
+            <span className="text-xs font-bold uppercase">PR Manager</span>
           </div>
+          <span className="text-[10px] font-mono">{apState.staff.prManager ? 'ACTIVE (+Reputation)' : 'OFF'}</span>
         </div>
       </div>
 
       {/* Toast Reward Banner */}
       {toastMessage && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-teal-900/80 to-emerald-950/80 border border-teal-500/50 rounded-xl text-teal-300 text-xs flex items-center gap-2 animate-in fade-in zoom-in-95 shadow-lg">
-          <Sparkles size={16} className="text-teal-400 shrink-0 animate-spin" />
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in shadow-lg">
+          <Sparkles size={16} className="text-emerald-400 shrink-0" />
           <span className="font-bold">{toastMessage}</span>
         </div>
       )}
 
-      {/* Quest Items List */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {dailyObjectives.map((obj) => {
-          const boostText: string[] = [];
-          if (obj.statBoost.attribute) {
-            boostText.push(`+${obj.statBoost.amount || 1} ${obj.statBoost.attribute.toUpperCase()}`);
-          }
-          if (obj.statBoost.sharpness) boostText.push(`+${obj.statBoost.sharpness} Sharpness`);
-          if (obj.statBoost.morale) boostText.push(`+${obj.statBoost.morale} Morale`);
-          if (obj.statBoost.trust) boostText.push(`+${obj.statBoost.trust} Trust`);
-          if (obj.statBoost.fatigue) {
-            if (obj.statBoost.fatigue < 0) {
-              boostText.push(`${obj.statBoost.fatigue} Fatigue`);
-            } else {
-              boostText.push(`+${obj.statBoost.fatigue} Fatigue`);
-            }
-          }
+      {/* Action Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {visibleActions.map((action) => {
+          const cost = getActionCost(action);
+          const numericCost = cost === 'ALL' ? apState.currentAP : (cost as number);
+          const hasEnoughAP = apState.currentAP >= numericCost;
+          const canUseStrain = !hasEnoughAP && apState.currentAP + (2 - apState.strainZoneUsed) >= numericCost;
+          const isExhausted = !hasEnoughAP && !canUseStrain;
 
           return (
             <div
-              key={obj.id}
-              className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
-                obj.completed
-                  ? 'bg-teal-950/20 border-teal-500/40 text-white/60'
-                  : 'bg-[#181920] border-white/5 hover:border-white/20 text-white'
-              }`}
+              key={action.id}
+              className="rounded-xl border border-white/10 bg-neutral-900/40 p-4 flex flex-col justify-between space-y-3 backdrop-blur-md"
             >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5">
-                    {getCategoryIcon(obj.category)}
-                    <span className="text-[10px] font-bold text-white/60 uppercase">
-                      {obj.category}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-teal-400 font-mono font-bold flex items-center gap-1">
-                    <Clock size={12} /> {obj.durationText}
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    {getCategoryIcon(action.category)} {action.category}
+                  </span>
+                  <span className="text-neutral-400 font-mono flex items-center gap-1">
+                    ⚡ {cost === 'ALL' ? 'ALL AP' : `${cost} AP`}
                   </span>
                 </div>
-
-                <h4 className="text-xs font-bold font-display uppercase mb-1.5 text-white">
-                  {obj.title}
-                </h4>
-
-                <p className="text-[11px] text-white/60 leading-relaxed mb-3">
-                  {obj.description}
-                </p>
+                <h3 className="text-sm font-bold text-white">{action.title}</h3>
+                <p className="text-[11px] text-neutral-400 mt-1">{action.description}</p>
               </div>
 
-              <div>
-                {/* Rewards Preview */}
-                <div className="bg-black/40 p-2 rounded-lg border border-white/5 mb-3 text-[10px] font-bold text-teal-300">
-                  ⚡ Rewards: {boostText.join(', ')}
-                </div>
-
-                {/* Action Button */}
-                <button
-                  onClick={() => handleComplete(obj)}
-                  disabled={obj.completed}
-                  className={`w-full py-2 px-3 text-xs font-bold uppercase rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer font-display ${
-                    obj.completed
-                      ? 'bg-teal-500/20 text-teal-400 border border-teal-500/40 opacity-80 cursor-default'
-                      : 'bg-teal-500 hover:bg-teal-400 text-black shadow-md'
-                  }`}
-                >
-                  {obj.completed ? (
-                    <>
-                      <CheckCircle2 size={15} /> COMPLETED TODAY
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={15} /> PERFORM OBJECTIVE
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={() => handlePerform(action)}
+                disabled={isExhausted}
+                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all min-h-[44px] cursor-pointer flex items-center justify-center gap-2 ${
+                  isExhausted
+                    ? 'bg-neutral-800/50 text-neutral-500 border border-white/5 cursor-not-allowed'
+                    : !hasEnoughAP
+                    ? 'bg-amber-500/20 hover:bg-amber-500 hover:text-neutral-950 text-amber-400 border border-amber-500/40 animate-pulse'
+                    : 'bg-neutral-800 hover:bg-emerald-500 hover:text-neutral-950 text-white border border-white/10'
+                }`}
+              >
+                {!hasEnoughAP && canUseStrain ? (
+                  <>
+                    <AlertTriangle size={15} /> PUSH LIMITS (-{numericCost} AP ⚠️)
+                  </>
+                ) : isExhausted ? (
+                  'EXHAUSTED'
+                ) : (
+                  <>
+                    <Zap size={15} /> PERFORM ACTION
+                  </>
+                )}
+              </button>
             </div>
           );
         })}

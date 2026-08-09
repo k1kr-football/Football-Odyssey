@@ -95,11 +95,11 @@ export function MainMenu() {
       <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#253D31]/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-[#00FF88]/4 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-6xl w-full relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 py-12 px-4 md:px-12 h-full">
+      <div className="max-w-6xl w-full relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-12 py-4 md:py-12 px-4 md:px-12 h-full">
         
         {/* Left Side: Game Logo & Title */}
         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-          <div className="w-48 h-48 sm:w-64 sm:h-64 mb-8 relative hover:scale-[1.03] transition-transform duration-500 ease-out">
+          <div className="w-24 h-24 sm:w-48 sm:h-48 mb-3 sm:mb-8 relative hover:scale-[1.03] transition-transform duration-500 ease-out">
             <img
               src={gameLogo}
               alt="Football Odyssey Logo"
@@ -107,16 +107,15 @@ export function MainMenu() {
               referrerPolicy="no-referrer"
             />
           </div>
-          <h1 className="text-white text-5xl sm:text-7xl font-black uppercase tracking-tighter mb-4 leading-none">
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#00FF88] mb-1 sm:mb-2 block">
+            CAREER RPG
+          </span>
+          <h1 className="text-white text-3xl sm:text-7xl font-black uppercase tracking-tighter mb-2 sm:mb-4 leading-none">
             FOOTBALL<br/>ODYSSEY
           </h1>
-          <p className="text-[#00FF88] text-sm uppercase tracking-[0.3em] font-bold">
+          <p className="text-[#00FF88] text-xs sm:text-sm uppercase tracking-[0.3em] font-bold">
             Write Your Legacy
           </p>
-          
-          <div className="mt-auto hidden md:block pt-24 text-[#444444] text-[9px] uppercase tracking-[0.2em] flex flex-col items-start gap-2">
-            <span className="pointer-events-none">SYSTEM ONLINE &middot; FULL-STACK PROTOCOL v2.1</span>
-          </div>
         </div>
 
         {/* Right Side: Save Slots List / Start Button */}
@@ -212,10 +211,6 @@ export function MainMenu() {
               ))}
             </div>
           )}
-          
-          <div className="mt-8 md:hidden text-[#444444] text-[9px] uppercase tracking-[0.2em] flex flex-col items-center gap-2 pointer-events-none">
-            <span>SYSTEM ONLINE &middot; FULL-STACK PROTOCOL v2.1</span>
-          </div>
         </div>
       </div>
       

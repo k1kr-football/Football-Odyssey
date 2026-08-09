@@ -8,7 +8,7 @@ dotenv.config();
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json({ limit: "10mb" }));
 
@@ -33,34 +33,66 @@ async function startServer() {
             }
           });
 
-          // Call Gemini 3.6 Flash model with Google Search Grounding tool enabled
-          const response = await ai.models.generateContent({
-            model: "gemini-3.6-flash",
-            contents: "Search for 6 top real-world football news headlines happening today across major European and global football leagues (Premier League, UEFA Champions League, La Liga, Serie A, Transfer News). Return a JSON array of objects with fields: id, title, summary, category (must be one of: 'TRANSFERS', 'CHAMPIONS LEAGUE', 'PREMIER LEAGUE', 'WORLD FOOTBALL', 'INTERNATIONAL'), sourceName, timestamp, keyEntities.",
-            config: {
-              tools: [{ googleSearch: {} }],
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    id: { type: Type.STRING },
-                    title: { type: Type.STRING },
-                    summary: { type: Type.STRING },
-                    category: { type: Type.STRING },
-                    sourceName: { type: Type.STRING },
-                    timestamp: { type: Type.STRING },
-                    keyEntities: {
-                      type: Type.ARRAY,
-                      items: { type: Type.STRING }
-                    }
-                  },
-                  required: ["id", "title", "summary", "category", "sourceName", "timestamp"]
+          // Call Gemini 2.5 Flash model with Google Search Grounding tool enabled
+          let response;
+          try {
+            response = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: "Search for 6 top real-world football news headlines happening today across major European and global football leagues (Premier League, UEFA Champions League, La Liga, Serie A, Transfer News). Return a JSON array of objects with fields: id, title, summary, category (must be one of: 'TRANSFERS', 'CHAMPIONS LEAGUE', 'PREMIER LEAGUE', 'WORLD FOOTBALL', 'INTERNATIONAL'), sourceName, timestamp, keyEntities.",
+              config: {
+                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      summary: { type: Type.STRING },
+                      category: { type: Type.STRING },
+                      sourceName: { type: Type.STRING },
+                      timestamp: { type: Type.STRING },
+                      keyEntities: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                      }
+                    },
+                    required: ["id", "title", "summary", "category", "sourceName", "timestamp"]
+                  }
                 }
               }
-            }
-          });
+            });
+          } catch (searchErr: any) {
+            console.warn("Search grounding unavailable or rate limited, falling back to standard generation:", searchErr?.message || searchErr);
+            // Retry without googleSearch tool if search grounding quota is exceeded
+            response = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: "Provide 6 top real-world football news headlines happening today across major European and global football leagues (Premier League, UEFA Champions League, La Liga, Serie A, Transfer News). Return a JSON array of objects with fields: id, title, summary, category (must be one of: 'TRANSFERS', 'CHAMPIONS LEAGUE', 'PREMIER LEAGUE', 'WORLD FOOTBALL', 'INTERNATIONAL'), sourceName, timestamp, keyEntities.",
+              config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      summary: { type: Type.STRING },
+                      category: { type: Type.STRING },
+                      sourceName: { type: Type.STRING },
+                      timestamp: { type: Type.STRING },
+                      keyEntities: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                      }
+                    },
+                    required: ["id", "title", "summary", "category", "sourceName", "timestamp"]
+                  }
+                }
+              }
+            });
+          }
 
           const text = response.text || "";
           let headlines = [];
@@ -138,91 +170,6 @@ async function startServer() {
     } catch (error: any) {
       console.error("Error fetching real-world news:", error);
       res.status(500).json({ error: "Failed to fetch real-world football news" });
-    }
-  });
-
-  // AI Profile Picture Generator Endpoint
-  app.post("/api/generate-portrait", async (req, res) => {
-    try {
-      const {
-        name,
-        position,
-        clubSymbol,
-        primaryColor = "#0052CC",
-        secondaryColor = "#FFFFFF",
-        ovr = 75,
-        repTier = "Rising Star",
-        hairStyle = "short",
-        facialHair = "none",
-        skinTone = "#E5C19E",
-        style = "FC_CARD",
-        kitStyle = "HOME",
-      } = req.body;
-
-      const apiKey = process.env.GEMINI_API_KEY;
-
-      if (apiKey) {
-        try {
-          const ai = new GoogleGenAI({
-            apiKey,
-            httpOptions: {
-              headers: {
-                'User-Agent': 'aistudio-build',
-              }
-            }
-          });
-          const response = await ai.models.generateContent({
-            model: "gemini-3.6-flash",
-            contents: `Generate a detailed SVG element description or creative concept design for a professional football player avatar card.
-Player Name: ${name}
-Position: ${position}
-Club: ${clubSymbol} (Primary Color: ${primaryColor}, Secondary: ${secondaryColor})
-Rating: ${ovr} OVR (${repTier})
-Features: Skin tone ${skinTone}, Hair style ${hairStyle}, Facial hair ${facialHair}, Kit: ${kitStyle}.
-Style: ${style} (EA Sports FC Card style with vibrant glow, rating badge, and club colors).
-
-Return a JSON object with:
-{
-  "cardTitle": "string",
-  "themeGlow": "${primaryColor}",
-  "styleTag": "string",
-  "quote": "string"
-}`,
-          });
-
-          const text = response.text || "";
-          let parsed = {};
-          try {
-            const cleanText = text.replace(/```json|```/g, "").trim();
-            parsed = JSON.parse(cleanText);
-          } catch {
-            parsed = { cardTitle: `${name} ${repTier}`, themeGlow: primaryColor, styleTag: style, quote: "Match ready." };
-          }
-
-          return res.json({
-            success: true,
-            aiData: parsed,
-            meta: { name, position, ovr, repTier, primaryColor, secondaryColor, skinTone, hairStyle, facialHair, style }
-          });
-        } catch (err: any) {
-          console.error("Gemini API Error:", err?.message || err);
-        }
-      }
-
-      // Fallback response when GEMINI_API_KEY is not set or API call fails
-      return res.json({
-        success: true,
-        aiData: {
-          cardTitle: `${name} - ${repTier}`,
-          themeGlow: primaryColor,
-          styleTag: `${style}_CUSTOM`,
-          quote: `Rating ${ovr} OVR Superstar for ${clubSymbol}`
-        },
-        meta: { name, position, ovr, repTier, primaryColor, secondaryColor, skinTone, hairStyle, facialHair, style }
-      });
-    } catch (error: any) {
-      console.error("Error generating portrait:", error);
-      res.status(500).json({ error: "Failed to generate player portrait" });
     }
   });
 
