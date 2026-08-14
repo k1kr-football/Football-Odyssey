@@ -1,4 +1,4 @@
-import { NPCRegistry, UnifiedNPCEngine } from "../utils/npcEngine";
+import { NPCRegistry, UnifiedNPCEngine, getDeterministicPersonality, updateNPCRelationship } from "../utils/npcEngine";
 import { assignManagerPhilosophy } from "../utils/managerPhilosophy";
 import { CUTSCENES } from '../data/cutscenes';
 import { decayReputationAndPerception, updateReputationAndPerception } from '../utils/reputation';
@@ -21,7 +21,7 @@ import { generateTransferOffers, getClubTier, getGatingStatus } from '../utils/t
 import { generateSeasonCalendar } from '../utils/calendar';
 import { checkAndTriggerPlayerCouncil, checkCaptaincyProgression } from '../utils/playerCouncil';
 import { generateMonthlyScoutReport, checkAndTriggerDressingRoomRumble, progressRivals, checkAndLogTrophies, processFinancialEmpireWeekly } from '../utils/gameRefinements';
-import { initializePlayerCareer, generateSaveNPCs, generateAllClubsRosters, calculateMatchSelection, calculateDetailedMatchSelection, generatePreseasonReportCard, applyPreseasonResults } from '../utils/careerSystems';
+import { initializePlayerCareer, generateSaveNPCs, generateAllClubsRosters, calculateMatchSelection, calculateDetailedMatchSelection, generatePreseasonReportCard, applyPreseasonResults, checkStoryArcProgression } from '../utils/careerSystems';
 import { getClubStandings, checkMidSeasonObjective, evaluateEndofSeasonObjective, generateSeasonObjective, generateRandomNewManager } from '../utils/seasonObjectives';
 import { generateIntlCallUp } from '../utils/international';
 import { generateTestimonialProposal } from '../utils/testimonialMatch';
@@ -75,7 +75,7 @@ export interface GameState {
     isBigMatch: boolean;
     matchType: 'DERBY' | 'FINAL' | 'RELEGATION' | 'REGULAR' | 'FRIENDLY' | 'GRUDGE';
     pressure: number; // 1-10
-    competitionType?: 'LEAGUE' | 'DOMESTIC_CUP' | 'EUROPEAN' | 'INTERNATIONAL' | 'FRIENDLY';
+    competitionType?: import('../types').CompetitionType;
     rivalryName?: string;
     playerStatus?: 'STARTER' | 'SUBSTITUTE' | 'UNUSED';
     squadList?: {
@@ -116,7 +116,7 @@ interface GameContextType {
   setScreen: (screen: Screen, force?: boolean) => void;
   setPlayer: (player: Player) => void;
   startCareer: (player: Player, difficulty: 'CASUAL' | 'STANDARD' | 'REALISTIC') => void;
-  advanceDay: (force?: boolean) => void;
+  advanceDay: (force?: boolean, overridePlayer?: Player) => void;
   resolveCutscene: (choiceIndex: number) => void;
   checkCutscenes: () => void;
   resolveEvent: (choiceType: string) => void;
@@ -752,6 +752,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
                      if (impact.relationships.teammates) p.relationships.teammates = Math.max(0, Math.min(100, p.relationships.teammates + impact.relationships.teammates));
                      if (impact.relationships.agent) p.relationships.agent = Math.max(0, Math.min(100, (p.relationships.agent || 50) + impact.relationships.agent));
                      if (impact.relationships.family) p.relationships.family = Math.max(0, Math.min(100, p.relationships.family + impact.relationships.family));
+                     if ((impact.relationships as any).npc) {
+                        const { name, delta } = (impact.relationships as any).npc;
+                        p.relationships.npc = updateNPCRelationship(p.relationships.npc || {}, name, delta);
+                     }
                   }
 
                   if (impact.attributes) {
@@ -969,7 +973,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const advanceDay = (force: boolean = false) => {
+  const advanceDay = (force: boolean = false, overridePlayer?: Player) => {
     // Basic day advancement logic
     const days: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     setState(s => {
@@ -1068,7 +1072,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             finalKickoffTime = cm.competitionType === 'DOMESTIC_CUP' || cm.competitionType === 'EUROPEAN' ? '19:45 BST' : '15:00 BST';
             
              const selRes = calculateDetailedMatchSelection(s.player, cm.competitionType);
-             finalStatus = selRes.status;
+             finalStatus = selRes.status as "STARTER" | "SUBSTITUTE" | "UNUSED";
              selectionReason = selRes.reason;
 
             const currentClubName = CLUBS.find(c => c.symbol === s.player!.currentClubSymbol)?.name || 'Birmingham';
@@ -1153,7 +1157,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
          };
       }
       
-      let updatedPlayerTemp = s.player;
+      let updatedPlayerTemp = overridePlayer || s.player;
 
       if (updatedPlayerTemp) {
         const currentCalendarEntry = s.seasonCalendar?.find(e => e.week === s.currentWeek && e.day === s.currentDay);
@@ -2768,6 +2772,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
                 const activeClubObj = CLUBS.find(c => c.symbol === s.player.currentClubSymbol);
                 newWorldState.clubs[s.player.currentClubSymbol].manager = {
                   name: newManagerInfo.name,
+                  patience: 80,
+                  tactics: '4-3-3',
                   archetype: archetypes[Math.floor(Math.random() * archetypes.length)],
                   philosophy: assignManagerPhilosophy(activeClubObj),
                   trust: 50,
@@ -3093,6 +3099,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
               choices: [{ text: 'Great, thank you.', type: 'ack' }]
             });
           }
+
+          if (finalPlayer.storyArc) {
+            const arcResult = checkStoryArcProgression(finalPlayer, finalPlayer.stats?.apps || 0);
+            if (arcResult.updatedArc) {
+              finalPlayer = { ...finalPlayer, storyArc: arcResult.updatedArc };
+            }
+            if (arcResult.inboxMessage && !newInbox.some(m => m.id === arcResult.inboxMessage?.id)) {
+              newInbox.push(arcResult.inboxMessage);
+            }
+          }
         }
 
         return {
@@ -3120,7 +3136,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const updateRelationship = (entity: keyof Player['relationships'], amount: number) => {
     setState(s => {
       if (!s.player) return s;
-      const current = s.player.relationships[entity];
+      const current = typeof s.player.relationships[entity] === "number" ? (s.player.relationships[entity] as number) : 50;
       return {
         ...s,
         player: {
@@ -3331,6 +3347,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const dayToUpdate = targetDay || s.currentDay;
       const currentCalendarEntry = s.seasonCalendar?.find(e => e.week === s.currentWeek && e.day === dayToUpdate);
       if (isDayMandatory(currentCalendarEntry)) return s;
+
+      const tracker = s.player.stateFlags?.weeklyActionTracker;
+      const existingChoice = tracker?.week === s.currentWeek ? tracker.choices[dayToUpdate] : undefined;
+
+      // If we are updating today and a choice is already made, prevent changing to avoid duplicate effects
+      if (dayToUpdate === s.currentDay && existingChoice) {
+        if (existingChoice === action) return s; // already selected
+        // We do not allow changing today's action once effects are applied.
+        // Changing future days is allowed.
+        return s; 
+      }
 
       let updatedPlayer = recordDailyChoice(s.player, s.currentWeek, dayToUpdate, action);
 

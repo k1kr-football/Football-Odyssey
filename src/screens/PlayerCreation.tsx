@@ -62,21 +62,21 @@ export function PlayerCreation() {
 
   // React to origin changes and initialize defaults
   useEffect(() => {
-    const initialNat = originDetails.nationalityPool[0];
+    const initialNat = originDetails?.nationalityPool?.[0] || 'England';
     setNationality(initialNat);
-    setPosition(originDetails.positions[0]);
+    setPosition(originDetails?.positions?.[0] || 'ST');
     setPersonality(originDetails.defaultPersonality);
     setStartingTrait(originDetails.defaultTrait);
 
     // Set region default for initial nationality
     const regList = expansionDetails.regions[initialNat] || DEFAULT_REGIONS;
-    setRegion(regList[0].city);
+    setRegion(regList[0]?.city || 'Capital City');
 
     // Set expansion defaults
-    setSelectedFormativeChoiceId(expansionDetails.formativeMoment.choices[0].id);
-    setSelectedFamilyOptionId(expansionDetails.familyOptions[0].id);
+    setSelectedFormativeChoiceId(expansionDetails.formativeMoment?.choices?.[0]?.id || '');
+    setSelectedFamilyOptionId(expansionDetails.familyOptions?.[0]?.id || '');
     setSelectedRivalMentorType('RIVAL');
-    setSelectedCoreWoundId(expansionDetails.drivingQuestionVariants[0].id);
+    setSelectedCoreWoundId(expansionDetails.drivingQuestionVariants?.[0]?.id || '');
 
     if (selectedOrigin === 'STREET_PRODIGY' || selectedOrigin === 'ACADEMY_GRADUATE') {
       setPathwayChoice('U21');
@@ -89,7 +89,7 @@ export function PlayerCreation() {
   useEffect(() => {
     if (!nationality) return;
     const regList = expansionDetails.regions[nationality] || DEFAULT_REGIONS;
-    setRegion(regList[0].city);
+    setRegion(regList[0]?.city || 'Capital City');
   }, [nationality, selectedOrigin]);
 
   const handleGenerateName = () => {
@@ -123,10 +123,10 @@ export function PlayerCreation() {
     }
 
     // Resolve expanded selections
-    const formativeChoice = expansionDetails.formativeMoment.choices.find(c => c.id === selectedFormativeChoiceId) || expansionDetails.formativeMoment.choices[0];
-    const familyOption = expansionDetails.familyOptions.find(f => f.id === selectedFamilyOptionId) || expansionDetails.familyOptions[0];
+    const formativeChoice = expansionDetails.formativeMoment.choices.find(c => c.id === selectedFormativeChoiceId) || expansionDetails.formativeMoment.choices[0] || { label: 'Default', frameTag: 'STANDARD', decisionMemoryText: 'Standard choice' };
+    const familyOption = expansionDetails.familyOptions.find(f => f.id === selectedFamilyOptionId) || expansionDetails.familyOptions[0] || { id: 'default', title: 'Supportive Family', description: 'Standard family', npcName: 'Parent', startingRelationship: 50 };
     const rivalMentorOption = selectedRivalMentorType === 'RIVAL' ? expansionDetails.rivalMentorOptions.rival : expansionDetails.rivalMentorOptions.mentor;
-    const coreWoundOption = expansionDetails.drivingQuestionVariants.find(dw => dw.id === selectedCoreWoundId) || expansionDetails.drivingQuestionVariants[0];
+    const coreWoundOption = expansionDetails.drivingQuestionVariants.find(dw => dw.id === selectedCoreWoundId) || expansionDetails.drivingQuestionVariants[0] || { id: 'default', tag: 'DETERMINED', question: 'Can I prove myself?', description: 'Standard motivation' };
 
     // Seed Rivals array if rival was chosen
     const initialRivals = selectedRivalMentorType === 'RIVAL' ? [
@@ -261,7 +261,7 @@ export function PlayerCreation() {
         goalBonus: 100
       },
       loanInfo: pathwayChoice === 'LOAN' ? {
-        hostClub: getClubsByTier('Lower')[0].symbol,
+        hostClub: getClubsByTier('Lower')[0]?.symbol || CLUBS[0].symbol,
         playingTimeGuarantee: true,
         recallClause: true,
         wagePercentage: 100
@@ -345,7 +345,7 @@ export function PlayerCreation() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0E0E0E] text-[#cccccc] font-mono overflow-y-auto w-full p-2 sm:p-6">
+    <div className="flex flex-col h-full bg-black text-[#cccccc] font-mono overflow-y-auto w-full p-2 sm:p-6">
       <div className="max-w-[1400px] w-full mx-auto flex flex-col gap-3 sm:gap-6 h-full">
 
         {/* Wizard Header & Stepper */}
@@ -358,7 +358,7 @@ export function PlayerCreation() {
           </h1>
 
           {/* Stepper Tabs */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 bg-[#121212] p-2 border border-white/10 rounded-2xl">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 bg-[#050505] p-2 border border-[#222] ">
             {stepsList.map((s) => {
               const isActive = step === s.num;
               const isCompleted = step > s.num;
@@ -367,11 +367,11 @@ export function PlayerCreation() {
                   key={s.num}
                   type="button"
                   onClick={() => setStep(s.num)}
-                  className={`py-2.5 px-3 rounded-xl text-left transition-all border cursor-pointer flex items-center justify-between ${
+                  className={`py-2.5 px-3 text-left transition-all border cursor-pointer flex items-center justify-between ${
                     isActive
-                      ? 'bg-[#00FF88] text-black border-[#00FF88] font-bold shadow-md shadow-[#00FF88]/20'
+                      ? 'bg-[#00FF88] text-black border-[#00FF88] font-bold shadow-[#00FF88]/20'
                       : isCompleted
-                      ? 'bg-white/5 text-white border-white/20 hover:bg-white/10'
+                      ? 'bg-white/5 text-white border-[#333] hover:bg-white/10'
                       : 'bg-transparent text-white/40 border-transparent hover:text-white/60'
                   }`}
                 >
@@ -404,14 +404,14 @@ export function PlayerCreation() {
                       key={key}
                       type="button"
                       onClick={() => setSelectedOrigin(key)}
-                      className={`text-left p-5 sm:p-6 border rounded-2xl transition-all duration-200 relative overflow-hidden cursor-pointer ${
+                      className={`text-left p-5 sm:p-6 border transition-all duration-200 relative overflow-hidden cursor-pointer ${
                         isActive
-                          ? 'bg-[#151515] border-[#00FF88] shadow-lg shadow-[#00FF88]/10'
-                          : 'bg-[#121212] border-white/10 hover:border-white/30 hover:bg-[#161616]'
+                          ? 'bg-[#151515] border-[#00FF88] shadow-[#00FF88]/10'
+                          : 'bg-[#050505] border-[#222] hover:border-white/30 hover:bg-[#161616]'
                       }`}
                     >
                       {isWonderkid && (
-                        <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg z-10 shadow-lg shadow-amber-500/20">
+                        <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg z-10 ">
                           Premium Start
                         </div>
                       )}
@@ -429,7 +429,7 @@ export function PlayerCreation() {
                       <p className="text-xs sm:text-sm text-white/60 leading-relaxed mb-4">
                         {config.description}
                       </p>
-                      <div className={`pl-3 border-l-2 text-xs font-medium ${isActive ? 'border-[#00FF88] text-white/80' : 'border-white/10 text-[#555]'}`}>
+                      <div className={`pl-3 border-l-2 text-xs font-medium ${isActive ? 'border-[#00FF88] text-white/80' : 'border-[#222] text-[#555]'}`}>
                         {config.bullet}
                       </div>
                     </button>
@@ -439,30 +439,30 @@ export function PlayerCreation() {
             </div>
 
             {/* Sidebar Overview */}
-            <div className="w-full lg:w-2/5 p-6 bg-[#121212] border border-white/15 rounded-2xl flex flex-col h-fit lg:sticky lg:top-4 shadow-2xl">
+            <div className="w-full lg:w-2/5 p-6 bg-[#050505] border border-white/15 flex flex-col h-fit lg:sticky lg:top-4 ">
               <h2 className="text-white text-xl font-black uppercase tracking-wider mb-1">{originDetails.title}</h2>
-              <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-6 pb-3 border-b border-white/10">
+              <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-6 pb-3 border-b border-[#222]">
                 Origin Baseline Profile
               </div>
 
               <div className="space-y-4 text-xs uppercase tracking-wider mb-8">
-                <div className="flex justify-between py-2 border-b border-white/5">
+                <div className="flex justify-between py-2 border-b border-[#111]">
                   <span className="text-white/40">Starting Tier</span>
                   <span className="text-white font-bold">{originDetails.startingTier}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
+                <div className="flex justify-between py-2 border-b border-[#111]">
                   <span className="text-white/40">Allowed Positions</span>
                   <span className="text-[#00FF88] font-bold">{originDetails.positions.join(' · ')}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
+                <div className="flex justify-between py-2 border-b border-[#111]">
                   <span className="text-white/40">Default Personality</span>
                   <span className="text-white font-bold">{originDetails.defaultPersonality}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
+                <div className="flex justify-between py-2 border-b border-[#111]">
                   <span className="text-white/40">Signature Trait</span>
                   <span className="text-white font-bold">{originDetails.defaultTrait}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
+                <div className="flex justify-between py-2 border-b border-[#111]">
                   <span className="text-white/40">Weak Foot Base</span>
                   <span className="text-white font-bold">{originDetails.weakFoot} / 5 Stars</span>
                 </div>
@@ -471,7 +471,7 @@ export function PlayerCreation() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="w-full py-4 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-[#00FF88]/20 border border-[#00FF88] cursor-pointer text-sm"
+                className="w-full py-4 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-widest transition-all shadow-[#00FF88]/20 border border-[#00FF88] cursor-pointer text-sm"
               >
                 Next Step: Formative Moment &rarr;
               </button>
@@ -482,7 +482,7 @@ export function PlayerCreation() {
         {/* ================= STEP 2: FORMATIVE MOMENT MICRO-SCENE ================= */}
         {step === 2 && (
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
-            <div className="bg-[#121212] border border-[#00FF88]/30 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-[#050505] border border-[#00FF88]/30 p-6 sm:p-8 relative overflow-hidden">
               <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2">
                 <span>🎬 Backstory Micro-Scene</span>
                 <span>&middot;</span>
@@ -491,7 +491,7 @@ export function PlayerCreation() {
               <h2 className="text-white text-2xl sm:text-3xl font-black uppercase tracking-tight mb-4">
                 {expansionDetails.formativeMoment.title}
               </h2>
-              <p className="text-white/80 text-sm sm:text-base leading-relaxed mb-8 italic bg-black/40 p-5 rounded-xl border border-white/10">
+              <p className="text-white/80 text-sm sm:text-base leading-relaxed mb-8 italic bg-black/40 p-5 border border-[#222]">
                 "{expansionDetails.formativeMoment.sceneText}"
               </p>
 
@@ -506,9 +506,9 @@ export function PlayerCreation() {
                     <div
                       key={choice.id}
                       onClick={() => setSelectedFormativeChoiceId(choice.id)}
-                      className={`p-5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                      className={`p-5 border cursor-pointer transition-all flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-[#00FF88]/10 border-[#00FF88] shadow-lg shadow-[#00FF88]/10'
+                          ? 'bg-[#00FF88]/10 border-[#00FF88] shadow-[#00FF88]/10'
                           : 'bg-black/40 border-white/15 hover:border-white/30 hover:bg-white/5'
                       }`}
                     >
@@ -525,7 +525,7 @@ export function PlayerCreation() {
                           {choice.text}
                         </p>
                       </div>
-                      <div className="text-[10px] text-white/50 border-t border-white/10 pt-2 italic">
+                      <div className="text-[10px] text-white/50 border-t border-[#222] pt-2 italic">
                         <strong>Memory:</strong> {choice.decisionMemoryText}
                       </div>
                     </div>
@@ -537,14 +537,14 @@ export function PlayerCreation() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-xl text-xs cursor-pointer border border-white/15"
+                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs cursor-pointer border border-white/15"
                 >
                   &larr; Back to Origin
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider rounded-xl text-xs cursor-pointer shadow-lg shadow-[#00FF88]/20"
+                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider text-xs cursor-pointer shadow-[#00FF88]/20"
                 >
                   Next Step: Identity & Region &rarr;
                 </button>
@@ -556,7 +556,7 @@ export function PlayerCreation() {
         {/* ================= STEP 3: IDENTITY & REGION SUB-BRANCH ================= */}
         {step === 3 && (
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
-            <div className="bg-[#121212] border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="bg-[#050505] border border-white/15 p-6 sm:p-8 ">
               <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-2">
                 Step 03 &middot; Roots & Personal Identity
               </div>
@@ -573,7 +573,7 @@ export function PlayerCreation() {
                   <select
                     value={nationality}
                     onChange={(e) => setNationality(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] rounded-xl p-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none transition-all cursor-pointer"
+                    className="w-full bg-[#0a0a0a] border border-[#333] focus:border-[#00FF88] p-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none transition-all cursor-pointer"
                   >
                     {originDetails.nationalityPool.map((nat) => (
                       <option key={nat} value={nat}>{nat}</option>
@@ -593,7 +593,7 @@ export function PlayerCreation() {
                         <div
                           key={regOpt.city}
                           onClick={() => setRegion(regOpt.city)}
-                          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                          className={`p-4 border cursor-pointer transition-all ${
                             isSelected
                               ? 'bg-[#00FF88]/10 border-[#00FF88] text-white'
                               : 'bg-black/40 border-white/15 text-white/60 hover:text-white hover:bg-white/5'
@@ -619,7 +619,7 @@ export function PlayerCreation() {
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none"
+                        className="w-full bg-[#0a0a0a] border border-[#333] focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] p-3 text-sm font-bold text-white focus:outline-none"
                       />
                     </div>
                     <div className="flex-1">
@@ -628,7 +628,7 @@ export function PlayerCreation() {
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] rounded-xl p-3 text-sm font-bold text-white focus:outline-none"
+                        className="w-full bg-[#0a0a0a] border border-[#333] focus:border-[#00FF88] focus:ring-1 focus:ring-[#00FF88] p-3 text-sm font-bold text-white focus:outline-none"
                       />
                     </div>
                   </div>
@@ -636,7 +636,7 @@ export function PlayerCreation() {
                   <button
                     type="button"
                     onClick={handleGenerateName}
-                    className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-[#00FF88] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    className="w-full py-3 bg-white/5 hover:bg-white/10 border border-[#333] hover:border-[#00FF88] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                   >
                     🎲 Generate {NATIONALITY_NAMES[nationality]?.isStyle || `${nationality}-Style`} Name
                   </button>
@@ -647,7 +647,7 @@ export function PlayerCreation() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-xl text-xs cursor-pointer border border-white/15"
+                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs cursor-pointer border border-white/15"
                 >
                   &larr; Previous Step
                 </button>
@@ -655,7 +655,7 @@ export function PlayerCreation() {
                   type="button"
                   onClick={() => setStep(4)}
                   disabled={!firstName || !lastName}
-                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider rounded-xl text-xs cursor-pointer shadow-lg shadow-[#00FF88]/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider text-xs cursor-pointer shadow-[#00FF88]/20 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next Step: Support Network &rarr;
                 </button>
@@ -667,7 +667,7 @@ export function PlayerCreation() {
         {/* ================= STEP 4: FAMILY & SUPPORT NETWORK ================= */}
         {step === 4 && (
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
-            <div className="bg-[#121212] border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="bg-[#050505] border border-white/15 p-6 sm:p-8 ">
               <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-2">
                 Step 04 &middot; Home Life & Support Circle
               </div>
@@ -685,9 +685,9 @@ export function PlayerCreation() {
                     <div
                       key={fOpt.id}
                       onClick={() => setSelectedFamilyOptionId(fOpt.id)}
-                      className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                      className={`p-5 border cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-[#00FF88]/10 border-[#00FF88] shadow-lg shadow-[#00FF88]/10'
+                          ? 'bg-[#00FF88]/10 border-[#00FF88] shadow-[#00FF88]/10'
                           : 'bg-black/40 border-white/15 hover:border-white/30 hover:bg-white/5'
                       }`}
                     >
@@ -718,14 +718,14 @@ export function PlayerCreation() {
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-xl text-xs cursor-pointer border border-white/15"
+                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs cursor-pointer border border-white/15"
                 >
                   &larr; Previous Step
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider rounded-xl text-xs cursor-pointer shadow-lg shadow-[#00FF88]/20"
+                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider text-xs cursor-pointer shadow-[#00FF88]/20"
                 >
                   Next Step: Rival / Mentor &rarr;
                 </button>
@@ -737,7 +737,7 @@ export function PlayerCreation() {
         {/* ================= STEP 5: FORMATIVE RIVAL OR MENTOR SEED ================= */}
         {step === 5 && (
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
-            <div className="bg-[#121212] border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="bg-[#050505] border border-white/15 p-6 sm:p-8 ">
               <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-2">
                 Step 05 &middot; Early Key Figure
               </div>
@@ -752,9 +752,9 @@ export function PlayerCreation() {
                 {/* Rival Card */}
                 <div
                   onClick={() => setSelectedRivalMentorType('RIVAL')}
-                  className={`p-6 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  className={`p-6 border cursor-pointer transition-all flex flex-col justify-between ${
                     selectedRivalMentorType === 'RIVAL'
-                      ? 'bg-rose-500/10 border-rose-500 shadow-lg shadow-rose-500/10'
+                      ? 'bg-rose-500/10 border-rose-500 '
                       : 'bg-black/40 border-white/15 hover:border-white/30 hover:bg-white/5'
                   }`}
                 >
@@ -774,7 +774,7 @@ export function PlayerCreation() {
                       {expansionDetails.rivalMentorOptions.rival.description}
                     </p>
                   </div>
-                  <div className="text-[10px] text-rose-400/80 font-mono border-t border-white/10 pt-2">
+                  <div className="text-[10px] text-rose-400/80 font-mono border-t border-[#222] pt-2">
                     Position: {expansionDetails.rivalMentorOptions.rival.roleOrPosition} &middot; Seeds Career Rivalry
                   </div>
                 </div>
@@ -782,9 +782,9 @@ export function PlayerCreation() {
                 {/* Mentor Card */}
                 <div
                   onClick={() => setSelectedRivalMentorType('MENTOR')}
-                  className={`p-6 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  className={`p-6 border cursor-pointer transition-all flex flex-col justify-between ${
                     selectedRivalMentorType === 'MENTOR'
-                      ? 'bg-cyan-500/10 border-cyan-400 shadow-lg shadow-cyan-500/10'
+                      ? 'bg-cyan-500/10 border-cyan-400 '
                       : 'bg-black/40 border-white/15 hover:border-white/30 hover:bg-white/5'
                   }`}
                 >
@@ -804,7 +804,7 @@ export function PlayerCreation() {
                       {expansionDetails.rivalMentorOptions.mentor.description}
                     </p>
                   </div>
-                  <div className="text-[10px] text-cyan-400/80 font-mono border-t border-white/10 pt-2">
+                  <div className="text-[10px] text-cyan-400/80 font-mono border-t border-[#222] pt-2">
                     Role: {expansionDetails.rivalMentorOptions.mentor.roleOrPosition} &middot; Seeds Guidance Network
                   </div>
                 </div>
@@ -814,14 +814,14 @@ export function PlayerCreation() {
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-xl text-xs cursor-pointer border border-white/15"
+                  className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs cursor-pointer border border-white/15"
                 >
                   &larr; Previous Step
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(6)}
-                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider rounded-xl text-xs cursor-pointer shadow-lg shadow-[#00FF88]/20"
+                  className="px-8 py-3 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-wider text-xs cursor-pointer shadow-[#00FF88]/20"
                 >
                   Next Step: Motivation & Review &rarr;
                 </button>
@@ -836,7 +836,7 @@ export function PlayerCreation() {
             <div className="w-full lg:w-3/5 flex flex-col gap-6">
 
               {/* Core Wound / Driving Question Selection */}
-              <div className="bg-[#121212] border border-white/15 rounded-2xl p-6">
+              <div className="bg-[#050505] border border-white/15 p-6">
                 <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-1">
                   Core Motivation & Driving Question
                 </div>
@@ -850,7 +850,7 @@ export function PlayerCreation() {
                       <div
                         key={dw.id}
                         onClick={() => setSelectedCoreWoundId(dw.id)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        className={`p-4 border cursor-pointer transition-all ${
                           isSelected
                             ? 'bg-[#00FF88]/10 border-[#00FF88]'
                             : 'bg-black/40 border-white/15 hover:border-white/30'
@@ -873,7 +873,7 @@ export function PlayerCreation() {
               </div>
 
               {/* On-Pitch Profile (Position, Role & Difficulty) */}
-              <div className="bg-[#121212] border border-white/15 rounded-2xl p-6">
+              <div className="bg-[#050505] border border-white/15 p-6">
                 <div className="text-[#00FF88] text-xs font-black uppercase tracking-widest mb-1">
                   On-Pitch Profile & Settings
                 </div>
@@ -883,13 +883,13 @@ export function PlayerCreation() {
                   <label className="block text-white/60 text-[11px] font-bold mb-1.5 uppercase tracking-widest">
                     Position &middot; {originDetails.positions.length} Options
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#0a0a0a] p-1.5 border border-white/20 rounded-xl">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#0a0a0a] p-1.5 border border-[#333] ">
                     {originDetails.positions.map((pos) => (
                       <button
                         key={pos}
                         type="button"
                         onClick={() => setPosition(pos)}
-                        className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                        className={`py-2 px-3 text-xs font-black uppercase tracking-wider transition-all border cursor-pointer ${
                           position === pos
                             ? 'bg-[#00FF88] text-black border-[#00FF88]'
                             : 'bg-transparent text-white/50 border-transparent hover:text-white'
@@ -903,7 +903,7 @@ export function PlayerCreation() {
 
                 {/* Tactical Role */}
                 {position && (
-                  <div className="mb-4 p-4 rounded-xl bg-black/40 border border-white/10 text-left">
+                  <div className="mb-4 p-4 bg-black/40 border border-[#222] text-left">
                     <label className="block text-[#00FF88] text-[10px] font-bold mb-2 uppercase tracking-widest">
                       Tactical Role Specialization
                     </label>
@@ -914,8 +914,8 @@ export function PlayerCreation() {
                           <div
                             key={role.id}
                             onClick={() => setSelectedRoleId(role.id)}
-                            className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                              isSelected ? 'border-[#00FF88] bg-[#00FF88]/10' : 'border-white/10 bg-[#121212] hover:bg-white/5'
+                            className={`p-3 border cursor-pointer transition-all ${
+                              isSelected ? 'border-[#00FF88] bg-[#00FF88]/10' : 'border-[#222] bg-[#050505] hover:bg-white/5'
                             }`}
                           >
                             <div className="flex justify-between items-center mb-1">
@@ -935,7 +935,7 @@ export function PlayerCreation() {
                   <label className="block text-white/60 text-[11px] font-bold mb-1.5 uppercase tracking-widest">
                     Game Difficulty
                   </label>
-                  <div className="w-full bg-[#0a0a0a] border border-white/20 rounded-xl p-3 text-xs font-bold text-white uppercase tracking-wider">
+                  <div className="w-full bg-[#0a0a0a] border border-[#333] p-3 text-xs font-bold text-white uppercase tracking-wider">
                     {getDifficulty(selectedOrigin) === 'CASUAL' ? '🟢 Casual' : getDifficulty(selectedOrigin) === 'STANDARD' ? '🟡 Standard' : '🔴 Realistic'} (Based on Origin)
                   </div>
                 </div>
@@ -943,38 +943,38 @@ export function PlayerCreation() {
             </div>
 
             {/* Complete Player Summary Sidebar */}
-            <div className="w-full lg:w-2/5 p-6 bg-[#121212] border border-white/15 rounded-2xl flex flex-col h-fit lg:sticky lg:top-4 shadow-2xl">
+            <div className="w-full lg:w-2/5 p-6 bg-[#050505] border border-white/15 flex flex-col h-fit lg:sticky lg:top-4 ">
               <h2 className="text-white text-2xl font-black uppercase tracking-wider mb-1">
                 {firstName || 'Player'} {lastName || 'Name'}
               </h2>
-              <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-4 pb-3 border-b border-white/10">
+              <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-4 pb-3 border-b border-[#222]">
                 {originDetails.title} &middot; OVR {calculateOVR(originDetails.attributeDistribution, (position || 'CM') as Position)}
               </div>
 
               <div className="space-y-3 text-xs uppercase tracking-wider mb-6">
-                <div className="flex justify-between py-1.5 border-b border-white/5">
+                <div className="flex justify-between py-1.5 border-b border-[#111]">
                   <span className="text-white/40">Nationality & Region</span>
                   <span className="text-white font-bold">{nationality} ({region})</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-white/5">
+                <div className="flex justify-between py-1.5 border-b border-[#111]">
                   <span className="text-white/40">Formative Frame</span>
                   <span className="text-[#00FF88] font-bold">
                     {expansionDetails.formativeMoment.choices.find(c => c.id === selectedFormativeChoiceId)?.frameTag}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-white/5">
+                <div className="flex justify-between py-1.5 border-b border-[#111]">
                   <span className="text-white/40">Support Circle</span>
                   <span className="text-white font-bold">
                     {expansionDetails.familyOptions.find(f => f.id === selectedFamilyOptionId)?.title}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-white/5">
+                <div className="flex justify-between py-1.5 border-b border-[#111]">
                   <span className="text-white/40">Key Figure</span>
                   <span className="text-white font-bold">
                     {selectedRivalMentorType === 'RIVAL' ? expansionDetails.rivalMentorOptions.rival.name : expansionDetails.rivalMentorOptions.mentor.name}
                   </span>
                 </div>
-                <div className="py-1.5 border-b border-white/5">
+                <div className="py-1.5 border-b border-[#111]">
                   <div className="text-white/40 mb-1">Driving Question</div>
                   <div className="text-[#00FF88] font-bold italic normal-case text-xs">
                     "{expansionDetails.drivingQuestionVariants.find(dw => dw.id === selectedCoreWoundId)?.question}"
@@ -986,7 +986,7 @@ export function PlayerCreation() {
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-xl text-xs cursor-pointer border border-white/15"
+                  className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs cursor-pointer border border-white/15"
                 >
                   &larr; Previous
                 </button>
@@ -994,7 +994,7 @@ export function PlayerCreation() {
                   type="button"
                   onClick={handleSignContract}
                   disabled={!firstName || !lastName || !position}
-                  className="flex-1 py-4 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-[#00FF88]/20 border border-[#00FF88] cursor-pointer text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-4 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black font-black uppercase tracking-widest transition-all shadow-[#00FF88]/20 border border-[#00FF88] cursor-pointer text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Play Trial Match &rarr;
                 </button>

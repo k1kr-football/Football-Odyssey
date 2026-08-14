@@ -35,9 +35,9 @@ export function MatchTacticsOverlay({
 }: MatchTacticsOverlayProps) {
   if (mode === 'HALFTIME') {
     return (
-      <div className="bg-[#121212]/95 border border-white/15 rounded-2xl p-6 shadow-2xl backdrop-blur-md mb-6">
+      <div className="bg-[#050505] border border-white/15 p-6 mb-6">
         {/* Score & Tactical Status Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center pb-4 mb-4 border-b border-white/10 gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-center pb-4 mb-4 border-b border-[#222] gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/30">
@@ -50,7 +50,7 @@ export function MatchTacticsOverlay({
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-black/60 px-4 py-2 rounded-xl border border-white/10">
+          <div className="flex items-center gap-4 bg-black/60 px-4 py-2 border border-[#222]">
             <span className="text-sm font-bold text-white/70">
               {userClubName} <span className="text-white font-black">{userScore} - {oppScore}</span> {oppClubName}
             </span>
@@ -65,7 +65,7 @@ export function MatchTacticsOverlay({
         {/* Pitch Visualization & Live Telemetry Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Tactical Pitch Canvas Mock */}
-          <div className="md:col-span-1 bg-gradient-to-b from-emerald-950/40 to-green-950/40 border border-emerald-500/20 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden h-44">
+          <div className="md:col-span-1 border border-emerald-500/20 p-4 flex flex-col justify-between relative overflow-hidden h-44">
             <div className="absolute inset-0 bg-[radial-gradient(#00FF88_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
             <div className="flex justify-between items-center z-10 text-[10px] font-mono text-emerald-400 font-bold uppercase">
               <span>Formation: 4-3-3</span>
@@ -108,12 +108,12 @@ export function MatchTacticsOverlay({
                   key={tactic.id}
                   disabled={isActive || !canAfford}
                   onClick={() => onSelectTactic(tactic)}
-                  className={`p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all relative ${
+                  className={`p-3.5 border text-left flex flex-col justify-between transition-all relative ${
                     isActive
-                      ? 'bg-[#00FF88]/15 border-[#00FF88] text-white shadow-lg shadow-[#00FF88]/10'
+                      ? 'bg-[#00FF88]/15 border-[#00FF88] text-white shadow-[#00FF88]/10'
                       : canAfford
-                      ? 'bg-black/40 border-white/10 hover:border-[#00FF88]/50 text-white/90 hover:bg-black/60 cursor-pointer'
-                      : 'bg-black/20 border-white/5 text-white/30 cursor-not-allowed'
+                      ? 'bg-black/40 border-[#222] hover:border-[#00FF88]/50 text-white/90 hover:bg-black/60 cursor-pointer'
+                      : 'bg-black/20 border-[#111] text-white/30 cursor-not-allowed'
                   }`}
                 >
                   <div>
@@ -145,7 +145,7 @@ export function MatchTacticsOverlay({
         {onResumeMatch && (
           <button
             onClick={onResumeMatch}
-            className="w-full bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-3.5 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#00FF88]/20 transition-all active:scale-98"
+            className="w-full bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-3.5 font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[#00FF88]/20 transition-all active:scale-98"
           >
             RESUME SECOND HALF <Play size={18} className="fill-black" />
           </button>
@@ -156,7 +156,7 @@ export function MatchTacticsOverlay({
 
   // Live Touchline Popup Bar
   return (
-    <div className="bg-[#121212]/95 border border-white/15 rounded-xl p-3 shadow-2xl backdrop-blur-md flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+    <div className="bg-[#050505] border border-white/15 p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
       <div className="flex items-center gap-2">
         <Zap size={16} className="text-[#00FF88] animate-pulse" />
         <div>
@@ -178,12 +178,12 @@ export function MatchTacticsOverlay({
               key={shout.id}
               disabled={isActive || !canAfford}
               onClick={() => onSelectTactic(shout)}
-              className={`px-3 py-2 rounded-lg border text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-2 border text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-amber-500/20 border-amber-500 text-white'
                   : canAfford
                   ? 'bg-black/60 border-white/15 text-white hover:border-[#00FF88] hover:bg-black'
-                  : 'bg-black/20 border-white/5 text-white/30 cursor-not-allowed'
+                  : 'bg-black/20 border-[#111] text-white/30 cursor-not-allowed'
               }`}
             >
               {isStoppageOnly && <AlertTriangle size={12} className="text-red-400" />}

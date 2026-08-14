@@ -99,9 +99,9 @@ export function CareerDepthWidget() {
   };
 
   return (
-    <div className="bg-[#101211] border border-white/10 rounded-xl p-5 shadow-2xl font-mono space-y-4">
+    <div className="bg-[#101211] border border-[#222] p-5 font-mono space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#222] pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00FF88] animate-pulse"></span>
@@ -115,7 +115,7 @@ export function CareerDepthWidget() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-1 bg-black/60 p-1 rounded-lg border border-white/5 text-[10px]">
+        <div className="flex gap-1 bg-black/60 p-1 border border-[#111] text-[10px]">
           <button
             onClick={() => setActiveTab('OBJECTIVES')}
             className={`px-3 py-1.5 rounded uppercase font-bold transition-all ${
@@ -166,10 +166,10 @@ export function CareerDepthWidget() {
               return (
                 <div
                   key={obj.id}
-                  className={`p-4 rounded-lg border transition-all ${
+                  className={`p-4 border transition-all ${
                     isDone
                       ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
-                      : 'bg-[#151716] border-white/10 hover:border-white/20'
+                      : 'bg-[#151716] border-[#222] hover:border-[#333]'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -182,7 +182,7 @@ export function CareerDepthWidget() {
                   </div>
                   <h4 className="text-white text-xs font-bold font-sans mb-1">{obj.title}</h4>
                   <p className="text-[11px] text-white/70 leading-tight mb-2">{obj.target}</p>
-                  <div className="text-[9px] text-[#00FF88] font-bold border-t border-white/5 pt-2">
+                  <div className="text-[9px] text-[#00FF88] font-bold border-t border-[#111] pt-2">
                     Reward: {obj.reward}
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export function CareerDepthWidget() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tactical Style Box */}
-            <div className="bg-[#151716] border border-white/10 p-4 rounded-lg space-y-3">
+            <div className="bg-[#151716] border border-[#222] p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] uppercase text-white/50 font-bold">Club Tactical System</span>
                 <span className="text-xs text-[#00FF88] font-bold">{currentClub.name}</span>
@@ -212,15 +212,15 @@ export function CareerDepthWidget() {
             </div>
 
             {/* Role Familiarity Bar */}
-            <div className="bg-[#151716] border border-white/10 p-4 rounded-lg space-y-3">
+            <div className="bg-[#151716] border border-[#222] p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] uppercase text-white/50 font-bold">Tactical Role Familiarity</span>
                 <span className="text-xs text-[#00FF88] font-bold">{roleFamiliarity}%</span>
               </div>
 
-              <div className="w-full bg-black/60 h-2.5 rounded-full overflow-hidden border border-white/10">
+              <div className="w-full bg-black/60 h-2.5 rounded-full overflow-hidden border border-[#222]">
                 <div
-                  className="bg-gradient-to-r from-emerald-500 to-[#00FF88] h-full transition-all duration-500"
+                  className="h-full transition-all duration-500"
                   style={{ width: `${roleFamiliarity}%` }}
                 ></div>
               </div>
@@ -232,19 +232,19 @@ export function CareerDepthWidget() {
           </div>
 
           {/* Pitch Partnership Synergies */}
-          <div className="bg-[#151716] border border-white/10 p-4 rounded-lg space-y-2">
+          <div className="bg-[#151716] border border-[#222] p-4 space-y-2">
             <div className="text-[10px] uppercase text-white/50 font-bold flex items-center gap-1.5">
               <Users size={12} className="text-[#00FF88]" /> Pitch Partnership Chemistry
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="bg-black/40 p-2.5 rounded border border-white/5 flex justify-between items-center text-xs">
+              <div className="bg-black/40 p-2.5 rounded border border-[#111] flex justify-between items-center text-xs">
                 <div>
                   <div className="text-white font-bold">Striker & Wing Synergy</div>
                   <div className="text-[9px] text-white/50">Combination Attack Rating</div>
                 </div>
                 <span className="text-[#00FF88] font-bold">88% (Deadly Duo)</span>
               </div>
-              <div className="bg-black/40 p-2.5 rounded border border-white/5 flex justify-between items-center text-xs">
+              <div className="bg-black/40 p-2.5 rounded border border-[#111] flex justify-between items-center text-xs">
                 <div>
                   <div className="text-white font-bold">Midfield Engine Pivot</div>
                   <div className="text-[9px] text-white/50">Pass Understanding</div>
@@ -273,12 +273,12 @@ export function CareerDepthWidget() {
                 <div
                   key={ps.id}
                   onClick={() => togglePlayStyle(ps.id, ps.requiredOvr)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 border cursor-pointer transition-all ${
                     isEquipped
-                      ? 'bg-[#00FF88]/10 border-[#00FF88] text-white shadow-lg'
+                      ? 'bg-[#00FF88]/10 border-[#00FF88] text-white '
                       : isUnlocked
-                      ? 'bg-[#151716] border-white/10 hover:border-white/30 text-white/80'
-                      : 'bg-black/40 border-white/5 text-white/30 opacity-60'
+                      ? 'bg-[#151716] border-[#222] hover:border-white/30 text-white/80'
+                      : 'bg-black/40 border-[#111] text-white/30 opacity-60'
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
@@ -302,7 +302,7 @@ export function CareerDepthWidget() {
 
       {/* TAB 4: INTERNATIONAL DUTY */}
       {activeTab === 'NATIONAL' && (
-        <div className="bg-[#151716] border border-white/10 p-5 rounded-lg space-y-4">
+        <div className="bg-[#151716] border border-[#222] p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
@@ -319,15 +319,15 @@ export function CareerDepthWidget() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-            <div className="bg-black/40 p-3 rounded border border-white/5">
+            <div className="bg-black/40 p-3 rounded border border-[#111]">
               <div className="text-white/50 text-[9px] uppercase font-bold mb-1">Senior Caps</div>
               <div className="text-white font-black text-base">{player.stats?.caps || 0} Caps</div>
             </div>
-            <div className="bg-black/40 p-3 rounded border border-white/5">
+            <div className="bg-black/40 p-3 rounded border border-[#111]">
               <div className="text-white/50 text-[9px] uppercase font-bold mb-1">International Goals</div>
               <div className="text-emerald-400 font-black text-base">{player.stats?.intlGoals || 0} Goals</div>
             </div>
-            <div className="bg-black/40 p-3 rounded border border-white/5">
+            <div className="bg-black/40 p-3 rounded border border-[#111]">
               <div className="text-white/50 text-[9px] uppercase font-bold mb-1">Scout Recommendation</div>
               <div className="text-[#00FF88] font-bold text-xs">
                 {ovr >= 80 ? 'Recommended for Senior Squad' : 'Under Observation in Domestic League'}

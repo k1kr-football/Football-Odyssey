@@ -1,7 +1,14 @@
 import { Attributes, PlayerRoleSpecialization, Player } from '../types';
 import { REAL_PLAYER_PROFILES } from '../data/realPlayerProfiles';
 import { CLUBS } from '../data/teams';
-import { calculateAcademyProspectPotentialBonus } from './clubPrestige';
+import { 
+  calculateAcademyProspectPotentialBonus, 
+  getClubAcademyRating, 
+  getClubPrestigeScore, 
+  getClubWorldReputationBoost, 
+  getManagerPhilosophyForClub, 
+  getClubStadiumCapacity 
+} from './clubPrestige';
 
 export type NPCType = 'TEAMMATE' | 'RIVAL' | 'OPPOSITION' | 'AGENT' | 'JOURNALIST' | 'MANAGER' | 'YOUTH';
 export type NPCPersonalityArchetype = 'DEMANDING' | 'SUPPORTIVE' | 'CALCULATING' | 'VOLATILE' | 'PROFESSIONAL' | 'CHARISMATIC' | 'SKEPTICAL' | 'MENTOR' | 'ENIGMATIC' | 'JOKER';
@@ -148,7 +155,8 @@ export class UnifiedNPCEngine {
 
     const finalOVR = realProfile ? realProfile.ovr : targetOVR;
     const clubObj = clubSymbol ? CLUBS.find(c => c.symbol === clubSymbol) : undefined;
-    const academyBonus = calculateAcademyProspectPotentialBonus(clubObj);
+    const academyRating = clubObj ? getClubAcademyRating(clubObj) : 50;
+    const academyBonus = calculateAcademyProspectPotentialBonus(clubObj, academyRating);
     const basePotential = realProfile ? realProfile.potential : Math.min(99, finalOVR + 4 + Math.floor(Math.random() * 12));
     const finalPotential = Math.min(99, Math.max(finalOVR + 2, basePotential + (type === 'YOUTH' ? academyBonus : Math.round(academyBonus * 0.5))));
     const finalPosition = realProfile ? realProfile.position : position;
@@ -156,7 +164,7 @@ export class UnifiedNPCEngine {
     const personalities: NPCPersonalityArchetype[] = ['PROFESSIONAL', 'VOLATILE', 'SUPPORTIVE', 'DEMANDING', 'CHARISMATIC'];
     const personality = personalities[Math.floor(Math.random() * personalities.length)];
 
-    const attrBase = Math.max(10, Math.min(99, finalOVR - 10 + Math.floor(Math.random() * 15)));
+    let attrBase = Math.max(10, Math.min(99, finalOVR - 10 + Math.floor(Math.random() * 15)));
     const attributes: Attributes = {
       pace: attrBase, passing: attrBase, dribbling: attrBase,
       finishing: attrBase, heading: attrBase, shortPassing: attrBase, longPassing: attrBase, ballControl: attrBase,
@@ -164,6 +172,36 @@ export class UnifiedNPCEngine {
       agility: attrBase, balance: attrBase, jumping: attrBase, composure: attrBase, decisionMaking: attrBase,
       tacticalAwareness: attrBase, leadership: attrBase, firstTouch: attrBase, determination: attrBase
     };
+
+    if (clubObj) {
+      const prestigeScore = getClubPrestigeScore(clubObj);
+      const worldRepBoost = getClubWorldReputationBoost(clubObj);
+      const managerPhilosophy = getManagerPhilosophyForClub(clubObj);
+      const stadiumCapacity = getClubStadiumCapacity(clubObj);
+
+      // Manager philosophy tactical specialization
+      if (managerPhilosophy === 'HIGH_PRESS') {
+        attributes.stamina = Math.min(99, attributes.stamina + 5);
+        attributes.tacticalAwareness = Math.min(99, attributes.tacticalAwareness + 4);
+      } else if (managerPhilosophy === 'FREE_FLOWING') {
+        attributes.dribbling = Math.min(99, attributes.dribbling + 5);
+        attributes.firstTouch = Math.min(99, attributes.firstTouch + 4);
+      } else if (managerPhilosophy === 'DEFENSIVE_SOLIDITY') {
+        attributes.positioning = Math.min(99, attributes.positioning + 5);
+        attributes.tackling = Math.min(99, attributes.tackling + 4);
+      } else if (managerPhilosophy === 'DIRECT_PLAY') {
+        attributes.passing = Math.min(99, attributes.passing + 5);
+        attributes.strength = Math.min(99, attributes.strength + 4);
+      }
+
+      if (type === 'YOUTH') {
+        console.log(`[Youth-Generation System] Generated Youth Prospect '${firstName} ${lastName}' for ${clubObj.name} (${clubObj.symbol}):`);
+        console.log(`  ✓ 1. Academy Rating: ${academyRating}/100 -> Potential Boost: +${academyBonus} (Base PA: ${basePotential} -> Final Potential: ${finalPotential})`);
+        console.log(`  ✓ 2. World Reputation / Prestige: Prestige Score ${prestigeScore}/100 (Rep Boost +${worldRepBoost}) -> Prospect Hype Factor set`);
+        console.log(`  ✓ 3. Manager Philosophy: ${managerPhilosophy} -> Tactical attribute specialization applied`);
+        console.log(`  ✓ 4. Stadium Capacity: ${stadiumCapacity.toLocaleString()} seats -> Home Arena tier set`);
+      }
+    }
 
     const npc: PlayerNPC = {
       id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -244,4 +282,31 @@ export class UnifiedNPCEngine {
     this.registry.managers.push(npc);
     return npc;
   }
+}
+
+export function getDeterministicPersonality(name: string): NPCPersonalityArchetype {
+  const archetypes: NPCPersonalityArchetype[] = ['PROFESSIONAL', 'SUPPORTIVE', 'CHARISMATIC', 'VOLATILE', 'DEMANDING'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash |= 0;
+  }
+  return archetypes[Math.abs(hash) % archetypes.length];
+}
+
+export function getNPCRelationshipLabel(score: number): string {
+  if (score >= 85) return 'Soulmates / Ideal Dynamic';
+  if (score >= 70) return 'Close Ally';
+  if (score >= 55) return 'Good Terms';
+  if (score >= 40) return 'Neutral';
+  if (score >= 25) return 'Strained';
+  return 'Fierce Rivalry / Hostile';
+}
+
+export function updateNPCRelationship(npcRelations: Record<string, number>, name: string, delta: number): Record<string, number> {
+  const current = npcRelations[name] || 50;
+  return {
+    ...npcRelations,
+    [name]: Math.min(100, Math.max(0, current + delta))
+  };
 }

@@ -106,12 +106,12 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex justify-center items-center backdrop-blur-md p-3 sm:p-6 font-mono text-white">
-      <div className="bg-[#101211] border border-white/10 w-full max-w-5xl rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/90 flex justify-center items-center p-3 sm:p-6 font-mono text-white">
+      <div className="bg-[#101211] border border-[#222] w-full max-w-5xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-emerald-950/40 via-black to-black">
+        <div className="p-5 border-b border-[#222] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 via-black to-black">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#00FF88]/20 border border-[#00FF88]/40 flex items-center justify-center text-[#00FF88]">
+            <div className="w-10 h-10 bg-[#00FF88]/20 border border-[#00FF88]/40 flex items-center justify-center text-[#00FF88]">
               <Sparkles size={22} />
             </div>
             <div>
@@ -130,7 +130,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex bg-black/60 p-1 rounded-lg border border-white/10 text-xs">
+            <div className="flex bg-black/60 p-1 border border-[#222] text-xs">
               <button
                 onClick={() => setActiveTab('MUSIC')}
                 className={`px-3 py-1.5 rounded uppercase font-bold transition-all ${
@@ -169,7 +169,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
           {activeTab === 'MUSIC' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               {/* Left Column: Context Track Picker */}
-              <div className="lg:col-span-4 space-y-2 bg-black/40 p-3 rounded-xl border border-white/5">
+              <div className="lg:col-span-4 space-y-2 bg-black/40 p-3 border border-[#111]">
                 <div className="text-xs font-bold text-[#00FF88] uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>Contextual Mood Tracks ({moodsList.length})</span>
                   <Radio size={12} className="animate-pulse text-[#00FF88]" />
@@ -185,10 +185,10 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                       <div
                         key={mood}
                         onClick={() => handleSelectMood(mood)}
-                        className={`p-3 rounded-lg border text-left cursor-pointer transition-all flex justify-between items-center ${
+                        className={`p-3 border text-left cursor-pointer transition-all flex justify-between items-center ${
                           isSelected
-                            ? 'bg-[#00FF88]/15 border-[#00FF88] text-white shadow-lg'
-                            : 'bg-[#151716] border-white/5 hover:border-white/20 text-white/70'
+                            ? 'bg-[#00FF88]/15 border-[#00FF88] text-white '
+                            : 'bg-[#151716] border-[#111] hover:border-[#333] text-white/70'
                         }`}
                       >
                         <div>
@@ -206,7 +206,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                             e.stopPropagation();
                             handlePlayMoodTest(mood);
                           }}
-                          className={`p-1.5 rounded-md ${
+                          className={`p-1.5 ${
                             playingPreview === mood ? 'bg-amber-500 text-black' : 'bg-white/10 hover:bg-white/20 text-white'
                           }`}
                         >
@@ -219,15 +219,15 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
               </div>
 
               {/* Right Column: Lyria 3 Generation Console */}
-              <div className="lg:col-span-8 bg-[#151716] border border-white/10 p-5 rounded-xl space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/10 pb-3">
+              <div className="lg:col-span-8 bg-[#151716] border border-[#222] p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#222] pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-white uppercase font-display flex items-center gap-2">
                       <Music size={16} className="text-[#00FF88]" /> {currentPromptData.moodName}
                     </h3>
                     <p className="text-[11px] text-white/50">{currentPromptData.contextDesc}</p>
                   </div>
-                  <span className="text-[10px] font-bold bg-white/5 text-white/70 px-2.5 py-1 rounded border border-white/10">
+                  <span className="text-[10px] font-bold bg-white/5 text-white/70 px-2.5 py-1 rounded border border-[#222]">
                     {currentPromptData.key} &middot; {currentPromptData.bpm} BPM
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value as any)}
-                      className="w-full bg-black border border-white/20 text-white p-2 rounded outline-none focus:border-[#00FF88]"
+                      className="w-full bg-black border border-[#333] text-white p-2 rounded outline-none focus:border-[#00FF88]"
                     >
                       <option value="lyria-3-pro-preview">lyria-3-pro-preview (Full-Length Pro Track)</option>
                       <option value="lyria-3-clip-preview">lyria-3-clip-preview (Fast 30s Loop Clip)</option>
@@ -256,7 +256,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                       type="text"
                       disabled
                       value={currentPromptData.genre}
-                      className="w-full bg-black/50 border border-white/10 text-white/60 p-2 rounded"
+                      className="w-full bg-black/50 border border-[#222] text-white/60 p-2 rounded"
                     />
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                     rows={3}
                     value={promptOverride}
                     onChange={(e) => setPromptOverride(e.target.value)}
-                    className="w-full bg-black border border-white/20 text-white/90 p-2.5 rounded-lg text-xs leading-relaxed outline-none focus:border-[#00FF88]"
+                    className="w-full bg-black border border-[#333] text-white/90 p-2.5 text-xs leading-relaxed outline-none focus:border-[#00FF88]"
                   />
                 </div>
 
@@ -279,7 +279,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                   <button
                     onClick={handleGenerateLyriaTrack}
                     disabled={generatingMood === selectedMood}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-[#00FF88] text-black font-black uppercase text-xs rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                    className="w-full sm:w-auto px-5 py-2.5 text-black font-black uppercase text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {generatingMood === selectedMood ? (
                       <>
@@ -296,7 +296,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                     <a
                       href={generatedTracks[selectedMood].audioUrl}
                       download={`football_odyssey_${selectedMood.toLowerCase()}.wav`}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition-all border border-white/10"
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 transition-all border border-[#222]"
                     >
                       <Download size={14} /> Download WAV File
                     </a>
@@ -305,7 +305,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
 
                 {/* Status / Output Banner */}
                 {apiStatus && (
-                  <div className="bg-black/60 border border-white/10 p-3 rounded-lg text-xs leading-snug text-white/80 flex items-start gap-2">
+                  <div className="bg-black/60 border border-[#222] p-3 text-xs leading-snug text-white/80 flex items-start gap-2">
                     <Info size={14} className="text-[#00FF88] mt-0.5 shrink-0" />
                     <span>{apiStatus}</span>
                   </div>
@@ -317,7 +317,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
           {/* TAB 2: SFX SOUNDBOARD */}
           {activeTab === 'SFX' && (
             <div className="space-y-4">
-              <div className="bg-[#151716] p-4 rounded-xl border border-white/10 flex justify-between items-center">
+              <div className="bg-[#151716] p-4 border border-[#222] flex justify-between items-center">
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase font-display">Zero-Latency Web Audio SFX Engine</h3>
                   <p className="text-[11px] text-white/50">Procedural synthesis for match day whistles, ball strikes, crowd roars, and UI feedback</p>
@@ -341,7 +341,7 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
                   <button
                     key={sfx.type}
                     onClick={() => sfxEngine.play(sfx.type)}
-                    className="p-4 bg-[#151716] border border-white/10 hover:border-[#00FF88] rounded-xl text-left transition-all hover:bg-white/5 group"
+                    className="p-4 bg-[#151716] border border-[#222] hover:border-[#00FF88] text-left transition-all hover:bg-white/5 group"
                   >
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xl">{sfx.icon}</span>
@@ -359,8 +359,8 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
 
           {/* TAB 3: LEGAL & LYRIA 3 SPECS */}
           {activeTab === 'LEGAL_SPECS' && (
-            <div className="bg-[#151716] border border-white/10 p-5 rounded-xl space-y-4 text-xs leading-relaxed text-white/80">
-              <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+            <div className="bg-[#151716] border border-[#222] p-5 space-y-4 text-xs leading-relaxed text-white/80">
+              <div className="flex items-center gap-3 border-b border-[#222] pb-3">
                 <ShieldCheck size={24} className="text-[#00FF88]" />
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase font-display">Google Lyria 3 & SynthID Watermark Specifications</h3>
@@ -369,14 +369,14 @@ export function LyriaMusicStudioModal({ onClose }: LyriaMusicStudioModalProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-black/40 p-4 rounded-lg border border-white/5 space-y-2">
+                <div className="bg-black/40 p-4 border border-[#111] space-y-2">
                   <h4 className="font-bold text-[#00FF88] uppercase text-xs">Lyria 3 API Models</h4>
                   <p className="text-[11px] text-white/70">
                     Google offers <strong className="text-white">lyria-3-pro-preview</strong> for full-length tracks (up to ~3 mins) and <strong className="text-white">lyria-3-clip-preview</strong> for 30-second rapid loops. Output is generated at 44.1kHz stereo audio.
                   </p>
                 </div>
 
-                <div className="bg-black/40 p-4 rounded-lg border border-white/5 space-y-2">
+                <div className="bg-black/40 p-4 border border-[#111] space-y-2">
                   <h4 className="font-bold text-[#00FF88] uppercase text-xs">SynthID Digital Watermarking</h4>
                   <p className="text-[11px] text-white/70">
                     All Lyria 3 generated audio streams automatically embed Google's imperceptible SynthID watermark directly into the audio waveform, ensuring authenticity and AI origin transparency without affecting audio fidelity.

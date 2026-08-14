@@ -50,12 +50,12 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl bg-[#0c0c0c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 animate-fade-in">
+      <div className="w-full max-w-2xl bg-[#0c0c0c] border border-[#222] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#111]">
+        <div className="p-4 border-b border-[#222] flex justify-between items-center bg-[#111]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+            <div className="p-2 bg-blue-500/10 text-blue-400">
               <Briefcase size={20} />
             </div>
             <div>
@@ -63,7 +63,7 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
               <p className="text-white/50 text-[10px] uppercase font-mono tracking-wider">{currentAgentName}</p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 text-white/50 hover:text-white transition-colors bg-white/5 rounded-lg">
+          <button onClick={handleClose} className="p-2 text-white/50 hover:text-white transition-colors bg-white/5 ">
             <X size={18} />
           </button>
         </div>
@@ -89,7 +89,7 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
           <div className="p-8 animate-fade-in">
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-1 space-y-6">
-                <div className="bg-[#111] border border-white/10 p-5 rounded-xl relative">
+                <div className="bg-[#111] border border-[#222] p-5 relative">
                   <div className="absolute -top-3 -left-3 bg-blue-500 text-white text-[10px] font-black px-2 py-1 uppercase rounded tracking-widest">
                     Agent's Response
                   </div>
@@ -100,14 +100,14 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
 
                 <div className="space-y-3">
                   <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest font-mono">Meeting Summary</h4>
-                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl text-sm text-white/80">
+                  <div className="bg-white/5 border border-[#222] p-4 text-sm text-white/80">
                     {result.summary}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+                  <div className="bg-white/5 border border-[#222] p-3 flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 text-blue-400 ">
                       <Briefcase size={16} />
                     </div>
                     <div>
@@ -123,7 +123,7 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
 
                 <button 
                   onClick={handleClose}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black uppercase tracking-widest rounded-xl text-xs transition-colors shadow-lg shadow-blue-500/20"
+                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black uppercase tracking-widest text-xs transition-colors "
                 >
                   Conclude Meeting
                 </button>
@@ -133,12 +133,12 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
         ) : (
           <div className="flex flex-col md:flex-row h-full max-h-[70vh]">
             {/* Sidebar Topics */}
-            <div className="w-full md:w-48 bg-[#111] border-r border-white/10 p-4 flex flex-col gap-2 shrink-0 overflow-y-auto">
+            <div className="w-full md:w-48 bg-[#111] border-r border-[#222] p-4 flex flex-col gap-2 shrink-0 overflow-y-auto">
               <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-widest font-mono mb-2 px-2">Discussion Topics</h3>
               
               <button 
                 onClick={() => handleTopicChange('TRANSFER_AMBITION')}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'TRANSFER_AMBITION' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                className={`flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'TRANSFER_AMBITION' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
               >
                 <Users size={14} className={selectedTopic === 'TRANSFER_AMBITION' ? 'text-white' : 'text-blue-400'} />
                 Transfers
@@ -146,7 +146,7 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
               
               <button 
                 onClick={() => handleTopicChange('CONTRACT_DEMANDS')}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'CONTRACT_DEMANDS' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                className={`flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'CONTRACT_DEMANDS' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
               >
                 <DollarSign size={14} className={selectedTopic === 'CONTRACT_DEMANDS' ? 'text-white' : 'text-emerald-400'} />
                 Contracts
@@ -154,7 +154,7 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
               
               <button 
                 onClick={() => handleTopicChange('PR_STRATEGY')}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'PR_STRATEGY' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                className={`flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors text-left ${selectedTopic === 'PR_STRATEGY' ? 'bg-blue-500 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
               >
                 <MessageSquare size={14} className={selectedTopic === 'PR_STRATEGY' ? 'text-white' : 'text-amber-400'} />
                 PR & Media
@@ -175,10 +175,10 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
                   <button
                     key={opt.id}
                     onClick={() => setSelectedOptionId(opt.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    className={`w-full text-left p-4 border transition-all ${
                       selectedOptionId === opt.id 
                         ? 'border-blue-500 bg-blue-500/10' 
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        : 'border-[#222] bg-white/5 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
@@ -192,13 +192,13 @@ export const AgentMeetingModal: React.FC<AgentMeetingModalProps> = ({ isOpen, on
                 ))}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="mt-8 pt-6 border-t border-[#222]">
                 <button 
                   onClick={handleStartMeeting}
                   disabled={!selectedOptionId}
-                  className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${
+                  className={`w-full py-3.5 text-xs font-black uppercase tracking-widest transition-all ${
                     selectedOptionId 
-                      ? 'bg-blue-500 hover:bg-blue-400 text-white shadow-blue-500/20' 
+                      ? 'bg-blue-500 hover:bg-blue-400 text-white ' 
                       : 'bg-white/5 text-white/30 cursor-not-allowed'
                   }`}
                 >

@@ -290,7 +290,7 @@ export function Career() {
 
  return (
  <div className="flex flex-col h-full gap-6">
-  <div className="flex gap-4 border-b border-white/10 pb-4 shrink-0">
+  <div className="flex gap-4 border-b border-[#222] pb-4 shrink-0">
   
   <button 
    onClick={() => setActiveTab('TIMELINE')}
@@ -337,7 +337,7 @@ export function Career() {
     return (
      <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 no-scrollbar animate-fade-in font-sans text-white">
       {/* DYNAMIC NARRATIVE SUMMARY */}
-      <div className="premium-card p-6 rounded-xl border border-white/5 bg-zinc-950/20">
+      <div className="premium-card p-6 border border-[#111] bg-zinc-950/20">
        <h3 className="text-white text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2">
         <Users size={16} className="text-[#00FF88]" />
         Dressing Room & Boardroom Relations Summary
@@ -353,10 +353,10 @@ export function Career() {
           'CORDIAL': 'text-sky-400 border-sky-500/20 bg-sky-500/5',
           'SKEPTICAL': 'text-amber-400 border-amber-500/20 bg-amber-500/5',
           'CONFLICT': 'text-red-400 border-red-500/20 bg-red-500/5 animate-pulse'
-         }[item.status as string] || 'text-zinc-400 border-white/5 bg-zinc-900/5';
+         }[item.status as string] || 'text-zinc-400 border-[#111] bg-zinc-900/5';
 
          return (
-          <div key={key} className="glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between space-y-3 bg-[#0a0a0a]/30">
+          <div key={key} className="glass-panel p-4 border border-[#111] flex flex-col justify-between space-y-3 bg-[#0a0a0a]/30">
            <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 font-mono">{key.toUpperCase()}</span>
             <span className={`px-2 py-0.5 rounded border text-[9px] font-bold font-mono tracking-wide ${relationColors}`}>
@@ -371,13 +371,13 @@ export function Career() {
       </div>
 
       {/* FILTER & SEARCH PANEL */}
-      <div className="premium-card p-4 rounded-xl border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-3 bg-zinc-950/20">
+      <div className="premium-card p-4 border border-[#111] grid grid-cols-1 md:grid-cols-3 gap-3 bg-zinc-950/20">
        <div>
         <label className="block text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1 font-mono">Significance Filter</label>
         <select
          value={significanceFilter}
          onChange={(e) => setSignificanceFilter(e.target.value)}
-         className="w-full bg-[#0d0d0d] border border-white/10 rounded px-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
+         className="w-full bg-[#0d0d0d] border border-[#222] rounded px-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
         >
          <option value="ALL">All Significance Levels</option>
          <option value="MINOR">Minor</option>
@@ -392,7 +392,7 @@ export function Career() {
         <select
          value={systemFilter}
          onChange={(e) => setSystemFilter(e.target.value)}
-         className="w-full bg-[#0d0d0d] border border-white/10 rounded px-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
+         className="w-full bg-[#0d0d0d] border border-[#222] rounded px-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
         >
          <option value="ALL">All Sources</option>
          <option value="Cutscene">Story Cutscenes</option>
@@ -410,7 +410,7 @@ export function Career() {
           placeholder="Search choices..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-[#0d0d0d] border border-white/10 rounded pl-8 pr-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
+          className="w-full bg-[#0d0d0d] border border-[#222] rounded pl-8 pr-3 py-2 text-xs text-zinc-300 outline-none focus:border-[#00FF88]"
          />
          <Search size={12} className="absolute left-2.5 top-3 text-zinc-500" />
         </div>
@@ -418,20 +418,20 @@ export function Career() {
       </div>
 
       {/* CHRONOLOGICAL DECISION LEDGER */}
-      <div className="premium-card p-6 rounded-xl border border-white/5 space-y-4">
+      <div className="premium-card p-6 border border-[#111] space-y-4">
        <div className="flex justify-between items-center mb-2">
         <h3 className="text-white text-xs font-black uppercase tracking-widest font-mono">Narrative Footprint Log ({results.length})</h3>
         <span className="text-[10px] text-zinc-500 font-mono uppercase">Chronological Ledger</span>
        </div>
 
        {results.length === 0 ? (
-        <div className="text-center py-12 text-zinc-500 border border-dashed border-white/10 rounded-lg">
+        <div className="text-center py-12 text-zinc-500 border border-dashed border-[#222] ">
          <Compass size={32} className="mx-auto mb-2 text-zinc-700 animate-pulse" />
          <p className="text-xs font-bold">No registered choices match your filters.</p>
          <p className="text-[10px] text-zinc-600 mt-1 font-mono">Your memory grows as you resolve more in-game dilemmas.</p>
         </div>
        ) : (
-        <div className="relative border-l border-white/10 pl-6 space-y-6 ml-3 py-2">
+        <div className="relative border-l border-[#222] pl-6 space-y-6 ml-3 py-2">
          {results.map((entry, index) => {
           const sigColors = {
            'MINOR': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
@@ -444,13 +444,13 @@ export function Career() {
           const echoStatus = isFresh ? 'ACTIVE IMPACT' : 'COOLING OFF';
           const echoColors = isFresh 
            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
-           : 'text-zinc-500 bg-zinc-900/40 border-white/5';
+           : 'text-zinc-500 bg-zinc-900/40 border-[#111]';
 
           return (
            <div key={entry.id} className="relative group">
             <div className="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-[#111] border-2 border-[#00FF88] group-hover:scale-125 transition-transform" />
             
-            <div className="glass-panel p-5 rounded-xl border border-white/5 hover:border-white/10 transition-colors space-y-3 bg-zinc-900/20">
+            <div className="glass-panel p-5 border border-[#111] hover:border-[#222] transition-colors space-y-3 bg-zinc-900/20">
              <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                <span className="text-xs font-black text-white">{entry.choiceText}</span>
@@ -463,7 +463,7 @@ export function Career() {
 
              <p className="text-xs text-zinc-400 leading-relaxed font-sans">{entry.description}</p>
 
-             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5 text-[9px] font-mono text-zinc-500">
+             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#111] text-[9px] font-mono text-zinc-500">
               <div className="flex flex-wrap gap-2">
                <span>System: <strong className="text-zinc-400">{entry.system}</strong></span>
                {entry.npcsInvolved.length > 0 && (
@@ -494,27 +494,27 @@ export function Career() {
   {activeTab === 'OVERVIEW' && (
   <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar">
    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
-    <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="premium-card p-6 flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Apps</div>
     <div className="text-white text-4xl font-black z-10">{player.stats?.apps || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.apps}</div>
     </div>
-    <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="premium-card p-6 flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Goals</div>
     <div className="text-white text-4xl font-black z-10">{player.stats?.goals || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.goals}</div>
     </div>
-    <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="premium-card p-6 flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Assists</div>
     <div className="text-white text-4xl font-black z-10">{player.stats?.assists || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.assists}</div>
     </div>
-    <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="premium-card p-6 flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Caps</div>
     <div className="text-white text-4xl font-black z-10">{player.stats?.caps || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.caps}</div>
     </div>
-    <div className="premium-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="premium-card p-6 flex flex-col justify-center items-center relative overflow-hidden">
     <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2 z-10">Intl Goals</div>
     <div className="text-white text-4xl font-black z-10">{player.stats.intlGoals || 0}</div>
     <div className="absolute -bottom-4 -right-4 text-[#00FF88]/5 text-8xl font-black">{player.stats.intlGoals || 0}</div>
@@ -524,14 +524,14 @@ export function Career() {
    <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-[400px]">
    {/* Contracts & Finances */}
    <div className="w-full lg:w-[320px] flex flex-col gap-6 shrink-0">
-    <div className="premium-card p-6 rounded-xl flex flex-col relative overflow-hidden flex-1">
-     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-white/10/60 pb-2">Current Contract</h3>
+    <div className="premium-card p-6 flex flex-col relative overflow-hidden flex-1">
+     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-[#222]/60 pb-2">Current Contract</h3>
      <div className="space-y-4 flex-1">
       <div>
       <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">Wage</div>
       <div className="text-white text-2xl font-black">£{player.contract.wage.toLocaleString()} <span className="text-white/40 text-xs font-bold uppercase tracking-widest">p/w</span></div>
       </div>
-      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#222]">
       <div>
        <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">Expires</div>
        <div className="text-white font-bold text-xs">{player.contract.expires}</div>
@@ -542,7 +542,7 @@ export function Career() {
       </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#222]">
       <div>
        <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">Appearance Bonus</div>
        <div className="text-white font-bold text-xs">£{player.contract.appearanceBonus?.toLocaleString() || 0}</div>
@@ -554,7 +554,7 @@ export function Career() {
       </div>
       
       {player.contract.releaseClause && (
-      <div className="pt-3 border-t border-white/10">
+      <div className="pt-3 border-t border-[#222]">
        <div className="text-red-400 text-[9px] font-bold uppercase tracking-widest mb-1"><GlossaryTooltip term="Release Clause Trigger">Release Clause Trigger</GlossaryTooltip></div>
        <div className="text-white font-bold text-xs">£{player.contract.releaseClause.toLocaleString()}</div>
       </div>
@@ -572,7 +572,7 @@ export function Career() {
      </div>
     </div>
     
-    <div className="premium-card p-6 rounded-xl flex flex-col relative overflow-hidden shrink-0">
+    <div className="premium-card p-6 flex flex-col relative overflow-hidden shrink-0">
      <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4">Bank Balance</h3>
      <div className="text-white text-3xl font-black tracking-tighter">£{((player.finances?.balance || 0) / 1000000).toFixed(2)}M</div>
      <div className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -582,7 +582,7 @@ export function Career() {
    </div>
    
    {/* Records & Legacy & Story Arc */}
-   <div className="flex-1 premium-card p-6 rounded-xl flex flex-col overflow-y-auto no-scrollbar gap-8">
+   <div className="flex-1 premium-card p-6 flex flex-col overflow-y-auto no-scrollbar gap-8">
     
     
     {/* RADAR CHART WIDGET */}
@@ -591,8 +591,8 @@ export function Career() {
     {/* STORY ARC WIDGET */}
     {player.storyArc && (
      <div>
-     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4 pb-2 border-b border-white/10 shrink-0">Personal Journey</h3>
-     <div className="glass-panel p-5 rounded-lg mb-4">
+     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4 pb-2 border-b border-[#222] shrink-0">Personal Journey</h3>
+     <div className="glass-panel p-5 mb-4">
       <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">Driving Question</div>
       <div className="text-white font-bold text-sm leading-snug italic">"{player.storyArc.drivingQuestion}"</div>
      </div>
@@ -625,7 +625,7 @@ export function Career() {
        <div className="text-[#555] text-xs italic">Your story is just beginning to unfold...</div>
        )}
        {player.storyArc.resolution && (
-       <div className="mt-4 pt-4 border-t border-white/10">
+       <div className="mt-4 pt-4 border-t border-[#222]">
         <div className="text-[#00FF88] text-[9px] font-bold uppercase tracking-widest mb-1">Arc Resolution</div>
         <div className="text-white font-bold text-xs">Path: {player.storyArc.resolution}</div>
        </div>
@@ -637,10 +637,10 @@ export function Career() {
     
      {player.careerIdentity && player.careerIdentity.length > 0 && (
       <div>
-       <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-white/10 shrink-0">Career Identity & Manager Fit</h3>
+       <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-[#222] shrink-0">Career Identity & Manager Fit</h3>
        <div className="space-y-3">
         {player.careerIdentity.map((identity, idx) => (
-         <div key={idx} className="bg-[#111] border border-[#222] p-4 rounded-lg flex justify-between items-center">
+         <div key={idx} className="bg-[#111] border border-[#222] p-4 flex justify-between items-center">
           <div>
            <div className="text-white font-bold text-xs uppercase tracking-wider">{identity.philosophy.replace('_', ' ')}</div>
            <div className="text-white/40 text-[9px] uppercase tracking-widest mt-1">Matches: {identity.matchesPlayed}</div>
@@ -658,9 +658,9 @@ export function Career() {
      )}
      {/* RITUALS */}
      <div>
-       <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-white/10 shrink-0">Matchday Rituals</h3>
+       <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-[#222] shrink-0">Matchday Rituals</h3>
        {player.matchdayRitual?.active ? (
-        <div className="bg-[#111] border border-[#222] p-4 rounded-lg">
+        <div className="bg-[#111] border border-[#222] p-4 ">
          <div className="text-white font-bold text-xs uppercase tracking-wider mb-1">{player.matchdayRitual.name}</div>
          <div className="text-white/40 text-[10px] leading-relaxed mb-3">{RITUALS.find(r => r.name === player.matchdayRitual?.name)?.description}</div>
          <div className="text-[#00FF88] font-mono text-[9px] font-bold uppercase">{player.matchdayRitual.effect}</div>
@@ -677,7 +677,7 @@ export function Career() {
              matchdayRitual: { name: r.name, active: true, effect: r.effect }
             });
            }}
-           className="w-full text-left bg-zinc-950 hover:bg-[#111] border border-white/5 hover:border-[#00FF88]/30 p-4 rounded-lg transition-all"
+           className="w-full text-left bg-zinc-950 hover:bg-[#111] border border-[#111] hover:border-[#00FF88]/30 p-4 transition-all"
           >
            <div className="text-white font-bold text-xs uppercase tracking-wider mb-1">{r.name}</div>
            <div className="text-white/40 text-[10px] leading-relaxed mb-2">{r.description}</div>
@@ -688,7 +688,7 @@ export function Career() {
        )}
      </div>
     <div>
-     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-white/10 shrink-0">Club Records Pursuit</h3>
+     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-[#222] shrink-0">Club Records Pursuit</h3>
     
     <div className="space-y-6">
      <div>
@@ -734,13 +734,13 @@ export function Career() {
    </div>
    
    <div className="w-full lg:w-[300px] flex flex-col gap-6 shrink-0">
-    <div className="premium-card p-6 rounded-xl flex flex-col flex-1">
-     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">Trophy Cabinet</h3>
+    <div className="premium-card p-6 flex flex-col flex-1">
+     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-[#222] pb-2">Trophy Cabinet</h3>
      <div className="flex-1 flex items-center justify-center text-[#555555] text-xs font-bold uppercase tracking-widest text-center px-4">
       No silverware yet. Get to work.
      </div>
     </div>
-    <div className="glass-panel p-6 rounded-xl flex flex-col shrink-0">
+    <div className="glass-panel p-6 flex flex-col shrink-0">
      <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-3">Social Reputation</h3>
      <div className="flex justify-between items-end mb-3">
       <div className="text-white/50 font-bold uppercase tracking-widest text-[9px]">Followers</div>
@@ -767,7 +767,7 @@ export function Career() {
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 no-scrollbar">
     
     {/* Header / Intro */}
-    <div className="premium-card p-6 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="premium-card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
      <div>
       <h2 className="text-white text-lg font-black uppercase tracking-wide flex items-center gap-2">
        <Sparkles className="text-[#00FF88]" size={20} />
@@ -784,7 +784,7 @@ export function Career() {
       {getReputationTags(player).map(tagId => {
        const tag = REPUTATION_TAGS.find(t => t.id === tagId);
        return (
-        <span key={tagId} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${tag?.badgeColor || 'bg-white/10 text-white/70 border-white/20'}`}>
+        <span key={tagId} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${tag?.badgeColor || 'bg-white/10 text-white/70 border-[#333]'}`}>
          {getTagName(tagId)}
         </span>
        );
@@ -795,7 +795,7 @@ export function Career() {
     {/* THREE TRACKED DIMENSIONS GRID */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
      {/* 1. World Reputation */}
-     <div className="premium-card p-6 rounded-xl flex flex-col justify-between">
+     <div className="premium-card p-6 flex flex-col justify-between">
       <div>
        <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
@@ -816,14 +816,14 @@ export function Career() {
         <span>Local Profile</span>
         <span>Global Icon</span>
        </div>
-       <div className="mt-4 pt-3 border-t border-white/5 text-[9px] text-emerald-400 font-mono">
+       <div className="mt-4 pt-3 border-t border-[#111] text-[9px] text-emerald-400 font-mono">
         🎯 Unlocks: Brand Deals (VictorySwoosh, LuxoChrono, etc.) & High Real Estate Trusts.
        </div>
       </div>
      </div>
 
      {/* 2. Media Perception */}
-     <div className="premium-card p-6 rounded-xl flex flex-col justify-between">
+     <div className="premium-card p-6 flex flex-col justify-between">
       <div>
        <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
@@ -844,14 +844,14 @@ export function Career() {
         <span>Tabloid Target</span>
         <span>Media Darling</span>
        </div>
-       <div className="mt-4 pt-3 border-t border-white/5 text-[9px] text-cyan-400 font-mono">
+       <div className="mt-4 pt-3 border-t border-[#111] text-[9px] text-cyan-400 font-mono">
         🎯 Unlocks: Transfer Scouting (T2/T1 interest), Reduces Press Penalty, weekly sponsor bonus.
        </div>
       </div>
      </div>
 
      {/* 3. Peer Respect */}
-     <div className="premium-card p-6 rounded-xl flex flex-col justify-between">
+     <div className="premium-card p-6 flex flex-col justify-between">
       <div>
        <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
@@ -872,7 +872,7 @@ export function Career() {
         <span>Disruptive influence</span>
         <span>Locker Room Anchor</span>
        </div>
-       <div className="mt-4 pt-3 border-t border-white/5 text-[9px] text-emerald-400 font-mono">
+       <div className="mt-4 pt-3 border-t border-[#111] text-[9px] text-emerald-400 font-mono">
         🎯 Unlocks: Training XP modifiers, prevents Dressing Room unrest, unlocks Elite Transfer Scouting.
        </div>
       </div>
@@ -880,7 +880,7 @@ export function Career() {
     </div>
 
     {/* PERSISTENT TAGS DESCRIPTION BLOCK */}
-    <div className="premium-card p-6 rounded-xl">
+    <div className="premium-card p-6 ">
      <h3 className="text-white text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-1.5">
       <Award size={14} className="text-[#00FF88]" />
       Qualitative Reputation Badges & Traits
@@ -892,7 +892,7 @@ export function Career() {
       {REPUTATION_TAGS.map(tag => {
        const isActive = getReputationTags(player).includes(tag.id);
        return (
-        <div key={tag.id} className={`p-4 border rounded-xl flex flex-col justify-between transition-all duration-300 ${isActive ? 'bg-[#00FF88]/5 border-[#00FF88]/40' : 'bg-[#050505]/40 border-white/5 opacity-50'}`}>
+        <div key={tag.id} className={`p-4 border flex flex-col justify-between transition-all duration-300 ${isActive ? 'bg-[#00FF88]/5 border-[#00FF88]/40' : 'bg-[#050505]/40 border-[#111] opacity-50'}`}>
          <div>
           <div className="flex items-center justify-between mb-2">
            <span className="text-xs font-bold text-white uppercase tracking-wider">{tag.name}</span>
@@ -900,7 +900,7 @@ export function Career() {
           </div>
           <p className="text-white/40 text-[10px] leading-relaxed mb-3">{tag.description}</p>
          </div>
-         <div className="space-y-2 pt-2 border-t border-white/5 text-[9px]">
+         <div className="space-y-2 pt-2 border-t border-[#111] text-[9px]">
           <div><strong className="text-white/50 uppercase">Trigger:</strong> <span className="text-white/70">{tag.triggerDesc}</span></div>
           <div><strong className="text-[#00FF88] uppercase">Effect:</strong> <span className="text-white/90">{tag.effectDesc}</span></div>
          </div>
@@ -913,7 +913,7 @@ export function Career() {
     {/* SEASON NARRATIVE SIMULATOR (WORKED EXAMPLE) */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
      {/* Simulator Configuration */}
-     <div className="premium-card p-6 rounded-xl flex flex-col justify-between">
+     <div className="premium-card p-6 flex flex-col justify-between">
       <div>
        <h3 className="text-white text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
         <Activity size={14} className="text-[#00FF88]" />
@@ -927,7 +927,7 @@ export function Career() {
         <button
          onClick={() => setSelectedPersona('SILENT')}
          disabled={simulating}
-         className={`p-3 border rounded-xl text-left transition-all ${selectedPersona === 'SILENT' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20'}`}
+         className={`p-3 border text-left transition-all ${selectedPersona === 'SILENT' ? 'border-emerald-500 bg-emerald-500/5' : 'border-[#222] hover:border-[#333]'}`}
         >
          <span className="text-[10px] font-black text-white block uppercase tracking-wider">The Silent Pro</span>
          <span className="text-[8px] text-white/40 block mt-1 leading-tight">Focuses purely on performance. Humble in press, works hard.</span>
@@ -935,7 +935,7 @@ export function Career() {
         <button
          onClick={() => setSelectedPersona('REBEL')}
          disabled={simulating}
-         className={`p-3 border rounded-xl text-left transition-all ${selectedPersona === 'REBEL' ? 'border-red-500 bg-red-500/5' : 'border-white/10 hover:border-white/20'}`}
+         className={`p-3 border text-left transition-all ${selectedPersona === 'REBEL' ? 'border-red-500 bg-red-500/5' : 'border-[#222] hover:border-[#333]'}`}
         >
          <span className="text-[10px] font-black text-white block uppercase tracking-wider">Tabloid Maverick</span>
          <span className="text-[8px] text-white/40 block mt-1 leading-tight">Elite output on pitch, but highly combative, outspoken in media.</span>
@@ -943,7 +943,7 @@ export function Career() {
         <button
          onClick={() => setSelectedPersona('PR_STAR')}
          disabled={simulating}
-         className={`p-3 border rounded-xl text-left transition-all ${selectedPersona === 'PR_STAR' ? 'border-cyan-500 bg-cyan-500/5' : 'border-white/10 hover:border-white/20'}`}
+         className={`p-3 border text-left transition-all ${selectedPersona === 'PR_STAR' ? 'border-cyan-500 bg-cyan-500/5' : 'border-[#222] hover:border-[#333]'}`}
         >
          <span className="text-[10px] font-black text-white block uppercase tracking-wider">PR Fashion Icon</span>
          <span className="text-[8px] text-white/40 block mt-1 leading-tight">Glamorous off-field lifestyle. Pristine public and commercial branding.</span>
@@ -974,9 +974,9 @@ export function Career() {
      </div>
 
      {/* Simulator Logs & Concrete Divergence Outcomes */}
-     <div className="premium-card p-6 rounded-xl flex flex-col justify-between max-h-[360px] overflow-hidden">
+     <div className="premium-card p-6 flex flex-col justify-between max-h-[360px] overflow-hidden">
       <div className="flex-1 flex flex-col justify-between overflow-hidden">
-       <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3 pb-2 border-b border-white/5">
+       <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3 pb-2 border-b border-[#111]">
         Simulation Stream & Career Results
        </h4>
        
@@ -990,7 +990,7 @@ export function Career() {
        </div>
 
        {simResults && (
-        <div className="mt-4 pt-3 border-t border-white/10 space-y-3 bg-[#020202]/50 p-3 rounded-lg">
+        <div className="mt-4 pt-3 border-t border-[#222] space-y-3 bg-[#020202]/50 p-3 ">
          <div className="grid grid-cols-3 gap-2 font-black text-center text-[10px]">
           <div className="text-amber-500 font-mono">World Rep: {simResults.worldRep}%</div>
           <div className="text-cyan-400 font-mono">Media Percep: {simResults.mediaPercep}%</div>
@@ -1007,7 +1007,7 @@ export function Career() {
     </div>
 
     {/* SYSTEM INTEGRATION MAP */}
-    <div className="premium-card p-6 rounded-xl">
+    <div className="premium-card p-6 ">
      <h3 className="text-white text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-1.5">
       <Compass size={14} className="text-[#00FF88]" />
       System Integration Map: Unified Gating Registry
@@ -1016,25 +1016,25 @@ export function Career() {
       Our three reputation dimensions are fed by and directly dictate outputs across all major application subsystems, eliminating fragmented, hardcoded logic:
      </p>
      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono text-white/70">
-      <div className="p-4 bg-[#0a0a0a] border border-white/5 rounded-lg">
+      <div className="p-4 bg-[#0a0a0a] border border-[#111] ">
        <div className="text-amber-500 font-bold mb-2">1. Brand Deals</div>
        <p className="text-[10px] text-white/50 leading-relaxed">
         <strong>Reads World Reputation.</strong> Sets hard thresholds to unlock custom shoe lines, watches, or hypercar sponsorships (15% to 90% gates) in your Finance tab.
        </p>
       </div>
-      <div className="p-4 bg-[#0a0a0a] border border-white/5 rounded-lg">
+      <div className="p-4 bg-[#0a0a0a] border border-[#111] ">
        <div className="text-cyan-400 font-bold mb-2">2. Transfer Pacing</div>
        <p className="text-[10px] text-white/50 leading-relaxed">
         <strong>Reads Media Perception & Peer Respect.</strong> Unlocks credible rumors and scout interests. If either metric falls below 45/55, you are gated from Tier 3/2 transfers.
        </p>
       </div>
-      <div className="p-4 bg-[#0a0a0a] border border-white/5 rounded-lg">
+      <div className="p-4 bg-[#0a0a0a] border border-[#111] ">
        <div className="text-emerald-400 font-bold mb-2">3. Dressing Room</div>
        <p className="text-[10px] text-white/50 leading-relaxed">
         <strong>Reads Peer Respect.</strong> Weekly progress checks your locker standing. Lower respect triggers "Dressing Room Rumbles" or team rifts, whilst high respect yields +10% Training XP.
        </p>
       </div>
-      <div className="p-4 bg-[#0a0a0a] border border-white/5 rounded-lg">
+      <div className="p-4 bg-[#0a0a0a] border border-[#111] ">
        <div className="text-[#00FF88] font-bold mb-2">4. Press & Board</div>
        <p className="text-[10px] text-white/50 leading-relaxed">
         <strong>Feeds All Dimensions.</strong> Your tone (Combative vs defend vs humble) adds instant delta adjustments, with press conferences logging concrete historical reasons in your profile feed.
@@ -1044,7 +1044,7 @@ export function Career() {
     </div>
 
     {/* CAUSE-AND-EFFECT HISTORY FEED */}
-    <div className="premium-card p-6 rounded-xl">
+    <div className="premium-card p-6 ">
      <h3 className="text-white text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-1.5">
       <Activity size={14} className="text-[#00FF88]" />
       Reputation & Perception Event History
@@ -1062,7 +1062,7 @@ export function Career() {
         if (logItem.deltaPeer !== 0) parts.push(`Peer Respect: ${logItem.deltaPeer > 0 ? '+' : ''}${logItem.deltaPeer}`);
         
         return (
-         <div key={hIdx} className="flex justify-between items-center bg-[#070707] border border-white/5 p-3 rounded-lg text-xs">
+         <div key={hIdx} className="flex justify-between items-center bg-[#070707] border border-[#111] p-3 text-xs">
           <div className="flex gap-4 items-center">
            <span className="text-[#00FF88] font-bold uppercase tracking-widest text-[9px] bg-[#00FF88]/10 px-2 py-0.5 rounded">
             {logItem.date}
@@ -1083,8 +1083,8 @@ export function Career() {
 
   
   {activeTab === 'TIMELINE' && (
-   <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative p-4 bg-zinc-950/20 rounded-xl border border-white/5">
-   <div className="absolute left-10 top-0 bottom-0 w-px bg-gradient-to-b from-white/5 via-white/20 to-transparent z-0"></div>
+   <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative p-4 bg-zinc-950/20 border border-[#111]">
+   <div className="absolute left-10 top-0 bottom-0 w-px from-white/5 via-white/20 to-transparent z-0"></div>
    {(player.timeline && player.timeline.length > 0) ? player.timeline.slice().reverse().map((event: any, idx: number) => (
     <div key={idx} className="relative z-10 flex gap-6 mb-8 group">
      <div className="w-12 flex flex-col items-center shrink-0">
@@ -1105,7 +1105,7 @@ export function Career() {
     </div>
    )) : (
     <div className="flex-1 flex flex-col items-center justify-center text-center py-12 px-6 relative z-20">
-    <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center mb-3 border border-white/5">
+    <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center mb-3 border border-[#111]">
      <Trophy className="text-[#444] w-6 h-6" />
     </div>
     <div className="text-white/40 text-[11px] font-bold uppercase tracking-widest">No timeline events recorded yet</div>
@@ -1117,8 +1117,8 @@ export function Career() {
   
 {activeTab === 'INTERNATIONAL' && (
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar animate-fade-in">
-    <div className="premium-card p-6 rounded-xl flex flex-col gap-4">
-     <div className="border-b border-white/10 pb-4">
+    <div className="premium-card p-6 flex flex-col gap-4">
+     <div className="border-b border-[#222] pb-4">
       <h3 className="text-white text-base font-black tracking-wider uppercase flex items-center gap-2">
        <Globe className="text-[#00FF88]" size={16} />
        International Tournament Group Standings
@@ -1131,7 +1131,7 @@ export function Career() {
      <div className="overflow-x-auto">
       <table className="w-full text-left font-mono text-xs border-collapse">
        <thead>
-        <tr className="border-b border-white/10 text-white/40 text-[10px] uppercase tracking-widest font-bold">
+        <tr className="border-b border-[#222] text-white/40 text-[10px] uppercase tracking-widest font-bold">
          <th className="py-3 px-2">Pos</th>
          <th className="py-3 px-4">Nation</th>
          <th className="py-3 px-2 text-center">P</th>
@@ -1148,7 +1148,7 @@ export function Career() {
          return (
           <tr 
            key={team.symbol} 
-           className={`border-b border-white/5 transition-colors ${
+           className={`border-b border-[#111] transition-colors ${
             isUserNation ? 'bg-[#00FF88]/10 text-[#00FF88] font-bold' : 'hover:bg-white/5 text-white'
            }`}
           >
@@ -1173,7 +1173,7 @@ export function Career() {
       </table>
      </div>
 
-     <div className="bg-[#0a0a0a] border border-white/5 p-4 rounded-lg mt-4 text-[11px] leading-relaxed text-white/60 font-sans">
+     <div className="bg-[#0a0a0a] border border-[#111] p-4 mt-4 text-[11px] leading-relaxed text-white/60 font-sans">
       <span className="text-[#00FF88] uppercase tracking-widest text-[9px] font-bold font-mono block mb-1">Board Directive & Qualification Status</span>
       <p>
        The top two nations secure immediate automatic tickets to the European Championship Finals. Third place enters a playoff round, while any placement lower results in tournament elimination.
@@ -1186,8 +1186,8 @@ export function Career() {
   {activeTab === 'LEGACY' && (
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar animate-fade-in">
     {/* 1. STADIUM & MILESTONE BADGES */}
-    <div className="premium-card p-6 rounded-xl flex flex-col gap-6">
-     <div className="border-b border-white/10 pb-4">
+    <div className="premium-card p-6 flex flex-col gap-6">
+     <div className="border-b border-[#222] pb-4">
       <h3 className="text-white text-base font-black tracking-wider uppercase flex items-center gap-2">
        <Award className="text-[#00FF88]" size={16} />
        Career Legacy & Milestone Badge Tracker
@@ -1199,10 +1199,10 @@ export function Career() {
 
      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Named Stand */}
-      <div className={`border p-5 rounded-lg flex flex-col items-center justify-between text-center transition-all ${
+      <div className={`border p-5 flex flex-col items-center justify-between text-center transition-all ${
        player.stateFlags?.stadiumMilestones?.hasNamedStand 
         ? 'border-amber-500/30 bg-amber-500/5 text-white' 
-        : 'border-white/5 bg-[#0a0a0a]/50 text-white/30'
+        : 'border-[#111] bg-[#0a0a0a]/50 text-white/30'
       }`}>
        <div className="text-4xl mb-3">{player.stateFlags?.stadiumMilestones?.hasNamedStand ? '🏟️' : '🔒'}</div>
        <div>
@@ -1216,17 +1216,17 @@ export function Career() {
          <span>Progress</span>
          <span className={player.stateFlags?.stadiumMilestones?.hasNamedStand ? 'text-amber-400 font-bold' : ''}>{player.stats.apps} / 200 Apps</span>
         </div>
-        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-[#222]">
          <div className={`h-full ${player.stateFlags?.stadiumMilestones?.hasNamedStand ? 'bg-amber-500' : 'bg-[#00FF88]'}`} style={{ width: `${Math.min(100, (player.stats.apps / 200) * 100)}%` }}></div>
         </div>
        </div>
       </div>
 
       {/* Bronze Statue */}
-      <div className={`border p-5 rounded-lg flex flex-col items-center justify-between text-center transition-all ${
+      <div className={`border p-5 flex flex-col items-center justify-between text-center transition-all ${
        player.stateFlags?.stadiumMilestones?.hasBronzeStatue 
         ? 'border-amber-500/30 bg-amber-500/5 text-white' 
-        : 'border-white/5 bg-[#0a0a0a]/50 text-white/30'
+        : 'border-[#111] bg-[#0a0a0a]/50 text-white/30'
       }`}>
        <div className="text-4xl mb-3">{player.stateFlags?.stadiumMilestones?.hasBronzeStatue ? '🗿' : '🔒'}</div>
        <div>
@@ -1240,17 +1240,17 @@ export function Career() {
          <span>Progress</span>
          <span className={player.stateFlags?.stadiumMilestones?.hasBronzeStatue ? 'text-amber-400 font-bold' : ''}>{player.stats.apps} / 350 Apps</span>
         </div>
-        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-[#222]">
          <div className={`h-full ${player.stateFlags?.stadiumMilestones?.hasBronzeStatue ? 'bg-amber-500' : 'bg-[#00FF88]'}`} style={{ width: `${Math.min(100, (player.stats.apps / 350) * 100)}%` }}></div>
         </div>
        </div>
       </div>
 
       {/* Hall of Fame */}
-      <div className={`border p-5 rounded-lg flex flex-col items-center justify-between text-center transition-all ${
+      <div className={`border p-5 flex flex-col items-center justify-between text-center transition-all ${
        player.stateFlags?.stadiumMilestones?.hasHallOfFame 
         ? 'border-amber-500/30 bg-amber-500/5 text-white' 
-        : 'border-white/5 bg-[#0a0a0a]/50 text-white/30'
+        : 'border-[#111] bg-[#0a0a0a]/50 text-white/30'
       }`}>
        <div className="text-4xl mb-3">{player.stateFlags?.stadiumMilestones?.hasHallOfFame ? '🏛️' : '🔒'}</div>
        <div>
@@ -1264,7 +1264,7 @@ export function Career() {
          <span>Progress</span>
          <span className={player.stateFlags?.stadiumMilestones?.hasHallOfFame ? 'text-amber-400 font-bold' : ''}>{player.stats.apps} / 500 Apps</span>
         </div>
-        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-[#222]">
          <div className={`h-full ${player.stateFlags?.stadiumMilestones?.hasHallOfFame ? 'bg-amber-500' : 'bg-[#00FF88]'}`} style={{ width: `${Math.min(100, (player.stats.apps / 500) * 100)}%` }}></div>
         </div>
        </div>
@@ -1273,8 +1273,8 @@ export function Career() {
     </div>
 
     {/* 2. PERSONAL BRAND BEYOND FOOTBALL */}
-    <div className="premium-card p-6 rounded-xl flex flex-col gap-6">
-     <div className="border-b border-white/10 pb-4 flex justify-between items-center">
+    <div className="premium-card p-6 flex flex-col gap-6">
+     <div className="border-b border-[#222] pb-4 flex justify-between items-center">
       <div>
        <h3 className="text-white text-base font-black tracking-wider uppercase flex items-center gap-2">
         <Sparkles className="text-amber-400" size={16} />
@@ -1294,7 +1294,7 @@ export function Career() {
       {MEDIA_BRAND_ACTIVITIES.map(activity => {
        const isCompleted = (player.stateFlags?.completedMediaActivities || []).includes(activity.id);
        return (
-        <div key={activity.id} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-lg flex flex-col justify-between space-y-3">
+        <div key={activity.id} className="bg-[#0a0a0a] border border-[#111] p-5 flex flex-col justify-between space-y-3">
          <div>
           <div className="flex justify-between items-start mb-1">
            <h4 className="text-white text-xs font-bold uppercase tracking-wide font-display">{activity.title}</h4>
@@ -1305,7 +1305,7 @@ export function Career() {
           <p className="text-white/50 text-[10px] leading-relaxed font-sans mt-1">{activity.description}</p>
          </div>
 
-         <div className="pt-3 border-t border-white/5 flex items-center justify-between font-mono text-[10px]">
+         <div className="pt-3 border-t border-[#111] flex items-center justify-between font-mono text-[10px]">
           <div className="space-x-3 text-white/40">
            <span>Payout: <strong className="text-emerald-400">+£{(activity.incomePayout / 1000).toFixed(0)}k</strong></span>
            <span>Fatigue: <strong className="text-red-400">+{activity.costMentalFatigue}</strong></span>
@@ -1334,8 +1334,8 @@ export function Career() {
     </div>
 
     {/* 3. YOUTH ACADEMY INVOLVEMENT & MENTORSHIP */}
-    <div className="premium-card p-6 rounded-xl flex flex-col gap-6">
-     <div className="border-b border-white/10 pb-4 flex justify-between items-center">
+    <div className="premium-card p-6 flex flex-col gap-6">
+     <div className="border-b border-[#222] pb-4 flex justify-between items-center">
       <div>
        <h3 className="text-white text-base font-black tracking-wider uppercase flex items-center gap-2">
         <Users className="text-cyan-400" size={16} />
@@ -1367,7 +1367,7 @@ export function Career() {
      {(player.stateFlags?.academyProspects || []).length > 0 ? (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
        {(player.stateFlags?.academyProspects || []).map((prospect: AcademyProspect) => (
-        <div key={prospect.id} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-lg space-y-4 font-mono">
+        <div key={prospect.id} className="bg-[#0a0a0a] border border-[#111] p-5 space-y-4 font-mono">
          <div className="flex justify-between items-start">
           <div>
            <span className="text-cyan-400 text-[9px] uppercase font-bold tracking-widest">{prospect.position} Prospect</span>
@@ -1380,7 +1380,7 @@ export function Career() {
          </div>
 
          {prospect.quote && (
-          <div className="bg-[#111] p-3 rounded text-[10px] text-white/50 leading-relaxed italic border border-white/5">
+          <div className="bg-[#111] p-3 rounded text-[10px] text-white/50 leading-relaxed italic border border-[#111]">
            "{prospect.quote}"
           </div>
          )}
@@ -1394,7 +1394,7 @@ export function Career() {
              setPlayer(res.updatedPlayer);
              setInbox([...state.inbox, res.inboxMessage]);
             }}
-            className="px-2.5 py-1.5 bg-white/5 hover:bg-cyan-500/20 text-white hover:text-cyan-400 text-[9px] font-bold uppercase rounded border border-white/10 transition-all"
+            className="px-2.5 py-1.5 bg-white/5 hover:bg-cyan-500/20 text-white hover:text-cyan-400 text-[9px] font-bold uppercase rounded border border-[#222] transition-all"
            >
             Technical Drill
            </button>
@@ -1404,7 +1404,7 @@ export function Career() {
              setPlayer(res.updatedPlayer);
              setInbox([...state.inbox, res.inboxMessage]);
             }}
-            className="px-2.5 py-1.5 bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-400 text-[9px] font-bold uppercase rounded border border-white/10 transition-all"
+            className="px-2.5 py-1.5 bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-400 text-[9px] font-bold uppercase rounded border border-[#222] transition-all"
            >
             Mental Focus
            </button>
@@ -1414,7 +1414,7 @@ export function Career() {
        ))}
       </div>
      ) : (
-      <div className="text-center py-8 border border-dashed border-white/10 rounded-lg text-white/40 font-mono text-xs">
+      <div className="text-center py-8 border border-dashed border-[#222] text-white/40 font-mono text-xs">
        No active academy prospects under your wing. Click "Scout Academy Prodigies" to mentor youngsters!
       </div>
      )}

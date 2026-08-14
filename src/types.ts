@@ -373,6 +373,7 @@ export interface Player {
     agent: number;
     family: number;
     intlManager?: number;
+    npc?: Record<string, number>;
   };
   managerInfo: {
     name: string;
@@ -975,7 +976,7 @@ export interface DailyEvent {
   choices: EventChoice[];
 }
 
-export type CompetitionType = 'LEAGUE' | 'DOMESTIC_CUP' | 'EUROPEAN' | 'INTERNATIONAL' | 'FRIENDLY';
+export type CompetitionType = 'LEAGUE' | 'DOMESTIC_CUP' | 'EUROPEAN' | 'INTERNATIONAL' | 'FRIENDLY' | 'YOUTH_LEAGUE' | 'YOUTH_CUP' | 'YOUTH_EUROPEAN' | 'U18 Friendly';
 
 export interface CalendarMatch {
   id: string;

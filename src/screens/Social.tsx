@@ -83,7 +83,7 @@ export function Social() {
  return (
  <div id="social_screen" className="flex flex-col h-full bg-[#0c0c0c] text-white p-6 md:p-8 overflow-y-auto space-y-8">
   {/* Header */}
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-6 gap-4">
+  <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#222] pb-6 gap-4">
   <div>
    <span className="text-xs font-mono font-bold tracking-widest text-[#00FF88] uppercase">RELATIONSHIPS & FAN CONNECTION</span>
    <h1 className="text-white text-3xl font-black uppercase tracking-tight mt-1">Social Hub</h1>
@@ -98,7 +98,7 @@ export function Social() {
   </div>
 
   {/* Fan Progression System */}
-  <div id="fan_progression_card" className="premium-card p-6 rounded-lg space-y-6">
+  <div id="fan_progression_card" className="premium-card p-6 space-y-6">
   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
    <div>
    <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export function Social() {
      isActive 
       ? 'border-[#00FF88] bg-[#00FF88]/10 scale-102' 
       : isUnlocked 
-      ? 'border-white/10 glass-panel text-[#ccc]' 
+      ? 'border-[#222] glass-panel text-[#ccc]' 
       : 'border-[#1a1a1a] bg-[#0c0c0c] text-[#555] opacity-50'
      }`}
     >
@@ -162,7 +162,7 @@ export function Social() {
      </span>
      <span className="text-[10px] text-white/40 font-semibold tracking-wider block mt-0.5">{t.range}% Support</span>
      </div>
-     <p className="text-[9px] text-white/50 leading-tight mt-2 border-t border-white/10 pt-1.5 font-medium">
+     <p className="text-[9px] text-white/50 leading-tight mt-2 border-t border-[#222] pt-1.5 font-medium">
      {t.desc}
      </p>
     </div>
@@ -196,12 +196,12 @@ export function Social() {
    return (
     <div 
     key={mentee.id} 
-    className={`p-6 border rounded-lg flex flex-col justify-between transition-all ${
+    className={`p-6 border flex flex-col justify-between transition-all ${
      isMentored 
      ? 'border-[#00FF88] bg-[#00FF88]/5' 
      : isGraduate 
       ? 'border-amber-400 bg-amber-400/5'
-      : 'border-white/10 premium-card hover:border-white/10'
+      : 'border-[#222] premium-card hover:border-[#222]'
     }`}
     >
     <div>
@@ -234,7 +234,7 @@ export function Social() {
      )}
 
      {/* Progress Indicators */}
-     <div className="space-y-4 border-t border-white/10 pt-4 mb-6">
+     <div className="space-y-4 border-t border-[#222] pt-4 mb-6">
      {/* Growth progress bar */}
      <div className="space-y-1.5 font-mono">
       <div className="flex justify-between text-xs text-white/50">
@@ -275,10 +275,10 @@ export function Social() {
      disabled={!isMentored && !canMentorMore}
      className={`w-full py-3 font-mono font-bold uppercase tracking-wider text-[11px] transition-all border 
       ${isMentored 
-      ? 'bg-[#1e1e1e] text-white border-white/10 hover:bg-red-500/10 hover:border-red-500 hover:text-red-400' 
+      ? 'bg-[#1e1e1e] text-white border-[#222] hover:bg-red-500/10 hover:border-red-500 hover:text-red-400' 
       : canMentorMore 
        ? 'bg-[#00FF88] text-black border-transparent hover:bg-[#00FF88]' 
-       : 'bg-transparent text-[#555] border-white/10 cursor-not-allowed'
+       : 'bg-transparent text-[#555] border-[#222] cursor-not-allowed'
       }`}
      >
      {isMentored 

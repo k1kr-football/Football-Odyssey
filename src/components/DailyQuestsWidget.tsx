@@ -55,7 +55,7 @@ export const DailyQuestsWidget: React.FC = () => {
   return (
     <div className="space-y-4 font-mono">
       {/* Header & AP Widget */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-neutral-900/60 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#0a0a0a] border border-[#222] p-4 ">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block mb-1">
             ACTION POINT ENGINE · {apState.phase.replace('_', ' ').toUpperCase()}
@@ -69,8 +69,8 @@ export const DailyQuestsWidget: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div 
           onClick={() => toggleStaff('nutritionist')}
-          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-            apState.staff.nutritionist ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          className={`p-3 border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.nutritionist ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-[#0a0a0a] border-[#111] text-white/50 hover:border-[#333]'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -82,8 +82,8 @@ export const DailyQuestsWidget: React.FC = () => {
 
         <div 
           onClick={() => toggleStaff('privatePhysio')}
-          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-            apState.staff.privatePhysio ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          className={`p-3 border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.privatePhysio ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-[#0a0a0a] border-[#111] text-white/50 hover:border-[#333]'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -95,8 +95,8 @@ export const DailyQuestsWidget: React.FC = () => {
 
         <div 
           onClick={() => toggleStaff('prManager')}
-          className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-            apState.staff.prManager ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-neutral-900/40 border-white/5 text-white/50 hover:border-white/20'
+          className={`p-3 border cursor-pointer transition-all flex items-center justify-between ${
+            apState.staff.prManager ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-[#0a0a0a] border-[#111] text-white/50 hover:border-[#333]'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export const DailyQuestsWidget: React.FC = () => {
 
       {/* Toast Reward Banner */}
       {toastMessage && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in shadow-lg">
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in ">
           <Sparkles size={16} className="text-emerald-400 shrink-0" />
           <span className="font-bold">{toastMessage}</span>
         </div>
@@ -127,7 +127,7 @@ export const DailyQuestsWidget: React.FC = () => {
           return (
             <div
               key={action.id}
-              className="rounded-xl border border-white/10 bg-neutral-900/40 p-4 flex flex-col justify-between space-y-3 backdrop-blur-md"
+              className="border border-[#222] bg-[#0a0a0a] p-4 flex flex-col justify-between space-y-3 "
             >
               <div>
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
@@ -145,12 +145,12 @@ export const DailyQuestsWidget: React.FC = () => {
               <button
                 onClick={() => handlePerform(action)}
                 disabled={isExhausted}
-                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all min-h-[44px] cursor-pointer flex items-center justify-center gap-2 ${
+                className={`w-full py-2.5 text-xs font-bold transition-all min-h-[44px] cursor-pointer flex items-center justify-center gap-2 ${
                   isExhausted
-                    ? 'bg-neutral-800/50 text-neutral-500 border border-white/5 cursor-not-allowed'
+                    ? 'bg-neutral-800/50 text-neutral-500 border border-[#111] cursor-not-allowed'
                     : !hasEnoughAP
                     ? 'bg-amber-500/20 hover:bg-amber-500 hover:text-neutral-950 text-amber-400 border border-amber-500/40 animate-pulse'
-                    : 'bg-neutral-800 hover:bg-emerald-500 hover:text-neutral-950 text-white border border-white/10'
+                    : 'bg-neutral-800 hover:bg-emerald-500 hover:text-neutral-950 text-white border border-[#222]'
                 }`}
               >
                 {!hasEnoughAP && canUseStrain ? (

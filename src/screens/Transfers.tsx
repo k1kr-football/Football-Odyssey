@@ -5,6 +5,13 @@ import { Globe, ShieldAlert, Sparkles, Send, ArrowLeftRight, Check, X, Handshake
 import { TeamLogo } from '../components/TeamLogo';
 import { CLUBS } from '../data/teams';
 import { getPhilosophyFitText } from '../utils/managerPhilosophy';
+import { 
+  getClubPrestigeScore, 
+  getClubWorldReputationBoost, 
+  getClubAcademyRating, 
+  getManagerPhilosophyForClub, 
+  getClubStadiumCapacity 
+} from '../utils/clubPrestige';
 import { negotiateTransfer, getClubInterestScore, getGatingStatus, getClubTier, generateDeadlineDayOffers, simulateDeadlineDayTicking } from '../utils/transfers';
 import { TransferOffer } from '../types';
 import { GlossaryTooltip } from '../components/GlossaryTooltip';
@@ -180,7 +187,7 @@ export function Transfers() {
   return (
    <div className="flex flex-col h-full gap-6 select-none font-mono text-xs text-[#cccccc]">
     {/* Banner */}
-    <div className="bg-yellow-500 text-black px-6 py-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-yellow-400 font-sans shadow-lg animate-pulse">
+    <div className="bg-yellow-500 text-black px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-yellow-400 font-sans animate-pulse">
      <div>
       <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-3">
        <Flame className="text-red-600 fill-red-600 w-8 h-8 animate-bounce" />
@@ -190,7 +197,7 @@ export function Transfers() {
        Desperate clubs are bidding late. Clock is ticking. Make your legacy.
       </p>
      </div>
-     <div className="bg-black text-yellow-400 px-5 py-3 rounded-lg border border-yellow-500 font-mono font-bold text-center">
+     <div className="bg-black text-yellow-400 px-5 py-3 border border-yellow-500 font-mono font-bold text-center">
       <div className="text-[10px] text-white/50 uppercase tracking-widest">Time Remaining</div>
       <div className="text-2xl font-black">{deadlineHours} HOURS</div>
      </div>
@@ -199,8 +206,8 @@ export function Transfers() {
     {/* Outer Split Layout */}
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
      {/* Left Panel: Gossip & Ticker Log (col-span-5) */}
-     <div className="lg:col-span-5 flex flex-col gap-4 premium-card p-5 rounded-xl border border-yellow-500/20">
-      <h3 className="text-yellow-400 text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2">
+     <div className="lg:col-span-5 flex flex-col gap-4 premium-card p-5 border border-yellow-500/20">
+      <h3 className="text-yellow-400 text-xs font-bold uppercase tracking-widest border-b border-[#222] pb-2 flex items-center gap-2">
        <Calendar size={14} className="text-yellow-400" />
        Live Deadline Feed
       </h3>
@@ -209,13 +216,13 @@ export function Transfers() {
       {deadlineHours > 0 ? (
        <button
         onClick={tickDeadlineHour}
-        className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase rounded-lg shadow transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer font-sans"
+        className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase shadow transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer font-sans"
        >
         <Flame size={14} className="animate-pulse" />
         Wait & See (Progress 1 Hour)
        </button>
       ) : (
-       <div className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-500 font-bold uppercase text-center rounded-lg font-sans">
+       <div className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-500 font-bold uppercase text-center font-sans">
         The Window is Closed
        </div>
       )}
@@ -229,7 +236,7 @@ export function Transfers() {
         return (
          <div
           key={lIdx}
-          className={`p-3 rounded-lg border text-xs leading-relaxed transition-all ${
+          className={`p-3 border text-xs leading-relaxed transition-all ${
            isLateOffer
             ? 'bg-emerald-950/20 border-emerald-900 text-emerald-300'
             : isImprovement
@@ -248,8 +255,8 @@ export function Transfers() {
 
      {/* Right Panel: Active Offers (col-span-7) */}
      <div className="lg:col-span-7 flex flex-col gap-4">
-      <div className="premium-card p-5 rounded-xl border border-white/10 flex-1 flex flex-col gap-4 overflow-y-auto">
-       <h3 className="text-white text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2 justify-between">
+      <div className="premium-card p-5 border border-[#222] flex-1 flex flex-col gap-4 overflow-y-auto">
+       <h3 className="text-white text-xs font-bold uppercase tracking-widest border-b border-[#222] pb-2 flex items-center gap-2 justify-between">
         <span className="flex items-center gap-2">
          <Handshake size={14} className="text-[#00FF88]" />
          Active Panic Bids ({player.transferOffers?.length || 0})
@@ -279,7 +286,7 @@ export function Transfers() {
           const isNegotiating = negotiatingOffer === offer.id;
 
           return (
-           <div key={offer.id} className="bg-zinc-950/60 border border-white/10 hover:border-[#00FF88]/30 rounded-xl p-5 transition-all duration-150">
+           <div key={offer.id} className="bg-zinc-950/60 border border-[#222] hover:border-[#00FF88]/30 p-5 transition-all duration-150">
             <div className="flex justify-between items-start gap-4 mb-4">
              <div className="flex items-center gap-3">
               <TeamLogo symbol={offer.clubSymbol} size={36} />
@@ -305,7 +312,7 @@ export function Transfers() {
             </div>
 
             {/* Details */}
-            <div className="grid grid-cols-2 gap-4 bg-white/5 p-3 rounded-lg mb-4 text-white/60">
+            <div className="grid grid-cols-2 gap-4 bg-white/5 p-3 mb-4 text-white/60">
              <div>
               <span className="text-white/40 block text-[9px] uppercase tracking-widest font-bold mb-0.5">Contract Length</span>
               <span className="text-white font-bold text-xs">{offer.length} Years</span>
@@ -346,19 +353,19 @@ export function Transfers() {
                  ...state.inbox
                 ]);
                }}
-               className="py-2.5 bg-[#00FF88] hover:bg-[#00e577] text-black font-black uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer text-center"
+               className="py-2.5 bg-[#00FF88] hover:bg-[#00e577] text-black font-black uppercase text-[10px] tracking-wider transition-all cursor-pointer text-center"
               >
                Sign Deal
               </button>
               <button
                onClick={() => setNegotiatingOffer(offer.id)}
-               className="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 font-black uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer text-center"
+               className="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 font-black uppercase text-[10px] tracking-wider transition-all cursor-pointer text-center"
               >
                Push Terms
               </button>
               <button
                onClick={() => handleRejectOffer(offer.id)}
-               className="py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-black uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer text-center"
+               className="py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-black uppercase text-[10px] tracking-wider transition-all cursor-pointer text-center"
               >
                Reject Bid
               </button>
@@ -367,7 +374,7 @@ export function Transfers() {
 
             {/* Negotiation Options (Takes 1 hour, Walkaway Risk) */}
             {deadlineHours > 0 && isNegotiating && (
-             <div className="bg-yellow-500/5 border border-yellow-500/20 p-3 rounded-lg space-y-3">
+             <div className="bg-yellow-500/5 border border-yellow-500/20 p-3 space-y-3">
               <p className="text-yellow-400 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                <AlertCircle size={10} />
                Risk Window: Push demands (takes 1 hour. suitor might walk away)
@@ -416,7 +423,7 @@ export function Transfers() {
         });
         setDeadlineHours(0);
        }}
-       className="py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white/70 hover:text-white font-bold uppercase rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 font-sans font-bold"
+       className="py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white/70 hover:text-white font-bold uppercase transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 font-sans font-bold"
       >
        Close Window & Finalize Papers
       </button>
@@ -434,6 +441,24 @@ export function Transfers() {
  const finalizeTransfer = (offer: TransferOffer) => {
    const club = CLUBS.find(c => c.symbol === offer.clubSymbol);
    
+   let repBoost = 0;
+   if (club) {
+     const prestigeScore = getClubPrestigeScore(club);
+     repBoost = getClubWorldReputationBoost(club);
+     const academyRating = getClubAcademyRating(club);
+     const managerPhilosophy = getManagerPhilosophyForClub(club);
+     const stadiumCapacity = getClubStadiumCapacity(club);
+
+     const newWorldRep = Math.min(100, (player.reputation?.world || 20) + repBoost);
+     const newGlobalRep = Math.min(100, (player.reputation?.global || 30) + repBoost);
+
+     console.log(`[Club-Joining System] Transfer Finalized to ${club.name} (${club.symbol}):`);
+     console.log(`  ✓ 1. World Reputation: Prestige Score ${prestigeScore}/100 -> World Rep Boost +${repBoost} (Applied: World Rep ${newWorldRep}, Global Rep ${newGlobalRep})`);
+     console.log(`  ✓ 2. Academy Rating: ${academyRating}/100 -> Youth Facilities Evaluation complete`);
+     console.log(`  ✓ 3. Manager Philosophy: ${managerPhilosophy} -> Tactical Philosophy updated`);
+     console.log(`  ✓ 4. Stadium Capacity: ${stadiumCapacity.toLocaleString()} seats -> Venue Capacity updated`);
+   }
+
    let newFans = player.fans;
    let newTimeline = [...(player.timeline || [])];
    
@@ -460,10 +485,16 @@ export function Transfers() {
      clubSymbol: offer.clubSymbol
    });
 
+
    setPlayer({ 
     ...player, 
     currentClubSymbol: offer.clubSymbol,
     transferOffers: [],
+    reputation: {
+      ...player.reputation,
+      world: Math.min(100, (player.reputation?.world || 20) + repBoost),
+      global: Math.min(100, (player.reputation?.global || 30) + repBoost)
+    },
     contract: {
     ...player.contract,
     wage: offer.wage,
@@ -748,7 +779,7 @@ export function Transfers() {
   <div className="flex items-center gap-3">
    
 
-   <div className={`px-4 py-2 rounded-lg font-bold border flex items-center gap-2 ${isTransferWindow ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50' : 'bg-zinc-950/20 text-zinc-400 border-zinc-900'}`}>
+   <div className={`px-4 py-2 font-bold border flex items-center gap-2 ${isTransferWindow ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50' : 'bg-zinc-950/20 text-zinc-400 border-zinc-900'}`}>
     <Calendar size={14} />
     <span className="uppercase tracking-wider">
     Transfer Window: {isTransferWindow ? 'OPEN' : 'CLOSED'}
@@ -758,7 +789,7 @@ export function Transfers() {
   </div>
 
   {/* Tabs */}
-  <div className="flex border-b border-white/10 shrink-0">
+  <div className="flex border-b border-[#222] shrink-0">
   <button 
    onClick={() => { setActiveTab('OFFERS'); setInquiryStatus('IDLE'); }}
    className={`text-xs font-bold tracking-widest uppercase px-6 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'OFFERS' ? 'border-[#00FF88] text-white premium-card' : 'border-transparent text-white/50 hover:text-white'}`}
@@ -788,9 +819,9 @@ export function Transfers() {
    {/* Left Panel: Current Contract & Financials */}
    <div className="w-full md:w-[350px] flex flex-col gap-6 shrink-0">
    {/* Contract details card */}
-   <div className="premium-card p-6 rounded-xl flex flex-col justify-between">
+   <div className="premium-card p-6 flex flex-col justify-between">
     <div>
-    <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-white/10/60 pb-2 flex items-center gap-2">
+    <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 border-b border-[#222]/60 pb-2 flex items-center gap-2">
      <ShieldAlert size={12} />
      Your Current Contract
     </h3>
@@ -802,7 +833,7 @@ export function Transfers() {
       <span className="text-white/40 text-xs font-bold tracking-widest ml-1">p/w</span>
      </div>
      </div>
-     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#222]">
      <div>
       <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">Expires</div>
       <div className="text-white font-bold text-xs">{player.contract.expires}</div>
@@ -813,7 +844,7 @@ export function Transfers() {
      </div>
      </div>
      
-     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#222]">
      <div>
       <div className="text-white/50 text-[9px] font-bold uppercase tracking-widest mb-1">App Bonus</div>
       <div className="text-white font-bold text-xs">£{player.contract.appearanceBonus?.toLocaleString() || '0'}</div>
@@ -825,7 +856,7 @@ export function Transfers() {
      </div>
 
      {player.contract.releaseClause && (
-     <div className="pt-3 border-t border-white/10">
+     <div className="pt-3 border-t border-[#222]">
       <div className="text-red-400 text-[9px] font-bold uppercase tracking-widest mb-1"><GlossaryTooltip term="Release Clause Trigger">Release Clause Trigger</GlossaryTooltip></div>
       <div className="text-white font-bold text-xs">£{player.contract.releaseClause.toLocaleString()}</div>
      </div>
@@ -833,7 +864,7 @@ export function Transfers() {
     </div>
     </div>
 
-     <div className="mt-6 pt-4 border-t border-white/10/60">
+     <div className="mt-6 pt-4 border-t border-[#222]/60">
      {player.currentClubSymbol === 'FA' ? (
       <div className="text-center py-3 bg-zinc-900/50 border border-zinc-800 rounded">
        <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">UNEMPLOYED - FREE AGENT</span>
@@ -862,7 +893,7 @@ export function Transfers() {
    </div>
 
    {/* Bank Balance Card */}
-   <div className="premium-card p-6 rounded-xl flex flex-col shrink-0">
+   <div className="premium-card p-6 flex flex-col shrink-0">
     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
     <DollarSign size={12} />
     Financial Records
@@ -876,8 +907,8 @@ export function Transfers() {
    </div>
 
    {/* Right Panel: Incoming Transfer Offers list */}
-   <div className="flex-1 premium-card p-6 rounded-xl flex flex-col overflow-y-auto no-scrollbar">
-   <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-white/10 flex items-center justify-between shrink-0">
+   <div className="flex-1 premium-card p-6 flex flex-col overflow-y-auto no-scrollbar">
+   <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-6 pb-2 border-b border-[#222] flex items-center justify-between shrink-0">
     <span>Incoming Transfer Offers</span>
     <span className="text-white/40">{player.transferOffers?.length || 0} ACTIVE</span>
    </h3>
@@ -897,7 +928,7 @@ export function Transfers() {
      const isNegotiating = negotiatingOffer === offer.id;
      
      return (
-     <div key={offer.id} className="bg-[#0c0c0c] p-5 rounded-lg flex flex-col gap-4">
+     <div key={offer.id} className="bg-[#0c0c0c] p-5 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
       <div className="flex items-center gap-3">
        <TeamLogo 
@@ -917,7 +948,7 @@ export function Transfers() {
       </div>
 
       {/* Terms */}
-      <div className="grid grid-cols-3 gap-6 bg-[#141414] px-4 py-2 rounded-lg text-center">
+      <div className="grid grid-cols-3 gap-6 bg-[#141414] px-4 py-2 text-center">
        <div>
        <div className="text-white/40 text-[8px] font-bold uppercase tracking-widest">Weekly Wage</div>
        <div className="text-white font-bold font-mono">£{offer.wage.toLocaleString()}</div>
@@ -973,7 +1004,7 @@ export function Transfers() {
 
       {/* Negotiate Options */}
       {isNegotiating && (
-      <div className="border-t border-white/10 pt-4 mt-2">
+      <div className="border-t border-[#222] pt-4 mt-2">
        <div className="text-[#00FF88] text-[8px] font-bold uppercase tracking-widest mb-3">Instruct Agent to Demand:</div>
        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
        <button 
@@ -1020,7 +1051,7 @@ export function Transfers() {
   <div className="flex-1 flex flex-col gap-6">
    {/* Active Negotiation Loading overlay/status */}
    {inquiryStatus !== 'IDLE' && (
-   <div className={`p-5 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all animate-fade-in ${
+   <div className={`p-5 border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all animate-fade-in ${
     inquiryStatus === 'NEGOTIATING' ? 'premium-card border-[#00FF88] text-[#00FF88]' :
     inquiryStatus === 'SUCCESS' ? 'bg-emerald-950/20 border-emerald-900/50 text-emerald-400' :
     'bg-[#221111]/30 border-red-900/40 text-red-400'
@@ -1053,7 +1084,7 @@ export function Transfers() {
    )}
 
    {/* Clubs Search & Market Grid */}
-   <div className="premium-card p-6 rounded-xl flex flex-col flex-1 gap-6 overflow-hidden">
+   <div className="premium-card p-6 flex flex-col flex-1 gap-6 overflow-hidden">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
     <h3 className="text-white font-bold text-sm uppercase tracking-wide">Club Market Watch</h3>
     <input 
@@ -1109,9 +1140,9 @@ export function Transfers() {
      return (
      <div 
       key={club.symbol} 
-      className={`p-4 sm:p-5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${
+      className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${
        gateStatus 
-        ? 'opacity-40 bg-[#080808] border border-white/5 text-white/30' 
+        ? 'opacity-40 bg-[#080808] border border-[#111] text-white/30' 
         : 'bg-[#0b0b0b]'
       }`}
      >
@@ -1157,7 +1188,7 @@ export function Transfers() {
       {/* Pitch Actions */}
       <div className="flex gap-2 shrink-0 self-end sm:self-center">
       {gateStatus ? (
-       <div className="px-3 py-2 border border-white/10 bg-white/5 text-white/30 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1.5 cursor-not-allowed">
+       <div className="px-3 py-2 border border-[#222] bg-white/5 text-white/30 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1.5 cursor-not-allowed">
         🔒 LOCKED
        </div>
       ) : hasActiveOffer ? (

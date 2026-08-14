@@ -74,14 +74,14 @@ export function MainMenu() {
           href="https://selar.com/showlove/k1kr" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="p-3 bg-white/5 hover:bg-[#00FF88]/20 rounded-full transition-colors border border-white/10 hover:border-[#00FF88]/50 group"
+          className="p-3 bg-white/5 hover:bg-[#00FF88]/20 rounded-full transition-colors border border-[#222] hover:border-[#00FF88]/50 group"
           title="Support the Developer"
         >
           <Heart size={24} className="text-white/70 group-hover:text-[#00FF88] transition-colors" />
         </a>
         <button 
           onClick={() => setShowSettings(true)}
-          className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/10"
+          className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-[#222]"
           title="Settings"
         >
           <Settings size={24} className="text-white/70" />
@@ -149,10 +149,10 @@ export function MainMenu() {
                 <div 
                   key={slot}
                   onClick={() => handleSlotAction(slot, data)}
-                  className="relative group w-full p-5 border border-white/10 rounded-2xl bg-[#121513]/80 backdrop-blur-md hover:bg-black/60 hover:border-[#00FF88]/50 transition-all cursor-pointer flex justify-between items-center shadow-xl hover:shadow-[#00FF88]/10 hover:-translate-y-1"
+                  className="relative group w-full p-5 border border-[#222] bg-[#121513]/80 hover:bg-black/60 hover:border-[#00FF88]/50 transition-all cursor-pointer flex justify-between items-center hover:shadow-[#00FF88]/10 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 bg-black/50 border border-white/5 rounded-full flex items-center justify-center font-black text-white/40 group-hover:text-[#00FF88] group-hover:border-[#00FF88]/30 transition-colors">
+                    <div className="w-12 h-12 bg-black/50 border border-[#111] rounded-full flex items-center justify-center font-black text-white/40 group-hover:text-[#00FF88] group-hover:border-[#00FF88]/30 transition-colors">
                       {slot}
                     </div>
                     <div className="text-left">
@@ -187,13 +187,13 @@ export function MainMenu() {
                       <span className="text-red-400 text-xs font-bold mr-2">DELETE?</span>
                       <button
                         onClick={(e) => confirmDelete(slot, e)}
-                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition-colors"
                       >
                         YES
                       </button>
                       <button
                         onClick={cancelDelete}
-                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors"
                       >
                         NO
                       </button>
@@ -201,7 +201,7 @@ export function MainMenu() {
                   ) : data && (
                     <button
                       onClick={(e) => handleDeleteSlot(slot, e)}
-                      className="p-3 text-white/30 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-3 text-white/30 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
                       title="Delete Save"
                     >
                       <Trash2 size={20} />

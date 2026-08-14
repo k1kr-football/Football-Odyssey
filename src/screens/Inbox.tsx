@@ -66,7 +66,87 @@ export function Inbox() {
       return;
     }
 
+    
+    if (choice.type === "TESTIMONIAL_ACCEPT" || (typeof choice.type === "string" && choice.type.startsWith("TESTIMONIAL_ACCEPT_"))) {
+      if (state.player) {
+        const speechStyle: 'HUMBLE_GRATITUDE' | 'PASS_THE_TORCH' | 'DEFIANT_LEGEND' =
+          choice.type === "TESTIMONIAL_ACCEPT_TORCH"
+            ? "PASS_THE_TORCH"
+            : choice.type === "TESTIMONIAL_ACCEPT_DEFIANT"
+            ? "DEFIANT_LEGEND"
+            : "HUMBLE_GRATITUDE";
+
+        import("../utils/testimonialMatch").then(({ executeTestimonialMatch }) => {
+          const result = executeTestimonialMatch(state.player!, speechStyle);
+          setPlayer(result.updatedPlayer);
+          const updated = state.inbox.map((m) => {
+            if (m.id === selectedMsg.id) {
+              return { ...m, read: true, handled: true, actionTaken: choice.text };
+            }
+            return m;
+          });
+          setInbox([result.inboxMessage, ...updated]);
+        });
+      }
+      return;
+    }
+
+    if (choice.type === "TESTIMONIAL_DECLINE") {
+      const updated = messages.map((m) => {
+        if (m.id === selectedMsg.id) {
+          return { ...m, read: true, handled: true, actionTaken: choice.text };
+        }
+        return m;
+      });
+      setInbox(updated);
+      return;
+    }
+
+    if (choice.type === "retire_graceful" || choice.type === "retire_coach") {
+      if (state.player) {
+        const isCoach = choice.type === "retire_coach";
+        const updatedPlayer = {
+          ...state.player,
+          stateFlags: {
+            ...(state.player.stateFlags || {}),
+            retired: true
+          },
+          timeline: [
+            ...(state.player.timeline || []),
+            {
+              id: `retired_${Date.now()}`,
+              week: state.currentWeek,
+              type: 'MILESTONE' as const,
+              day: 'SUN' as const,
+              title: isCoach ? `🏆 Announced Retirement & Transition to Coaching` : `👑 Announced Official Retirement`,
+              description: isCoach
+                ? `Formally hung up the boots at age ${state.player.age} and accepted a Coaching Trainee role.`
+                : `Formally announced immediate retirement at age ${state.player.age} after a legendary career.`
+            }
+          ]
+        };
+        setPlayer(updatedPlayer);
+
+        import("../utils/testimonialMatch").then(({ generateTestimonialProposal }) => {
+          const proposal = generateTestimonialProposal(updatedPlayer);
+          const updatedMessages = messages.map((m) => {
+            if (m.id === selectedMsg.id) {
+              return { ...m, read: true, handled: true, actionTaken: choice.text };
+            }
+            return m;
+          });
+          if (proposal) {
+            setInbox([proposal, ...updatedMessages]);
+          } else {
+            setInbox(updatedMessages);
+          }
+        });
+      }
+      return;
+    }
+
     if (choice.type === "digest_mark_all_read") {
+
       const updated = messages.map((m) => ({ ...m, read: true }));
       setInbox(updated);
       return;
@@ -107,7 +187,7 @@ export function Inbox() {
       {/* Contract Negotiation Overlay */}
       {negotiationPhase !== "NONE" && negotiatingMsg && (
         <div className="absolute inset-0 z-50 bg-[#0c0d0d] flex flex-col p-8 font-sans animate-fade-in overflow-y-auto">
-          <div className="max-w-2xl w-full mx-auto glass-panel p-8 rounded-xl border border-emerald-500/30 my-auto shadow-2xl">
+          <div className="max-w-2xl w-full mx-auto glass-panel p-8 border border-emerald-500/30 my-auto ">
             <h2 className="text-xl font-black uppercase text-white font-display mb-2 flex items-center gap-3">
               <Briefcase className="text-emerald-400" size={24} />
               Contract Offer Negotiations
@@ -118,7 +198,7 @@ export function Inbox() {
 
             {negotiationPhase === "NEGOTIATE" && (
               <div className="space-y-6">
-                <div className="bg-[#141414] p-5 rounded-lg border border-white/10 space-y-3">
+                <div className="bg-[#141414] p-5 border border-[#222] space-y-3">
                   <div className="flex justify-between text-xs font-mono">
                     <span className="text-white/50">Current Weekly Wage:</span>
                     <span className="text-white font-bold">£{(state.player?.contract?.wage || 500).toLocaleString()}/wk</span>
@@ -190,7 +270,7 @@ export function Inbox() {
 
       {/* Left Sidebar Category Navigation */}
       <div className="w-64 premium-card flex flex-col flex-shrink-0">
-        <div className="p-5 border-b border-white/10">
+        <div className="p-5 border-b border-[#222]">
           <h2 className="text-white text-xs font-black uppercase tracking-widest font-display flex items-center gap-2">
             <Mail size={16} className="text-[#00FF88]" />
             Inbox Dispatch
@@ -214,8 +294,8 @@ export function Inbox() {
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className={`w-full flex items-center justify-between p-3 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
-                  isSelected ? "bg-white/10 text-white font-bold border border-white/10 shadow" : "text-white/60 hover:text-white hover:bg-white/5"
+                className={`w-full flex items-center justify-between p-3 text-xs font-mono uppercase tracking-wider transition-all ${
+                  isSelected ? "bg-white/10 text-white font-bold border border-[#222] shadow" : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -237,7 +317,7 @@ export function Inbox() {
         </div>
 
         {/* Verbosity Selector & Digest Mode */}
-        <div className="p-4 border-t border-white/10 bg-[#0a0a0a] space-y-3">
+        <div className="p-4 border-t border-[#222] bg-[#0a0a0a] space-y-3">
           <div>
             <label className="text-[10px] text-white/50 uppercase font-mono font-bold block mb-1">Feed Filter</label>
             <select
@@ -257,7 +337,7 @@ export function Inbox() {
               className={`px-2.5 py-1 rounded text-[9px] font-mono font-black uppercase transition-all ${
                 digestEnabled 
                   ? 'bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/40' 
-                  : 'bg-white/10 text-white/50 border border-white/10'
+                  : 'bg-white/10 text-white/50 border border-[#222]'
               }`}
             >
               {digestEnabled ? 'Enabled (ON)' : 'Disabled (OFF)'}
@@ -275,7 +355,7 @@ export function Inbox() {
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* Middle Column: Messages List */}
           <div className="w-1/3 premium-card flex flex-col">
-            <div className="p-4 border-b border-white/10 text-white/50 text-[10px] font-mono tracking-widest uppercase flex justify-between font-bold bg-[#151515]">
+            <div className="p-4 border-b border-[#222] text-white/50 text-[10px] font-mono tracking-widest uppercase flex justify-between font-bold bg-[#151515]">
               <span>{category} MESSAGES</span>
               <span className="text-[#00FF88] font-mono">
                 {filteredMessages.filter((m) => !m.read).length} Unread
@@ -332,7 +412,7 @@ export function Inbox() {
             {selectedMsg ? (
               <div className="flex-1 flex flex-col h-full bg-[#0d0e0e] relative overflow-hidden">
                 {/* Detail Header */}
-                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
+                <div className="p-6 border-b border-[#222] flex items-center justify-between bg-black/40">
                   <div>
                     <span className="text-[10px] font-mono text-[#00FF88] font-bold uppercase tracking-widest block">
                       {resolveSenderIdentity(state, selectedMsg.sender, selectedMsg.id)}
@@ -346,16 +426,16 @@ export function Inbox() {
 
                 {/* Detail Content Body */}
                 <div className="p-8 flex-1 overflow-y-auto space-y-6">
-                  <div className="bg-[#141414] border border-white/5 p-6 rounded-lg font-sans text-sm text-white/80 leading-relaxed whitespace-pre-line">
+                  <div className="bg-[#141414] border border-[#111] p-6 font-sans text-sm text-white/80 leading-relaxed whitespace-pre-line">
                     {selectedMsg.content}
                   </div>
 
                   {/* Social Media Post Attachment */}
                   {selectedMsg.socialPost && (
-                    <div className="glass-panel p-5 rounded-lg border border-purple-500/20 font-mono text-xs space-y-2">
+                    <div className="glass-panel p-5 border border-purple-500/20 font-mono text-xs space-y-2">
                       <div className="text-purple-400 font-bold">{selectedMsg.socialPost.authorHandle}</div>
                       <p className="text-white text-xs">{selectedMsg.content}</p>
-                      <div className="flex gap-6 text-white/40 text-[10px] font-mono pt-2 border-t border-white/5">
+                      <div className="flex gap-6 text-white/40 text-[10px] font-mono pt-2 border-t border-[#111]">
                         <span>❤️ {selectedMsg.socialPost.likes.toLocaleString()} Likes</span>
                         <span>🔁 {selectedMsg.socialPost.retweets.toLocaleString()} Retweets</span>
                       </div>
@@ -364,7 +444,7 @@ export function Inbox() {
 
                   {/* Action Choices */}
                   {selectedMsg.choices && selectedMsg.choices.length > 0 && (
-                    <div className="pt-4 border-t border-white/10 space-y-3">
+                    <div className="pt-4 border-t border-[#222] space-y-3">
                       <span className="text-[10px] font-mono text-white/50 uppercase font-bold tracking-widest block">
                         Response Options
                       </span>
@@ -373,7 +453,7 @@ export function Inbox() {
                           <button
                             key={idx}
                             onClick={() => handleAction(choice)}
-                            className="flex-1 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black px-6 py-3.5 font-black uppercase text-xs tracking-wider rounded font-mono transition-all shadow-lg"
+                            className="flex-1 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black px-6 py-3.5 font-black uppercase text-xs tracking-wider rounded font-mono transition-all "
                           >
                             {choice.text}
                           </button>

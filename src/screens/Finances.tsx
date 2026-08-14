@@ -507,7 +507,7 @@ export function Finances() {
  return (
  <div className="flex flex-col h-full premium-card text-white overflow-hidden p-6 md:p-8 font-sans animate-fade-in">
   {/* HEADER */}
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-white/10 pb-6">
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-[#222] pb-6">
   <div>
    <div className="flex items-center gap-2">
    <h1 className="text-white text-3xl font-black uppercase tracking-tight">
@@ -523,7 +523,7 @@ export function Finances() {
   </div>
 
   {notification && (
-   <div className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-lg text-xs font-mono uppercase animate-pulse">
+   <div className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 text-xs font-mono uppercase animate-pulse">
    {notification}
    </div>
   )}
@@ -531,19 +531,19 @@ export function Finances() {
 
   {/* DASHBOARD GRID */}
   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-  <div className="premium-card p-4 rounded-xl">
+  <div className="premium-card p-4 ">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Checking Balance</span>
    <span className="text-2xl font-black font-mono text-white">£{(p.finances?.balance || 0).toLocaleString()}</span>
   </div>
-  <div className="premium-card p-4 rounded-xl">
+  <div className="premium-card p-4 ">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Total Assets Valuation</span>
    <span className="text-2xl font-black font-mono text-emerald-500">£{(realEstateValue + vcValue + cryptoValue).toLocaleString()}</span>
   </div>
-  <div className="premium-card p-4 rounded-xl">
+  <div className="premium-card p-4 ">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Total Net Worth</span>
    <span className="text-2xl font-black font-mono text-[#00FF88]">£{netWorth.toLocaleString()}</span>
   </div>
-  <div className="premium-card p-4 rounded-xl relative group">
+  <div className="premium-card p-4 relative group">
    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mb-1">Net Weekly Cashflow</span>
    <span className={`text-2xl font-black font-mono ${netWeekly >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
    {netWeekly >= 0 ? '+' : '-'}£{Math.abs(netWeekly).toLocaleString()}/w
@@ -561,7 +561,7 @@ export function Finances() {
     const isInvestmentsLocked = netWorth < 30000 && p.reputation.world < 10;
     const isEmpireLocked = netWorth < 250000 && p.reputation.world < 25;
     return (
-     <div className="flex gap-2 border-b border-white/10 mb-6">
+     <div className="flex gap-2 border-b border-[#222] mb-6">
      <button
       onClick={() => setActiveTab('OVERVIEW')}
       className={`px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'OVERVIEW' ? 'border-emerald-500 text-white' : 'border-transparent text-white/40 hover:text-[#aaa]'}`}
@@ -655,7 +655,7 @@ export function Finances() {
 
     if (!financials) {
       return (
-        <div className="flex flex-col items-center justify-center p-12 text-center border border-white/5 bg-zinc-950/20 rounded-xl">
+        <div className="flex flex-col items-center justify-center p-12 text-center border border-[#111] bg-zinc-950/20 ">
           <Building2 size={48} className="text-zinc-600 mb-4 animate-pulse" />
           <p className="text-sm font-bold text-zinc-400">Boardroom Data Initializing...</p>
           <p className="text-xs text-zinc-500 mt-1 font-mono">Advance a day to load your club's financial profile.</p>
@@ -677,7 +677,7 @@ export function Finances() {
     return (
       <div className="space-y-6 font-sans">
         {/* CLUB PROFILE & HEALTH HEADER */}
-        <div className="premium-card p-6 rounded-xl border border-white/5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="premium-card p-6 border border-[#111] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-black">{club.symbol}</span>
@@ -708,7 +708,7 @@ export function Finances() {
 
         {/* EMBARGO / WARNING BULLETIN */}
         {(financials.activeEmbargo || financials.pointsDeductionNextSeason > 0) && (
-          <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-xs text-red-300 leading-relaxed space-y-2">
+          <div className="p-4 border border-red-500/20 bg-red-500/5 text-xs text-red-300 leading-relaxed space-y-2">
             <h4 className="font-bold text-red-400 flex items-center gap-1.5 uppercase tracking-wider font-mono">
               <AlertTriangle size={14} /> Club Regulatory Warning
             </h4>
@@ -723,25 +723,25 @@ export function Finances() {
         {/* REVENUE VS SPENDING SPREADSHEET */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* REVENUES */}
-          <div className="premium-card p-6 rounded-xl border border-white/5">
+          <div className="premium-card p-6 border border-[#111]">
             <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-1.5">
               <TrendingUp size={14} className="text-emerald-400" />
               Weekly Operating Revenues
             </h4>
             <div className="space-y-3 font-mono text-xs text-zinc-300">
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Matchday Ingress (Tickets & Food)</span>
                 <span>£{financials.revenue.matchday.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Broadcast Rights Yield</span>
                 <span>£{financials.revenue.tvRights.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Sponsorships & Merchandise</span>
                 <span>£{financials.revenue.sponsorship.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Transfer Amortization Yield</span>
                 <span>£{financials.revenue.transferTrading.toLocaleString()}</span>
               </div>
@@ -753,21 +753,21 @@ export function Finances() {
           </div>
 
           {/* SPENDING */}
-          <div className="premium-card p-6 rounded-xl border border-white/5">
+          <div className="premium-card p-6 border border-[#111]">
             <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-1.5">
               <TrendingDown size={14} className="text-red-400" />
               Weekly Operating Spending
             </h4>
             <div className="space-y-3 font-mono text-xs text-zinc-300">
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Squad & Staff Wages</span>
                 <span>£{financials.spending.wages.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Transfer Amortization Costs</span>
                 <span>£{financials.spending.transfers.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pb-1.5 border-b border-white/5">
+              <div className="flex justify-between pb-1.5 border-b border-[#111]">
                 <span className="text-zinc-500 font-sans">Stadium Upkeep & Youth Dev</span>
                 <span>£{financials.spending.infrastructure.toLocaleString()}</span>
               </div>
@@ -781,19 +781,19 @@ export function Finances() {
 
         {/* CASHFLOW, LEDGER RESERVES & FFP BAR */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between">
+          <div className="glass-panel p-4 border border-[#111] flex flex-col justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono">Net Weekly Cashflow</span>
             <span className={`text-xl font-black font-mono mt-1 ${netWeeklyFlow >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {netWeeklyFlow >= 0 ? '+' : ''}£{netWeeklyFlow.toLocaleString()}
             </span>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between">
+          <div className="glass-panel p-4 border border-[#111] flex flex-col justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono">Club Liquid Reserves</span>
             <span className="text-xl font-black font-mono mt-1 text-white">
               £{financials.cashReserves.toLocaleString()}
             </span>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between">
+          <div className="glass-panel p-4 border border-[#111] flex flex-col justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono">Accumulated Structural Debt</span>
             <span className="text-xl font-black font-mono mt-1 text-zinc-400">
               £{financials.debt.toLocaleString()}
@@ -802,7 +802,7 @@ export function Finances() {
         </div>
 
         {/* FINANCIAL FAIR PLAY MONITOR */}
-        <div className="premium-card p-6 rounded-xl border border-white/5 space-y-4">
+        <div className="premium-card p-6 border border-[#111] space-y-4">
           <h4 className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
             <Building2 size={14} className="text-sky-400" />
             Financial Fair Play (FFP) Monitor
@@ -818,7 +818,7 @@ export function Finances() {
                 {wageRatio}% {wageLimitExceeded ? '(VIOLATION - LIMIT 70%)' : '(COMPLIANT)'}
               </span>
             </div>
-            <div className="h-3 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
+            <div className="h-3 bg-zinc-950 rounded-full overflow-hidden border border-[#111]">
               <div 
                 className={`h-full transition-all duration-500 ${wageLimitExceeded ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-emerald-500'}`} 
                 style={{ width: `${Math.min(100, wageRatio)}%` }} 
@@ -827,7 +827,7 @@ export function Finances() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <div className="p-3 bg-zinc-950/40 rounded-lg border border-white/5 text-xs">
+            <div className="p-3 bg-zinc-950/40 border border-[#111] text-xs">
               <span className="block text-[9px] uppercase tracking-wider text-zinc-500 font-mono mb-1">Contract Negotiation Wage Cap</span>
               <span className="text-sm font-black text-white font-mono">
                 £{financials.wageCeiling.toLocaleString()}/w
@@ -836,7 +836,7 @@ export function Finances() {
                 The boardroom blocks any personal contract extensions or incoming signings exceeding this limit.
               </p>
             </div>
-            <div className="p-3 bg-zinc-950/40 rounded-lg border border-white/5 text-xs">
+            <div className="p-3 bg-zinc-950/40 border border-[#111] text-xs">
               <span className="block text-[9px] uppercase tracking-wider text-zinc-500 font-mono mb-1">Boardroom Transfer Allocation</span>
               <span className="text-sm font-black text-white font-mono">
                 £{financials.transferBudget.toLocaleString()}
@@ -853,17 +853,17 @@ export function Finances() {
 
   {activeTab === 'OVERVIEW' && (
    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-   <div className="premium-card p-6 rounded-xl">
+   <div className="premium-card p-6 ">
     <h3 className="text-white text-sm font-black uppercase tracking-wider mb-6 flex items-center gap-2">
     <TrendingUp size={16} className="text-emerald-500" />
     Revenue Breakdown (Weekly)
     </h3>
     <div className="space-y-4">
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Professional Club Wage</span>
      <span className="text-white font-mono font-bold">£{p.contract.wage.toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50 flex flex-col sm:flex-row sm:items-center gap-1.5">
       <GlossaryTooltip term="World Reputation">World Reputation Sponsorship</GlossaryTooltip>
       {p.mediaPerception >= 70 && <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded uppercase font-black tracking-wider">Media Darling (+25%)</span>}
@@ -871,11 +871,11 @@ export function Finances() {
      </span>
      <span className="text-white font-mono">£{sponsorIncome.toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Signed Ambassador Deals</span>
      <span className="text-white font-mono font-bold">£{customSponsorIncome.toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Real Estate Rent Passive Yields</span>
      <span className="text-white font-mono font-bold">£{propertyRentalYield.toLocaleString()}</span>
     </div>
@@ -886,25 +886,25 @@ export function Finances() {
     </div>
    </div>
 
-   <div className="premium-card p-6 rounded-xl">
+   <div className="premium-card p-6 ">
     <h3 className="text-white text-sm font-black uppercase tracking-wider mb-6 flex items-center gap-2">
     <TrendingDown size={16} className="text-red-500" />
     Expenses Breakdown (Weekly)
     </h3>
     <div className="space-y-4">
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Housing Maintenance / Upkeep ({p.lifestyleTier.housing})</span>
      <span className="text-white font-mono">£{(p.finances?.expenses?.housing || 0).toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Physio, Gym, & Diet Coaching ({p.lifestyleTier?.training || 'Standard'})</span>
      <span className="text-white font-mono">£{(p.finances?.expenses?.training || 0).toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">PR & Public Relations Outgoings ({p.lifestyleTier?.image || 'Standard'})</span>
      <span className="text-white font-mono">£{(p.finances?.expenses?.lifestyle || 0).toLocaleString()}</span>
     </div>
-    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10/50">
+    <div className="flex justify-between items-center text-xs pb-2 border-b border-[#222]/50">
      <span className="text-white/50">Family Allowances / Support</span>
      <span className="text-white font-mono">£{(p.finances?.expenses?.family || 0).toLocaleString()}</span>
     </div>
@@ -919,7 +919,7 @@ export function Finances() {
 
   {activeTab === 'SPONSORS' && (
    <div className="space-y-4">
-   <div className="glass-panel p-4 rounded-xl text-xs text-white/50 flex items-center justify-between mb-4">
+   <div className="glass-panel p-4 text-xs text-white/50 flex items-center justify-between mb-4">
     <span>Your current World Reputation: <strong className="text-white ml-1">{p.reputation.world}%</strong></span>
     <span>Available Sponsorship slots: <strong className="text-white ml-1">Unlimited (Reputation locked)</strong></span>
    </div>
@@ -932,7 +932,7 @@ export function Finances() {
     const canSign = p.reputation.world >= deal.reqRep;
     
     return (
-     <div key={deal.id} className={`min-w-[280px] md:min-w-0 p-5 border rounded-xl flex flex-col justify-between ${isSigned ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-white/10 premium-card'}`}>
+     <div key={deal.id} className={`min-w-[280px] md:min-w-0 p-5 border flex flex-col justify-between ${isSigned ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-[#222] premium-card'}`}>
      <div>
       <div className="flex items-center justify-between mb-2">
       <span className="text-2xl">{deal.icon}</span>
@@ -949,7 +949,7 @@ export function Finances() {
       <p className="text-white/50 text-[10px] font-mono mt-2 uppercase">{deal.clause}</p>
      </div>
 
-     <div className="mt-6 pt-4 border-t border-white/10/60 flex items-center justify-between">
+     <div className="mt-6 pt-4 border-t border-[#222]/60 flex items-center justify-between">
       <span className="text-[9px] uppercase font-bold text-[#555]">Req Rep: {deal.reqRep}%</span>
       {isSigned ? (
       <button
@@ -992,8 +992,8 @@ export function Finances() {
   {activeTab === 'INVESTMENTS' && (
    <div className="space-y-6">
    {/* REAL ESTATE */}
-   <div className="premium-card p-6 rounded-xl">
-    <h3 className="text-white text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+   <div className="premium-card p-6 ">
+    <h3 className="text-white text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[#222] pb-3">
     <Building2 size={16} className="text-emerald-500" />
     Physical Property Acquisitions
     </h3>
@@ -1005,7 +1005,7 @@ export function Finances() {
      const totalYield = owned ? owned.yield : 0;
 
      return (
-     <div key={prop.id} className={`min-w-[280px] md:min-w-0 p-4 rounded-lg flex flex-col justify-between transition-all duration-300 ${lock.locked ? 'opacity-40 bg-[#080808] border border-white/5 text-white/30' : 'bg-[#0a0a0a]'}`}>
+     <div key={prop.id} className={`min-w-[280px] md:min-w-0 p-4 flex flex-col justify-between transition-all duration-300 ${lock.locked ? 'opacity-40 bg-[#080808] border border-[#111] text-white/30' : 'bg-[#0a0a0a]'}`}>
       <div>
       <div className="flex justify-between items-center mb-1">
        <h4 className="text-white font-bold text-xs uppercase tracking-wide flex items-center gap-1">{prop.name} {lock.locked && <span className="text-red-400">🔒</span>}</h4>
@@ -1030,7 +1030,7 @@ export function Finances() {
       </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/10/50 flex gap-2 justify-end">
+      <div className="mt-4 pt-3 border-t border-[#222]/50 flex gap-2 justify-end">
       {qty > 0 && (
        <button
        onClick={() => sellProperty(prop.id)}
@@ -1059,8 +1059,8 @@ export function Finances() {
    </div>
 
    {/* STARTUPS & ANGEL ROUNDS */}
-   <div className="premium-card p-6 rounded-xl">
-    <h3 className="text-white text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+   <div className="premium-card p-6 ">
+    <h3 className="text-white text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[#222] pb-3">
     <Briefcase size={16} className="text-cyan-500" />
     Venture Capital Seed Rounds
     </h3>
@@ -1071,7 +1071,7 @@ export function Finances() {
      const active = activeArr.find((s: any) => s.id === start.id);
 
      return (
-     <div key={start.id} className={`p-4 rounded-lg flex flex-col justify-between transition-all duration-300 ${lock.locked ? 'opacity-40 bg-[#080808] border border-white/5 text-white/30' : 'bg-[#0a0a0a]'}`}>
+     <div key={start.id} className={`p-4 flex flex-col justify-between transition-all duration-300 ${lock.locked ? 'opacity-40 bg-[#080808] border border-[#111] text-white/30' : 'bg-[#0a0a0a]'}`}>
       <div>
       <div className="flex justify-between items-start mb-1">
        <h4 className="text-white font-bold text-xs uppercase tracking-wide truncate max-w-[120px] flex items-center gap-1">{start.name} {lock.locked && <span className="text-red-400">🔒</span>}</h4>
@@ -1096,7 +1096,7 @@ export function Finances() {
       )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/10/50 flex justify-between items-center">
+      <div className="mt-4 pt-3 border-t border-[#222]/50 flex justify-between items-center">
       <span className="text-white text-[10px] font-mono font-bold">Cost: £{start.defaultCost.toLocaleString()}</span>
       {!active && (
        lock.locked ? (
@@ -1120,7 +1120,7 @@ export function Finances() {
    </div>
 
    {/* CRYPTO CURRENCY TRADING */}
-   <div className="premium-card p-6 rounded-xl">
+   <div className="premium-card p-6 ">
     {(() => {
      const cryptoLock = checkAssetLock(p, 'shiba_crypto');
      if (cryptoLock.locked) {
@@ -1134,7 +1134,7 @@ export function Finances() {
      }
      return (
       <>
-       <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+       <div className="flex justify-between items-center mb-4 border-b border-[#222] pb-3">
        <h3 className="text-white text-sm font-black uppercase tracking-wider flex items-center gap-2">
      <Coins size={16} className="text-yellow-500 animate-pulse" />
      ShibaFC Cryptocoin Exchange
@@ -1145,7 +1145,7 @@ export function Finances() {
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div className="bg-[#0a0a0a] p-4 rounded-lg">
+    <div className="bg-[#0a0a0a] p-4 ">
      <h4 className="text-white font-bold text-xs uppercase tracking-wider mb-2">My Holdings</h4>
      <div className="space-y-2 font-mono text-xs">
      <div className="flex justify-between">
@@ -1163,7 +1163,7 @@ export function Finances() {
      </div>
     </div>
 
-    <div className="bg-[#0a0a0a] p-4 rounded-lg flex flex-col justify-between">
+    <div className="bg-[#0a0a0a] p-4 flex flex-col justify-between">
      <div>
      <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest block mb-2">Trade Quantity</span>
      <input 
@@ -1200,7 +1200,7 @@ export function Finances() {
   {activeTab === 'EMPIRE' && (
    <div className="space-y-6">
    {!p.financialEmpire ? (
-    <div className="premium-card rounded-xl p-8 text-center max-w-xl mx-auto">
+    <div className="premium-card p-8 text-center max-w-xl mx-auto">
     <Globe size={48} className="text-[#333] mx-auto mb-4" />
     <h3 className="text-white text-lg font-black uppercase tracking-wider mb-2">Establish Wealth Advisor Office</h3>
     <p className="text-white/50 text-xs font-mono leading-relaxed mb-6 uppercase">
@@ -1209,7 +1209,7 @@ export function Finances() {
     <button
      onClick={establishFinancialEmpire}
       disabled={getEmpireLock().locked}
-     className={`px-8 py-3 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${getEmpireLock().locked ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5' : 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-lg shadow-emerald-500/10'}`}
+     className={`px-8 py-3 text-xs font-black uppercase tracking-widest transition-all ${getEmpireLock().locked ? 'bg-white/5 text-white/30 cursor-not-allowed border border-[#111]' : 'bg-emerald-500 text-black hover:bg-emerald-400 '}`}
     >
      {getEmpireLock().locked ? `Locked: ${getEmpireLock().reason} 🔒` : 'Establish Trust (Cost: £1,000,000)'}
     </button>
@@ -1217,8 +1217,8 @@ export function Finances() {
    ) : (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {/* Stocks & Indices */}
-    <div className="premium-card p-6 rounded-xl">
-     <h4 className="text-white text-md font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+    <div className="premium-card p-6 ">
+     <h4 className="text-white text-md font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[#222] pb-2">
      <LineChart size={16} className="text-emerald-500" />
      Brokerage Stocks & Indices Portfolio
      </h4>
@@ -1252,8 +1252,8 @@ export function Finances() {
     </div>
 
     {/* Crypto coins Held */}
-    <div className="premium-card p-6 rounded-xl">
-     <h4 className="text-white text-md font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+    <div className="premium-card p-6 ">
+     <h4 className="text-white text-md font-black uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[#222] pb-2">
      <Coins size={16} className="text-yellow-500" />
      Advisory Crypto Assets
      </h4>
@@ -1288,7 +1288,7 @@ export function Finances() {
     
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Recovery Chamber */}
-      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.recoveryChamber ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+      <div className={`premium-card p-4 border flex flex-col justify-between ${apState.lifestyle?.recoveryChamber ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-[#111] bg-black/40'}`}>
         <div>
           <div className="flex justify-between items-start mb-2">
             <h4 className="text-white font-bold text-sm uppercase">Cryo-Recovery Chamber</h4>
@@ -1313,8 +1313,8 @@ export function Finances() {
             apState.lifestyle?.recoveryChamber 
               ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
               : p.finances.balance >= 150000
-                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
-                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer '
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-[#222]'
           }`}
         >
           {apState.lifestyle?.recoveryChamber ? 'Installed' : 'Purchase (£150,000)'}
@@ -1322,7 +1322,7 @@ export function Finances() {
       </div>
 
       {/* Luxury Housing */}
-      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.luxuryHousing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+      <div className={`premium-card p-4 border flex flex-col justify-between ${apState.lifestyle?.luxuryHousing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-[#111] bg-black/40'}`}>
         <div>
           <div className="flex justify-between items-start mb-2">
             <h4 className="text-white font-bold text-sm uppercase">Luxury Private Estate</h4>
@@ -1347,8 +1347,8 @@ export function Finances() {
             apState.lifestyle?.luxuryHousing 
               ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
               : p.finances.balance >= 2500000
-                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
-                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer '
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-[#222]'
           }`}
         >
           {apState.lifestyle?.luxuryHousing ? 'Purchased' : 'Purchase (£2,500,000)'}
@@ -1356,7 +1356,7 @@ export function Finances() {
       </div>
       
       {/* Private Jet */}
-      <div className={`premium-card p-4 rounded-xl border flex flex-col justify-between ${apState.lifestyle?.privateJet ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-black/40'}`}>
+      <div className={`premium-card p-4 border flex flex-col justify-between ${apState.lifestyle?.privateJet ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-[#111] bg-black/40'}`}>
         <div>
           <div className="flex justify-between items-start mb-2">
             <h4 className="text-white font-bold text-sm uppercase">Chartered Private Jet</h4>
@@ -1381,8 +1381,8 @@ export function Finances() {
             apState.lifestyle?.privateJet 
               ? 'bg-emerald-500/20 text-emerald-500 cursor-not-allowed border border-emerald-500/20' 
               : p.finances.balance >= 8000000
-                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer shadow-lg shadow-fuchsia-500/20'
-                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                ? 'bg-fuchsia-500 text-white hover:bg-fuchsia-400 cursor-pointer '
+                : 'bg-white/5 text-white/30 cursor-not-allowed border border-[#222]'
           }`}
         >
           {apState.lifestyle?.privateJet ? 'Purchased' : 'Purchase (£8,000,000)'}
@@ -1475,13 +1475,13 @@ export function Finances() {
    };
 
    return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in select-none">
-    <div className="premium-card max-w-2xl w-full rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-white/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fade-in select-none">
+    <div className="premium-card max-w-2xl w-full overflow-hidden flex flex-col border border-[#222]">
      
-     <div className="p-6 border-b border-white/5 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950">
+     <div className="p-6 border-b border-[#111] ">
       <div className="flex justify-between items-center">
        <div className="flex items-center gap-3">
-        <span className="text-3xl p-2 bg-white/5 rounded-xl border border-white/10">{deal.icon}</span>
+        <span className="text-3xl p-2 bg-white/5 border border-[#222]">{deal.icon}</span>
         <div>
          <h2 className="text-lg font-black uppercase tracking-wider text-white">{deal.name}</h2>
          <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Round {negotiationRound} of Negotiation</span>
@@ -1519,10 +1519,10 @@ export function Finances() {
           </div>
          </div>
 
-         <div className="space-y-2 border-t border-white/5 pt-4">
+         <div className="space-y-2 border-t border-[#111] pt-4">
           <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">Optional Clauses</span>
           
-          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-[#111] cursor-pointer hover:bg-white/10 transition-colors">
            <div className="flex flex-col">
             <span className="text-xs text-white font-bold">Exclusivity Clause</span>
             <span className="text-[9px] text-zinc-500">Block other shoe brands for a +15% pay boost</span>
@@ -1539,7 +1539,7 @@ export function Finances() {
            />
           </label>
 
-          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-[#111] cursor-pointer hover:bg-white/10 transition-colors">
            <div className="flex flex-col">
             <span className="text-xs text-white font-bold">Social Media Commitment</span>
             <span className="text-[9px] text-zinc-500 font-mono">Adds +10% pay, increases cancellation risk</span>
@@ -1556,7 +1556,7 @@ export function Finances() {
            />
           </label>
 
-          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center justify-between p-2 rounded bg-white/5 border border-[#111] cursor-pointer hover:bg-white/10 transition-colors">
            <div className="flex flex-col">
             <span className="text-xs text-white font-bold">Morality Clause Safeguard</span>
             <span className="text-[9px] text-zinc-500">Risk termination on scandal for a +10% pay boost</span>
@@ -1576,23 +1576,23 @@ export function Finances() {
         </div>
        </div>
 
-       <div className="space-y-4 border-t border-white/5 pt-4">
+       <div className="space-y-4 border-t border-[#111] pt-4">
         <div>
          <div className="flex justify-between text-xs mb-1 font-mono">
           <span className="text-zinc-500">Brand Impatience</span>
           <span className={`${brandImpatience > 70 ? 'text-red-400 font-bold' : brandImpatience > 40 ? 'text-amber-400' : 'text-zinc-400'}`}>{brandImpatience}%</span>
          </div>
-         <div className="h-2 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+         <div className="h-2 bg-zinc-900 rounded-full overflow-hidden border border-[#111]">
           <div className={`h-full transition-all duration-500 ${brandImpatience > 70 ? 'bg-red-500' : brandImpatience > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${brandImpatience}%` }} />
          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-center">
-         <div className="glass-panel p-3 rounded-lg border border-white/5">
+         <div className="glass-panel p-3 border border-[#111]">
           <span className="block text-[9px] text-zinc-500 uppercase font-mono mb-1">Leverage Power</span>
           <span className="text-lg font-black text-white font-mono">{leverage}%</span>
          </div>
-         <div className="glass-panel p-3 rounded-lg border border-white/5">
+         <div className="glass-panel p-3 border border-[#111]">
           <span className="block text-[9px] text-zinc-500 uppercase font-mono mb-1">Acceptance Odds</span>
           <span className="text-lg font-black text-emerald-400 font-mono">{negotiationStage.startsWith('RESULT') ? '—' : `${acceptanceOdds}%`}</span>
          </div>
@@ -1608,7 +1608,7 @@ export function Finances() {
          {negotiationHistory.map((item, index) => (
           <div key={index} className={`flex flex-col ${item.sender === 'PLAYER' ? 'items-end' : 'items-start'}`}>
            <span className="text-[8px] uppercase tracking-wider text-zinc-600 mb-1 font-mono">{item.sender === 'PLAYER' ? 'You' : 'Brand Executive'}</span>
-           <div className={`p-3 rounded-xl max-w-[85%] text-xs font-sans leading-relaxed ${item.sender === 'PLAYER' ? 'bg-emerald-500/10 text-white border border-emerald-500/20 rounded-tr-none' : 'bg-zinc-900 text-zinc-300 border border-white/5 rounded-tl-none'}`}>
+           <div className={`p-3 max-w-[85%] text-xs font-sans leading-relaxed ${item.sender === 'PLAYER' ? 'bg-emerald-500/10 text-white border border-emerald-500/20 rounded-tr-none' : 'bg-zinc-900 text-zinc-300 border border-[#111] rounded-tl-none'}`}>
             {item.text}
            </div>
           </div>
@@ -1616,18 +1616,18 @@ export function Finances() {
         </div>
        </div>
 
-       <div className="pt-4 border-t border-white/5 flex gap-2">
+       <div className="pt-4 border-t border-[#111] flex gap-2">
         {negotiationStage === 'INTRO' || negotiationStage === 'TALKING' ? (
          <>
           <button 
            onClick={() => setNegotiatingDealId(null)} 
-           className="flex-1 py-2.5 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
+           className="flex-1 py-2.5 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 text-xs font-black uppercase tracking-wider transition-all"
           >
            Walk Away
           </button>
           <button 
            onClick={handleProposeCounter} 
-           className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+           className="flex-1 py-2.5 hover:hover:text-white text-xs font-black uppercase tracking-wider transition-all active:scale-95"
           >
            Propose Counter
           </button>
@@ -1635,14 +1635,14 @@ export function Finances() {
         ) : negotiationStage === 'RESULT_SUCCESS' ? (
          <button 
           onClick={handleSignContract} 
-          className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/10 active:scale-95"
+          className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition-all active:scale-95"
          >
           Sign Contract (£{currentTarget.toLocaleString()}/w)
          </button>
         ) : (
          <button 
           onClick={() => setNegotiatingDealId(null)} 
-          className="w-full py-3 bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-xs font-black uppercase tracking-wider transition-all"
+          className="w-full py-3 bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white text-xs font-black uppercase tracking-wider transition-all"
          >
           Leave Meeting (Withdrawn)
          </button>

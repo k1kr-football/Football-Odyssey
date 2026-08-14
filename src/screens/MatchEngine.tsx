@@ -1,4 +1,5 @@
 import { getFlavorText } from "../utils/matchEngineUtils";
+import { requestGeminiMatchCommentary } from "../utils/geminiCommentary";
 import { generateMatchDecisions, getPositionGroup, DecisionOption, KeyDecision } from "../utils/positionMatchDecisions";
 import { RadarChartComparison } from '../components/RadarChartComparison';
 import { calculateMatchReputationGain, updateReputationAndPerception } from "../utils/reputation";
@@ -9,10 +10,11 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../store/GameContext';
 import { Player, TurningPointEvent } from '../types';
 import { CLUBS } from '../data/teams';
+import { getClubSquad } from '../data/sheetSquads';
 import { TeamLogo } from '../components/TeamLogo';
 import { TurningPointsReview } from '../components/TurningPointsReview';
 import { motion, AnimatePresence } from 'motion/react';
-import { updateProgressionState } from '../utils/careerSystems';
+import { updateProgressionState, checkStoryArcProgression } from '../utils/careerSystems';
 import { initializeActiveRehab } from '../utils/wellbeingEngine';
 import { getClubStaff, getCanonicalSender } from '../utils/clubStaff';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -38,6 +40,9 @@ export function MatchEngine() {
   const { state, advanceDay, setScreen, setPlayer, setInbox, settings } = useGame();
   const { apState, setApState } = useAPEngine();
   const p = state.player;
+  const squad = getClubSquad(p?.currentClubSymbol || 'BIR');
+  const npcRelations = p?.relationships?.npc || {};
+  const closeTeammateCount = squad.players.slice(0, 11).filter(tp => (npcRelations[tp.name] || 50) >= 80).length;
 
   // Mid-Match Tactical Enhancements
   const [halftimeTactic, setHalftimeTactic] = useState<'HIGH_PRESS_OVERLOAD' | 'PARK_THE_BUS' | null>(null);
@@ -63,6 +68,7 @@ export function MatchEngine() {
       { minute, text: `⚡ TACTICAL SWITCH ACTIVATED: ${option.title} — ${option.description}`, type: 'highlight' },
       ...c
     ]);
+    triggerAiCommentary('TACTICAL_SWITCH', minute, { tacticalName: option.title });
   };
 
 
@@ -79,7 +85,7 @@ export function MatchEngine() {
 
   // Identify Opponent and User Club
   const opponentSymbol = state.nextMatch?.opponentSymbol || 'AST';
-  const oppClub = CLUBS.find(c => c.symbol.toUpperCase() === opponentSymbol.toUpperCase()) || {
+  const oppClub = CLUBS.find(c => c.symbol.toUpperCase() === opponentSymbol.replace(' U18', '').replace(' U19', '').toUpperCase()) || {
     name: 'Upcoming Opponent',
     symbol: opponentSymbol,
     primaryColor: '#670E36',
@@ -95,6 +101,10 @@ export function MatchEngine() {
     secondaryColor: '#FFFFFF',
     ovr: 70
   };
+
+  const isYouthMatch = state.nextMatch?.competitionType === 'YOUTH_LEAGUE' || state.nextMatch?.competitionType === 'YOUTH_CUP' || state.nextMatch?.competitionType === 'YOUTH_EUROPEAN' || state.nextMatch?.competitionType === 'U18 Friendly';
+  const effectiveOppOvr = isYouthMatch ? Math.max(50, oppClub.ovr - 15) : oppClub.ovr;
+  const effectiveUserOvr = isYouthMatch ? Math.max(50, userClub.ovr - 15) : userClub.ovr;
 
   const isHome = state.nextMatch?.venue === 'Home' || true;
   const playerStatus = state.nextMatch?.playerStatus || (p.contract?.status === 'Backup' ? 'SUBSTITUTE' : 'STARTER');
@@ -342,9 +352,35 @@ export function MatchEngine() {
 
   const benchSubTriggerMin = useMemo(() => Math.floor(Math.random() * 12) + 58, []);
 
-  const [commentaryLogs, setCommentaryLogs] = useState<{ minute: number; text: string; type: 'info' | 'highlight' | 'goal_user' | 'goal_opp' }[]>([
+  const [commentaryLogs, setCommentaryLogs] = useState<{ minute: number; text: string; type: 'info' | 'highlight' | 'goal_user' | 'goal_opp'; isAiGenerated?: boolean }[]>([
     { minute: 0, text: `Kickoff at ${isHome ? 'Home Ground' : 'Away Stadium'}. High anticipation in the stands!`, type: 'info' }
   ]);
+
+  const triggerAiCommentary = (eventType: string, min: number, extraDetails: { decisionText?: string; decisionOutcome?: string; tacticalName?: string; currentScoreUser?: number; currentScoreOpp?: number } = {}) => {
+    const userSc = extraDetails.currentScoreUser ?? userScore;
+    const oppSc = extraDetails.currentScoreOpp ?? oppScore;
+
+    requestGeminiMatchCommentary({
+      eventType,
+      minute: min,
+      playerName: `${p.firstName} ${p.lastName}`,
+      playerPosition: p.position || 'ST',
+      playerReputation: p.reputation,
+      userClub: { name: userClub.name, symbol: userClub.symbol, ovr: effectiveUserOvr },
+      oppClub: { name: oppClub.name, symbol: oppClub.symbol, ovr: effectiveOppOvr },
+      score: { userScore: userSc, oppScore: oppSc },
+      decisionText: extraDetails.decisionText,
+      decisionOutcome: extraDetails.decisionOutcome,
+      tacticalName: extraDetails.tacticalName
+    }).then((res) => {
+      if (res.commentary) {
+        setCommentaryLogs(prev => [
+          { minute: min, text: res.commentary, type: eventType.includes('GOAL') ? (eventType === 'GOAL_USER' ? 'goal_user' : 'goal_opp') : 'highlight', isAiGenerated: res.isAiGenerated },
+          ...prev
+        ]);
+      }
+    });
+  };
 
   // Match Turning Points Log (Detailed events, goals, key decisions & turning points)
   const [turningPoints, setTurningPoints] = useState<TurningPointEvent[]>([
@@ -437,6 +473,7 @@ export function MatchEngine() {
             { minute: 45, text: `Half Time whistle! Score: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}`, type: 'info' },
             ...prev
           ]);
+          triggerAiCommentary('HALF_TIME', 45);
           setTurningPoints(prev => [
             ...prev,
             {
@@ -460,6 +497,7 @@ export function MatchEngine() {
             { minute: 90, text: `Full Time whistle! Final Score: ${userClub.symbol} ${userScore} - ${oppScore} ${oppClub.symbol}`, type: 'info' },
             ...prev
           ]);
+          triggerAiCommentary('FULL_TIME', 90);
           setTurningPoints(prev => [
             ...prev,
             {
@@ -491,6 +529,7 @@ export function MatchEngine() {
         if (scheduledDecisions.current[nextMin] && playerStatus !== 'UNUSED' && isSubbedOn && !isSubbedOff) {
           setActiveDecision(scheduledDecisions.current[nextMin]);
           setSimSpeed('PAUSED');
+          triggerAiCommentary('KEY_DECISION', nextMin, { decisionText: scheduledDecisions.current[nextMin].situation });
           return nextMin;
         }
 
@@ -523,6 +562,7 @@ export function MatchEngine() {
               { minute: nextMin, text: getFlavorText('goal_opp', '', oppClub.name), type: 'goal_opp' },
               ...prev
             ]);
+            triggerAiCommentary('GOAL_OPP', nextMin, { currentScoreOpp: oppScore + 1 });
             setTurningPoints(prev => [
               ...prev,
               {
@@ -549,6 +589,7 @@ export function MatchEngine() {
               { minute: nextMin, text: getFlavorText('chance_user', '', userClub.name), type: 'goal_user' },
               ...prev
             ]);
+            triggerAiCommentary('GOAL_USER', nextMin, { currentScoreUser: userScore + 1 });
             setTurningPoints(prev => [
               ...prev,
               {
@@ -628,6 +669,7 @@ export function MatchEngine() {
                 { minute: nextMin, text: `🚨 CRITICAL INJURY INCIDENT: ${p.lastName} goes down clutching their leg in agony! Stretcher called. Medical diagnosis: ${chosen.name} (${chosen.weeks} wks).`, type: 'goal_opp' },
                 ...c
               ]);
+              triggerAiCommentary('INJURY', nextMin);
             }
 
             // Check if manager hook / substitution should trigger
@@ -680,7 +722,8 @@ export function MatchEngine() {
     const baseChance = playerAttrVal / 100;
     const riskPenalty = opt.risk === 'HIGH' ? 0.25 : opt.risk === 'MED' ? 0.12 : 0.02;
 
-    const finalSuccessChance = Math.max(0.2, Math.min(0.92, baseChance - riskPenalty + (stamina / 500)));
+    const relationshipBonus = closeTeammateCount > 0 ? 0.05 : 0;
+    const finalSuccessChance = Math.max(0.2, Math.min(0.92, baseChance - riskPenalty + (stamina / 500) + relationshipBonus));
     const isSuccess = Math.random() < finalSuccessChance;
     const posGroup = getPositionGroup(p.position || 'ST');
 
@@ -701,6 +744,7 @@ export function MatchEngine() {
           { minute: activeDecision.minute, text: getFlavorText('goal_user', p.lastName, '', opt.text, p.position), type: 'goal_user' },
           ...prev
         ]);
+        triggerAiCommentary('GOAL_USER', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Goal scored clean!', currentScoreUser: userScore + 1 });
         setLastActionResult(`✅ SUCCESSFUL ACTION: GOAL SCORED! (+0.9 Rating)`);
       } else if (opt.attrKey === 'passing' || opt.attrKey === 'vision') {
         if (posGroup === 'GK') {
@@ -732,6 +776,7 @@ export function MatchEngine() {
               { minute: activeDecision.minute, text: getFlavorText('assist', p.lastName, '', opt.text, p.position), type: 'goal_user' },
               ...prev
             ]);
+            triggerAiCommentary('GOAL_USER', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Assist provided for goal!', currentScoreUser: userScore + 1 });
             setLastActionResult(`✅ SUCCESSFUL ACTION: ASSIST RECORDED! (+0.7 Rating)`);
           } else {
             setPlayerStats(prev => ({
@@ -745,6 +790,7 @@ export function MatchEngine() {
               { minute: activeDecision.minute, text: getFlavorText('key_pass', p.lastName, '', opt.text, p.position), type: 'highlight' },
               ...prev
             ]);
+            triggerAiCommentary('KEY_DECISION', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Key pass delivered' });
             setLastActionResult(`✅ SUCCESSFUL ACTION: KEY PASS DELIVERED! (+0.3 Rating)`);
           }
         }
@@ -759,6 +805,7 @@ export function MatchEngine() {
             { minute: activeDecision.minute, text: getFlavorText('save', p.lastName, '', opt.text, p.position), type: 'highlight' },
             ...prev
           ]);
+          triggerAiCommentary('KEY_DECISION', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Crucial save / claim made by keeper' });
           setLastActionResult(`✅ SUCCESSFUL ACTION: CRUCIAL KEEPER SAVE / CLAIM! (+0.5 Rating)`);
         } else {
           setPlayerStats(prev => ({
@@ -770,6 +817,7 @@ export function MatchEngine() {
             { minute: activeDecision.minute, text: getFlavorText('tackle', p.lastName, '', opt.text, p.position), type: 'highlight' },
             ...prev
           ]);
+          triggerAiCommentary('KEY_DECISION', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Crucial tackle executed' });
           setLastActionResult(`✅ SUCCESSFUL ACTION: DISPOSSESSED OPPONENT! (+0.4 Rating)`);
         }
       } else {
@@ -781,6 +829,7 @@ export function MatchEngine() {
           { minute: activeDecision.minute, text: getFlavorText('skill', p.lastName, '', opt.text, p.position), type: 'highlight' },
           ...prev
         ]);
+        triggerAiCommentary('KEY_DECISION', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Excellent skill move executed' });
         setLastActionResult(`✅ SUCCESSFUL ACTION: EXCELLENT POSSESSION PLAY! (+0.3 Rating)`);
       }
     } else {
@@ -796,6 +845,7 @@ export function MatchEngine() {
         { minute: activeDecision.minute, text: getFlavorText('miss', p.lastName, '', opt.text, p.position), type: 'info' },
         ...prev
       ]);
+      triggerAiCommentary('KEY_DECISION', activeDecision.minute, { decisionText: opt.text, decisionOutcome: 'Unsuccessful attempt / saved / blocked' });
       setLastActionResult(`⚠️ ATTEMPT UNSUCCESSFUL: Dispossessed / Saved (-0.2 Rating)`);
     }
 
@@ -980,7 +1030,7 @@ export function MatchEngine() {
     }
 
     // Save state
-    setPlayer({
+    const updatedPlayer = {
       ...playerWithRep.player,
       trust: newTrust,
       fans: newFans,
@@ -1011,13 +1061,24 @@ export function MatchEngine() {
       },
       progression: nextProgResult.progression,
       ...injuryStateUpdate
-    });
+    };
 
-    setInbox(inboxList);
+    // Update player and advance day
+    const { updatedArc, inboxMessage } = checkStoryArcProgression(updatedPlayer, newApps);
+    let finalPlayer = updatedPlayer;
+    if (updatedArc) {
+      finalPlayer = { ...updatedPlayer, storyArc: updatedArc };
+    }
+
+    setPlayer(finalPlayer);
+
+    if (inboxMessage) {
+      setInbox([inboxMessage, ...inboxList]);
+    }
 
     // Return to Hub and advance calendar day
     setScreen('HUB', true);
-    advanceDay(true);
+    advanceDay(true, finalPlayer);
   };
 
   // ==================== RENDERING PHASES ====================
@@ -1027,9 +1088,9 @@ export function MatchEngine() {
     return (
       <div className="w-full text-white flex flex-col font-mono select-none space-y-6 pb-8">
         {/* Header Bar */}
-        <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+        <div className="flex justify-between items-center border-b border-[#222] pb-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#00FF88]/10 border border-[#00FF88]/30 rounded-xl text-[#00FF88]">
+            <div className="p-2.5 bg-[#00FF88]/10 border border-[#00FF88]/30 text-[#00FF88]">
               <Trophy size={22} />
             </div>
             <div>
@@ -1044,11 +1105,11 @@ export function MatchEngine() {
         </div>
 
         {/* Fixture Matchup Banner */}
-        <div className="relative bg-gradient-to-br from-[#141414] via-[#0e0e0e] to-[#070707] border border-white/15 rounded-2xl p-6 mb-6 shadow-2xl overflow-hidden">
+        <div className="relative border border-white/15 p-6 mb-6 overflow-hidden">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
             {/* User Club */}
             <div className="flex items-center gap-4 flex-1 justify-center md:justify-start">
-              <div className="p-3 bg-black/50 rounded-xl border border-white/10 shrink-0">
+              <div className="p-3 bg-black/50 border border-[#222] shrink-0">
                 <TeamLogo symbol={userClub.symbol} name={userClub.name} primaryColor={userClub.primaryColor} secondaryColor={userClub.secondaryColor} size={56} />
               </div>
               <div>
@@ -1058,7 +1119,7 @@ export function MatchEngine() {
             </div>
 
             {/* VS Badge */}
-            <div className="flex flex-col items-center justify-center bg-black/80 px-6 py-3 rounded-xl border border-white/10">
+            <div className="flex flex-col items-center justify-center bg-black/80 px-6 py-3 border border-[#222]">
               <span className="text-2xl font-black tracking-widest text-[#00FF88]">VS</span>
               <span className="text-[10px] text-white/40 uppercase font-bold mt-1">KICKOFF 15:00</span>
             </div>
@@ -1069,7 +1130,7 @@ export function MatchEngine() {
                 <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">{oppClub.name}</h2>
                 <span className="text-xs text-white/40 font-bold uppercase">{!isHome ? 'HOME TEAM' : 'AWAY TEAM'}</span>
               </div>
-              <div className="p-3 bg-black/50 rounded-xl border border-white/10 shrink-0">
+              <div className="p-3 bg-black/50 border border-[#222] shrink-0">
                 <TeamLogo symbol={oppClub.symbol} name={oppClub.name} primaryColor={oppClub.primaryColor} secondaryColor={oppClub.secondaryColor} size={56} />
               </div>
             </div>
@@ -1079,8 +1140,8 @@ export function MatchEngine() {
         {/* Grid: Tactical Mindset & Manager Objectives */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Tactical Mindset Selector */}
-          <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-white/10 pb-3 mb-4">
+          <div className="bg-[#0e0e0e] border border-[#222] p-6">
+            <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-[#222] pb-3 mb-4">
               <Compass size={16} /> Choose Tactical Mindset
             </div>
 
@@ -1097,10 +1158,10 @@ export function MatchEngine() {
                   <button
                     key={m.id}
                     onClick={() => setMindset(m.id as any)}
-                    className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    className={`p-4 border text-left transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-[#00FF88]/10 border-[#00FF88] text-white shadow-lg shadow-[#00FF88]/10'
-                        : 'bg-black/40 border-white/10 hover:border-white/20 text-white/70'
+                        ? 'bg-[#00FF88]/10 border-[#00FF88] text-white shadow-[#00FF88]/10'
+                        : 'bg-black/40 border-[#222] hover:border-[#333] text-white/70'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -1118,15 +1179,15 @@ export function MatchEngine() {
           </div>
 
           {/* Manager Objectives */}
-          <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
+          <div className="bg-[#0e0e0e] border border-[#222] p-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-white/10 pb-3 mb-4">
+              <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-[#222] pb-3 mb-4">
                 <Award size={16} /> Manager's Match Objectives
               </div>
 
               <div className="space-y-3">
                 {objectives.map((obj, i) => (
-                  <div key={obj.id} className="bg-black/40 p-3.5 rounded-xl border border-white/10 flex items-center justify-between">
+                  <div key={obj.id} className="bg-black/40 p-3.5 border border-[#222] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-bold text-[#00FF88] bg-[#00FF88]/10 w-6 h-6 rounded-full flex items-center justify-center">
                         {i + 1}
@@ -1148,7 +1209,7 @@ export function MatchEngine() {
             {/* Kickoff CTA */}
             <button
               onClick={handleStartMatch}
-              className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-xl shadow-[#00FF88]/20 cursor-pointer active:scale-98"
+              className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-[#00FF88]/20 cursor-pointer active:scale-98"
             >
               <Play size={20} className="fill-black" /> KICK OFF MATCH
             </button>
@@ -1163,7 +1224,7 @@ export function MatchEngine() {
     return (
       <div className="w-full text-white flex flex-col font-mono select-none relative space-y-4 pb-8">
         {/* Top Header Scoreboard Bar */}
-        <div className="bg-[#121212] border border-white/15 rounded-xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl">
+        <div className="bg-[#050505] border border-white/15 p-3 sm:p-4 mb-4 flex items-center justify-between ">
           {/* User Club */}
           <div className="flex items-center gap-3">
             <TeamLogo symbol={userClub.symbol} name={userClub.name} primaryColor={userClub.primaryColor} secondaryColor={userClub.secondaryColor} size={38} />
@@ -1172,7 +1233,7 @@ export function MatchEngine() {
           </div>
 
           {/* Live Score & Clock */}
-          <div className="flex items-center gap-4 bg-black/60 px-5 py-2 rounded-xl border border-white/10">
+          <div className="flex items-center gap-4 bg-black/60 px-5 py-2 border border-[#222]">
             <span className="text-2xl sm:text-3xl font-black text-[#00FF88] tracking-widest">
               {userScore} - {oppScore}
             </span>
@@ -1204,7 +1265,7 @@ export function MatchEngine() {
                 key={s.val}
                 onClick={() => setSimSpeed(s.val as any)}
                 className={`px-3 py-1 rounded text-xs font-bold border cursor-pointer ${
-                  simSpeed === s.val ? 'bg-[#00FF88] text-black border-[#00FF88]' : 'bg-black/40 text-white/70 border-white/10'
+                  simSpeed === s.val ? 'bg-[#00FF88] text-black border-[#00FF88]' : 'bg-black/40 text-white/70 border-[#222]'
                 }`}
               >
                 {s.label}
@@ -1223,7 +1284,7 @@ export function MatchEngine() {
         </div>
 
         {/* 2D Interactive Pitch Radar Display */}
-        <div className="relative w-full h-56 sm:h-64 bg-[#143d22] border-2 border-white/20 rounded-2xl overflow-hidden shadow-2xl mb-4 flex flex-col justify-between p-3">
+        <div className="relative w-full h-56 sm:h-64 bg-[#143d22] border-2 border-[#333] overflow-hidden mb-4 flex flex-col justify-between p-3">
           {/* Pitch Field Markings (Center circle & Lines) */}
           <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none opacity-25">
             <div className="w-full h-full border border-white" />
@@ -1235,26 +1296,26 @@ export function MatchEngine() {
 
           {/* Top Info Overlay */}
           <div className="relative z-10 flex justify-between items-center text-[10px] font-bold tracking-wider">
-            <span className="bg-black/70 px-2.5 py-1 rounded text-[#00FF88] border border-white/10">
+            <span className="bg-black/70 px-2.5 py-1 rounded text-[#00FF88] border border-[#222]">
               PHASE: {phaseText}
             </span>
-            <span className="bg-black/70 px-2.5 py-1 rounded text-white border border-white/10">
+            <span className="bg-black/70 px-2.5 py-1 rounded text-white border border-[#222]">
               MOMENTUM: {momentum > 0 ? `+${momentum} ${userClub.symbol}` : momentum < 0 ? `${momentum} ${oppClub.symbol}` : 'NEUTRAL'}
             </span>
           </div>
 
           {/* Animated Pitch Radar Ball Marker */}
           <div
-            className="absolute z-20 w-5 h-5 bg-yellow-400 rounded-full border-2 border-black shadow-lg transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out flex items-center justify-center"
+            className="absolute z-20 w-5 h-5 bg-yellow-400 rounded-full border-2 border-black transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out flex items-center justify-center"
             style={{ left: `${ballPos.x}%`, top: `${ballPos.y}%` }}
           >
             <div className="w-2 h-2 bg-black rounded-full" />
           </div>
 
           {/* Bottom Live Player HUD */}
-          <div className="relative z-10 bg-black/80 backdrop-blur border border-white/15 p-3 rounded-xl flex items-center justify-between">
+          <div className="relative z-10 bg-black/80 border border-white/15 p-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#00FF88]/20 text-[#00FF88] rounded-lg font-black text-sm border border-[#00FF88]/30">
+              <div className="p-2 bg-[#00FF88]/20 text-[#00FF88] font-black text-sm border border-[#00FF88]/30">
                 {playerStats.rating}
               </div>
               <div>
@@ -1284,7 +1345,7 @@ export function MatchEngine() {
 
             <div className="text-right min-w-[110px]">
               <span className="text-[9px] text-white/40 font-bold block mb-1">STAMINA ({Math.round(stamina)}%)</span>
-              <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
+              <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-[#222]">
                 <div
                   className={`h-full transition-all ${stamina > 50 ? 'bg-[#00FF88]' : stamina > 25 ? 'bg-amber-400' : 'bg-red-500'}`}
                   style={{ width: `${Math.max(0, Math.min(100, stamina))}%` }}
@@ -1296,8 +1357,8 @@ export function MatchEngine() {
 
         {/* Subbed Off Notification Banner */}
         {isSubbedOff && (
-          <div className="bg-gradient-to-r from-red-950/80 to-black border border-red-500/40 rounded-xl p-3 mb-3 flex items-center gap-3 font-mono shadow-lg">
-            <div className="p-2 bg-red-500/20 text-red-400 rounded-lg shrink-0">
+          <div className="to-black border border-red-500/40 p-3 mb-3 flex items-center gap-3 font-mono ">
+            <div className="p-2 bg-red-500/20 text-red-400 shrink-0">
               <RefreshCw size={18} />
             </div>
             <div className="text-xs">
@@ -1323,12 +1384,13 @@ export function MatchEngine() {
         )}
 
         {/* Live Match Commentary Ticker */}
-        <div className="flex-1 bg-[#0e0e0e] border border-white/10 rounded-2xl p-4 flex flex-col justify-between overflow-hidden">
+        <div className="flex-1 bg-[#0e0e0e] border border-[#222] p-4 flex flex-col justify-between overflow-hidden">
           <span className="text-xs font-bold text-white/40 uppercase tracking-wider block mb-3">Live Commentary Feed</span>
           <div className="overflow-y-auto max-h-48 hide-scrollbar">
             <AnimatePresence initial={false}>
               {commentaryLogs.map((log, index) => {
                 const uniqueKey = `${index}-${log.minute}-${log.text.substring(0, 20).replace(/\s+/g, '')}`;
+                const isAi = log.isAiGenerated;
                 return (
                   <motion.div
                     layout
@@ -1336,15 +1398,21 @@ export function MatchEngine() {
                     initial={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, x: 0, height: 'auto', marginBottom: 8 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex items-start gap-3 p-2.5 rounded-lg border text-xs font-mono mb-2 ${
+                    className={`flex items-start gap-3 p-3 border text-xs font-mono mb-2 relative overflow-hidden ${
+                      isAi ? '/15 to-black border-[#00FF88]/60 text-emerald-200 shadow-[0_0_15px_rgba(0,255,136,0.15)]' :
                       log.type === 'goal_user' ? 'bg-[#00FF88]/10 border-[#00FF88]/40 text-[#00FF88]' :
                       log.type === 'goal_opp' ? 'bg-red-500/10 border-red-500/40 text-red-400' :
                       log.type === 'highlight' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' :
-                      'bg-black/40 border-white/5 text-white/80'
+                      'bg-black/40 border-[#111] text-white/80'
                     }`}
                   >
-                    <span className="font-black shrink-0">{log.minute}'</span>
-                    <span>{log.text}</span>
+                    {isAi && (
+                      <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-[#00FF88] text-black font-black text-[8px] tracking-wider uppercase rounded shadow flex items-center gap-1 animate-pulse">
+                        <Sparkles size={10} /> GEMINI LIVE
+                      </div>
+                    )}
+                    <span className="font-black shrink-0 text-[#00FF88]">{log.minute}'</span>
+                    <span className="leading-relaxed pr-16">{log.text}</span>
                   </motion.div>
                 );
               })}
@@ -1354,16 +1422,16 @@ export function MatchEngine() {
 
         {/* INTERACTIVE KEY MOMENT DECISION OVERLAY MODAL */}
         {activeDecision && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-[#121212] border-2 border-[#00FF88] rounded-2xl p-6 max-w-lg w-full shadow-2xl font-mono animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#050505] border-2 border-[#00FF88] p-6 max-w-lg w-full font-mono animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between border-b border-[#222] pb-3 mb-4">
                 <div className="flex items-center gap-2 text-[#00FF88] font-black text-sm uppercase">
                   <Sparkles size={18} /> {activeDecision.title}
                 </div>
                 <span className="text-xs text-amber-400 font-bold uppercase">KEY DECISION</span>
               </div>
 
-              <p className="text-sm text-white/90 mb-6 bg-black/50 p-4 rounded-xl border border-white/10 leading-relaxed">
+              <p className="text-sm text-white/90 mb-6 bg-black/50 p-4 border border-[#222] leading-relaxed">
                 "{activeDecision.situation}"
               </p>
 
@@ -1372,7 +1440,7 @@ export function MatchEngine() {
                   <button
                     key={i}
                     onClick={() => handleMakeDecision(opt)}
-                    className="w-full bg-black/60 hover:bg-[#00FF88]/10 border border-white/15 hover:border-[#00FF88] p-4 rounded-xl text-left transition-all cursor-pointer group"
+                    className="w-full bg-black/60 hover:bg-[#00FF88]/10 border border-white/15 hover:border-[#00FF88] p-4 text-left transition-all cursor-pointer group"
                   >
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-bold text-white group-hover:text-[#00FF88]">{opt.text}</span>
@@ -1427,9 +1495,9 @@ export function MatchEngine() {
   return (
     <div className="w-full text-white flex flex-col font-mono select-none space-y-6 pb-12">
       {/* Top Bar Header */}
-      <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+      <div className="flex justify-between items-center border-b border-[#222] pb-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#00FF88]/10 border border-[#00FF88]/30 rounded-xl text-[#00FF88]">
+          <div className="p-2.5 bg-[#00FF88]/10 border border-[#00FF88]/30 text-[#00FF88]">
             <Trophy size={22} />
           </div>
           <div>
@@ -1444,11 +1512,11 @@ export function MatchEngine() {
       </div>
 
       {/* Main Scoreboard Banner Card */}
-      <div className="relative bg-gradient-to-br from-[#121212] via-[#0e0e0e] to-[#070707] border border-white/15 rounded-2xl p-6 mb-6 shadow-2xl overflow-hidden">
+      <div className="relative border border-white/15 p-6 mb-6 overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           {/* User Club */}
           <div className="flex items-center gap-4 flex-1 justify-center md:justify-start">
-            <div className="p-3 bg-black/40 rounded-xl border border-white/10 shrink-0">
+            <div className="p-3 bg-black/40 border border-[#222] shrink-0">
               <TeamLogo symbol={userClub.symbol} name={userClub.name} primaryColor={userClub.primaryColor} secondaryColor={userClub.secondaryColor} size={54} />
             </div>
             <div>
@@ -1458,7 +1526,7 @@ export function MatchEngine() {
           </div>
 
           {/* Score Display */}
-          <div className="flex flex-col items-center justify-center bg-black/60 px-8 py-4 rounded-xl border border-white/20 min-w-[180px]">
+          <div className="flex flex-col items-center justify-center bg-black/60 px-8 py-4 border border-[#333] min-w-[180px]">
             <div className="text-4xl sm:text-5xl font-black tracking-widest text-[#00FF88] flex items-center gap-4">
               <span>{userScore}</span>
               <span className="text-white/20 text-3xl">-</span>
@@ -1479,7 +1547,7 @@ export function MatchEngine() {
               <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">{oppClub.name}</h2>
               <span className="text-xs text-white/40 font-bold uppercase">{!isHome ? 'HOME' : 'AWAY'}</span>
             </div>
-            <div className="p-3 bg-black/40 rounded-xl border border-white/10 shrink-0">
+            <div className="p-3 bg-black/40 border border-[#222] shrink-0">
               <TeamLogo symbol={oppClub.symbol} name={oppClub.name} primaryColor={oppClub.primaryColor} secondaryColor={oppClub.secondaryColor} size={54} />
             </div>
           </div>
@@ -1488,8 +1556,8 @@ export function MatchEngine() {
 
       {/* Realistic Match Injury Alert Banner if injured */}
       {matchInjury && (
-        <div className="bg-red-950/80 border border-red-500/40 rounded-2xl p-5 mb-6 flex items-start gap-4 shadow-xl">
-          <div className="p-3 bg-red-500/20 text-red-400 rounded-xl shrink-0">
+        <div className="bg-red-950/80 border border-red-500/40 p-5 mb-6 flex items-start gap-4 ">
+          <div className="p-3 bg-red-500/20 text-red-400 shrink-0">
             <AlertCircle size={22} />
           </div>
           <div>
@@ -1513,8 +1581,8 @@ export function MatchEngine() {
       </div>
 
       {/* Recharts Pitch Heatmap & Spatial Activity Card */}
-      <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 mb-6 shadow-xl">
-        <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+      <div className="bg-[#0e0e0e] border border-[#222] p-6 mb-6 ">
+        <div className="flex justify-between items-center border-b border-[#222] pb-3 mb-4">
           <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider">
             <Target size={16} /> Pitch Heatmap & Spatial Activity (Match Rating: {playerStats.rating})
           </div>
@@ -1523,7 +1591,7 @@ export function MatchEngine() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           {/* Pitch Canvas with Recharts Scatter Heatmap */}
-          <div className="md:col-span-2 relative w-full h-64 bg-[#113820] border border-white/20 rounded-xl overflow-hidden p-2 flex items-center justify-center shadow-inner">
+          <div className="md:col-span-2 relative w-full h-64 bg-[#113820] border border-[#333] overflow-hidden p-2 flex items-center justify-center shadow-inner">
             <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none opacity-20">
               <div className="w-full h-full border border-white" />
               <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white" />
@@ -1540,7 +1608,7 @@ export function MatchEngine() {
                     if (payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-black/90 border border-[#00FF88] p-2.5 rounded text-[10px] font-mono text-white shadow-xl">
+                        <div className="bg-black/90 border border-[#00FF88] p-2.5 rounded text-[10px] font-mono text-white ">
                           <p className="font-bold text-[#00FF88]">Zone: {data.zone}</p>
                           <p>Activity Intensity: {data.intensity}/10</p>
                           <p>Coords: X: {data.x}%, Y: {data.y}%</p>
@@ -1565,17 +1633,17 @@ export function MatchEngine() {
 
           {/* Heatmap Insights & Zone Summary */}
           <div className="flex flex-col justify-between space-y-3 font-mono text-xs">
-            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+            <div className="bg-black/40 p-3.5 border border-[#222]">
               <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">PRIMARY ZONE</span>
               <span className="text-sm font-black text-[#00FF88]">
                 {p.position === 'ST' || (p.position as string) === 'CF' ? 'Final Third & Box' : p.position === 'CM' ? 'Central Midfield Engine' : 'Defensive Third & Flanks'}
               </span>
             </div>
-            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+            <div className="bg-black/40 p-3.5 border border-[#222]">
               <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">DISTANCE COVERED</span>
               <span className="text-sm font-black text-white">{playerStats.distanceCovered} km</span>
             </div>
-            <div className="bg-black/40 p-3.5 rounded-xl border border-white/10">
+            <div className="bg-black/40 p-3.5 border border-[#222]">
               <span className="text-[10px] text-white/40 font-bold uppercase block mb-1">SPATIAL EFFICIENCY</span>
               <span className="text-xs text-white/80 leading-relaxed font-sans font-medium">
                 {playerStats.rating >= 7.5 ? 'High offensive output and tactical pressing efficiency.' : 'Solid defensive tracking and positional discipline.'}
@@ -1594,9 +1662,9 @@ export function MatchEngine() {
       {/* Grid: Player Stats & Objectives Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Column 1 & 2: Detailed Performance Stats */}
-        <div className="lg:col-span-2 bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-[#0e0e0e] border border-[#222] p-6 flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+            <div className="flex justify-between items-center border-b border-[#222] pb-3 mb-4">
               <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider">
                 <Star size={16} /> Player Performance Card
               </div>
@@ -1606,53 +1674,53 @@ export function MatchEngine() {
             </div>
 
             {/* Rating Box */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 bg-black/40 p-4 rounded-xl border border-white/5">
-              <div className="flex flex-col items-center justify-center bg-[#00FF88]/10 border border-[#00FF88]/30 rounded-xl px-6 py-4 shrink-0 text-center w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 bg-black/40 p-4 border border-[#111]">
+              <div className="flex flex-col items-center justify-center bg-[#00FF88]/10 border border-[#00FF88]/30 px-6 py-4 shrink-0 text-center w-full sm:w-auto">
                 <span className="text-[10px] text-[#00FF88] font-bold uppercase tracking-widest mb-1">MATCH RATING</span>
                 <span className="text-4xl font-black text-[#00FF88] tracking-tight">{playerStats.rating}</span>
                 <span className="text-[9px] text-white/50 uppercase mt-1">/ 10.0</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-                <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                <div className="bg-white/5 p-3 border border-[#111] text-center">
                   <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">MINUTES</span>
                   <span className="text-lg font-black text-white">{playerStats.minutes}'</span>
                 </div>
                 {getPositionGroup(p.position || 'ST') === 'GK' ? (
                   <>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">SAVES</span>
                       <span className="text-lg font-black text-[#00FF88]">{playerStats.saves || 0}</span>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">CLEAN SHEET</span>
                       <span className="text-lg font-black text-[#00FF88]">{oppScore === 0 ? 'YES' : 'NO'}</span>
                     </div>
                   </>
                 ) : getPositionGroup(p.position || 'ST') === 'DEFENDER' ? (
                   <>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">TACKLES</span>
                       <span className="text-lg font-black text-[#00FF88]">{playerStats.tackles}</span>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">G / A</span>
                       <span className="text-lg font-black text-[#00FF88]">{playerStats.goals + playerStats.assists}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">GOALS</span>
                       <span className="text-lg font-black text-[#00FF88]">{playerStats.goals}</span>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                    <div className="bg-white/5 p-3 border border-[#111] text-center">
                       <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">ASSISTS</span>
                       <span className="text-lg font-black text-[#00FF88]">{playerStats.assists}</span>
                     </div>
                   </>
                 )}
-                <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                <div className="bg-white/5 p-3 border border-[#111] text-center">
                   <span className="text-[9px] text-white/40 font-bold uppercase block mb-1">PASS ACC.</span>
                   <span className="text-lg font-black text-white">
                     {playerStats.passesAttempted > 0 ? Math.round((playerStats.passesCompleted / playerStats.passesAttempted) * 100) : 100}%
@@ -1668,7 +1736,7 @@ export function MatchEngine() {
                 {objectives.map((obj) => {
                   const passed = obj.check(playerStats, playerStats.rating);
                   return (
-                    <div key={obj.id} className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 text-xs">
+                    <div key={obj.id} className="flex items-center justify-between bg-black/40 p-3 border border-[#111] text-xs">
                       <div className="flex items-center gap-3">
                         {passed ? (
                           <CheckCircle2 size={18} className="text-[#00FF88] shrink-0" />
@@ -1689,14 +1757,14 @@ export function MatchEngine() {
         </div>
 
         {/* Column 3: Rewards & Financial Gains */}
-        <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
+        <div className="bg-[#0e0e0e] border border-[#222] p-6 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-white/10 pb-3 mb-4">
+            <div className="flex items-center gap-2 text-[#00FF88] font-bold text-xs uppercase tracking-wider border-b border-[#222] pb-3 mb-4">
               <Award size={16} /> Career Rewards & Impact
             </div>
 
             <div className="space-y-3.5">
-              <div className="p-3 bg-black/40 rounded-xl border border-white/10 flex items-center justify-between">
+              <div className="p-3 bg-black/40 border border-[#222] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Coins size={18} className="text-amber-400" />
                   <div>
@@ -1709,7 +1777,7 @@ export function MatchEngine() {
                 </span>
               </div>
 
-              <div className="p-3 bg-black/40 rounded-xl border border-white/10 flex items-center justify-between">
+              <div className="p-3 bg-black/40 border border-[#222] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Shield size={18} className="text-[#00FF88]" />
                   <div>
@@ -1722,7 +1790,7 @@ export function MatchEngine() {
                 </span>
               </div>
 
-              <div className="p-3 bg-black/40 rounded-xl border border-white/10 flex items-center justify-between">
+              <div className="p-3 bg-black/40 border border-[#222] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Users size={18} className="text-purple-400" />
                   <div>
@@ -1737,7 +1805,7 @@ export function MatchEngine() {
             </div>
 
             {/* Quick Post-Match Media Quote */}
-            <div className="mt-5 pt-4 border-t border-white/10">
+            <div className="mt-5 pt-4 border-t border-[#222]">
               <span className="text-[10px] text-white/50 font-bold uppercase block mb-2">Flash Press Question</span>
               <p className="text-xs text-white/80 mb-2 font-sans italic">"What are your thoughts on today's performance?"</p>
               <div className="space-y-1.5">
@@ -1750,7 +1818,7 @@ export function MatchEngine() {
                     key={idx}
                     onClick={() => setInterviewAnswer(idx)}
                     className={`w-full text-left text-[11px] p-2 rounded border transition-all cursor-pointer ${
-                      interviewAnswer === idx ? 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88]' : 'bg-black/40 border-white/10 text-white/70'
+                      interviewAnswer === idx ? 'bg-[#00FF88]/10 border-[#00FF88] text-[#00FF88]' : 'bg-black/40 border-[#222] text-white/70'
                     }`}
                   >
                     {ans}
@@ -1763,7 +1831,7 @@ export function MatchEngine() {
           <button
             onClick={handleClaimAndExit}
             disabled={hasClaimed}
-            className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#00FF88]/20 cursor-pointer active:scale-95 disabled:opacity-50 min-h-[44px]"
+            className="w-full mt-6 bg-[#00FF88] hover:bg-[#00FF88]/90 text-black py-4 px-6 font-black uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-[#00FF88]/20 cursor-pointer active:scale-95 disabled:opacity-50 min-h-[44px]"
           >
             CONTINUE TO DASHBOARD <ArrowRight size={18} />
           </button>

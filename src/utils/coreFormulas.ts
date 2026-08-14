@@ -1,6 +1,35 @@
 import { Attributes } from '../types';
 
 export const CoreFormulas = {
+  /**
+   * Piecewise CA/PA -> OVR conversion model:
+   * - CA >= 160: Elite World-Class ceiling (OVR 85 - 95+) [e.g. CA 180 -> OVR 91, CA 190 -> OVR 93]
+   * - 120 <= CA < 160: Top-Tier / Solid First Division (OVR 70 - 85)
+   * - 80 <= CA < 120: Mid-Tier / Football League (OVR 50 - 70)
+   * - CA < 80: Lower-Tier / Fringe / Youth (OVR 40 - 50, rating realistically into the 40s range)
+   */
+  convertCAToOVR: (ca: number): number => {
+    let ovr = 40;
+    if (ca >= 160) {
+      ovr = 85 + Math.round((ca - 160) * 0.267);
+    } else if (ca >= 120) {
+      ovr = 70 + Math.round((ca - 120) * 0.375);
+    } else if (ca >= 80) {
+      ovr = 50 + Math.round((ca - 80) * 0.50);
+    } else {
+      ovr = 40 + Math.round((ca - 60) * 0.50);
+    }
+    return Math.max(40, Math.min(99, ovr));
+  },
+
+  /**
+   * Converts legacy linear OVR (derived from 55 + (CA-85)/3) into the new piecewise OVR curve.
+   */
+  convertLinearOvrToPiecewiseOvr: (linearOvr: number): number => {
+    const estimatedCA = Math.round((linearOvr - 55) * 3 + 85);
+    return CoreFormulas.convertCAToOVR(estimatedCA);
+  },
+
   // OVR Calculation based on position
   calculateOVR: (attributes: Attributes, position: string): number => {
     let weightSum = 0;
@@ -196,7 +225,7 @@ export const CoreFormulas = {
     return Math.round(base * tierMult * repBonus / 1000) * 1000; // Round to nearest 1000
   },
 
-  calculateTransferFee: (ovr: number, age: number, yearsLeftOnContract: number, buyerTier: string): number => {
+  calculateTransferFee: (ovr: number, age: number, yearsLeftOnContract: number, buyerTier: string, potential: number = ovr + 5): number => {
     // Value in millions £ - Continuous exponential growth
     // OVR 65 ~ 2.4M, OVR 70 ~ 4.9M, OVR 75 ~ 9.9M, OVR 80 ~ 20M, OVR 85 ~ 40M
     let baseVal = 0.3 * Math.exp((Math.max(50, ovr) - 50) * 0.14);
@@ -207,18 +236,31 @@ export const CoreFormulas = {
       baseVal *= Math.pow(1.15, elitePoints);
     }
 
-    // Age curve
-    if (age < 21) baseVal *= 1.5;
-    else if (age > 29) baseVal *= 0.7;
-    else if (age > 33) baseVal *= 0.3;
+    // Wonderkid / Youth potential valuation curve
+    if (age <= 21) {
+      if (potential >= 88) {
+        baseVal *= 2.2; // Generational wonderkid premium (e.g. Yamal / Endrick level)
+      } else if (potential >= 84) {
+        baseVal *= 1.7; // Top prospect premium
+      } else {
+        baseVal *= 1.35;
+      }
+    } else if (age >= 30) {
+      // Exponential age decay past 30
+      const yearsPast30 = age - 30;
+      baseVal *= Math.pow(0.78, yearsPast30);
+    } else if (age >= 24 && age <= 28) {
+      baseVal *= 1.15; // Prime age market premium
+    }
 
-    // Contract length
-    if (yearsLeftOnContract <= 1) baseVal *= 0.6;
-    else if (yearsLeftOnContract >= 4) baseVal *= 1.2;
+    // Contract length (Realistic Bosman / contract urgency effect)
+    if (yearsLeftOnContract <= 0.5) baseVal *= 0.35; // Expiring in 6 months
+    else if (yearsLeftOnContract <= 1) baseVal *= 0.55;
+    else if (yearsLeftOnContract >= 4) baseVal *= 1.25;
 
-    // Buyer tier tax
-    if (buyerTier === 'ELITE') baseVal *= 1.2;
+    // Buyer tier tax (Premier League / Elite club inflation)
+    if (buyerTier === 'ELITE') baseVal *= 1.25;
 
-    return Math.max(0.5, Math.round(baseVal * 10) / 10);
+    return Math.max(0.2, Math.round(baseVal * 10) / 10);
   }
 };

@@ -60,7 +60,7 @@ export function AgencyStaff() {
           </h2>
           <p className="text-sm text-white/50 mt-1 font-mono">Automate daily routines and optimize recovery.</p>
         </div>
-        <div className="bg-black/40 border border-white/10 rounded-xl p-3 text-right">
+        <div className="bg-black/40 border border-[#222] p-3 text-right">
           <div className="text-[10px] uppercase text-white/40 font-bold mb-1">Weekly Financial Impact</div>
           <div className="font-mono text-sm">
             <span className="text-white">Net Income: </span>
@@ -80,10 +80,10 @@ export function AgencyStaff() {
           return (
             <div 
               key={staff.id} 
-              className={`p-5 rounded-xl border transition-all ${
+              className={`p-5 border transition-all ${
                 isHired 
-                  ? 'bg-[#121212] border-[#00FF88]/30 shadow-[0_0_15px_rgba(0,255,136,0.05)]' 
-                  : 'bg-black/40 border-white/5 opacity-80 hover:opacity-100 hover:border-white/20'
+                  ? 'bg-[#050505] border-[#00FF88]/30 shadow-[0_0_15px_rgba(0,255,136,0.05)]' 
+                  : 'bg-black/40 border-[#111] opacity-80 hover:opacity-100 hover:border-[#333]'
               }`}
             >
               <div className="flex items-start justify-between mb-4">
@@ -105,7 +105,7 @@ export function AgencyStaff() {
               
               <button
                 onClick={() => toggleStaff(staff.id)}
-                className={`w-full py-2.5 rounded-lg text-xs font-bold font-mono tracking-wider transition-all ${
+                className={`w-full py-2.5 text-xs font-bold font-mono tracking-wider transition-all ${
                   isHired
                     ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
                     : 'bg-white text-black hover:bg-[#00FF88] hover:scale-[1.02]'

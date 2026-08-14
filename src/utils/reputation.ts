@@ -314,6 +314,7 @@ export function calculateMatchReputationGain(
     passesAttempted: number;
     cleanSheet?: boolean;
     minutes: number;
+    competitionType?: string;
   },
   matchOutcome: 'WON' | 'DREW' | 'LOST'
 ): { worldDelta: number; mediaDelta: number; peerDelta: number; fanGain: number } {
@@ -395,6 +396,17 @@ export function calculateMatchReputationGain(
       worldDelta += 2;
       mediaDelta += 2;
     }
+  }
+
+  const isYouthMatch = stats.competitionType === 'YOUTH_LEAGUE' || stats.competitionType === 'YOUTH_CUP' || stats.competitionType === 'YOUTH_EUROPEAN' || stats.competitionType === 'U18 Friendly';
+
+  if (isYouthMatch) {
+    return {
+      worldDelta: 0,
+      mediaDelta: Math.floor(mediaDelta * 0.2),
+      peerDelta: Math.floor(peerDelta * 0.5), // peers at club might respect it
+      fanGain: Math.floor(fanGain * 0.1)
+    };
   }
 
   return { worldDelta, mediaDelta, peerDelta, fanGain };

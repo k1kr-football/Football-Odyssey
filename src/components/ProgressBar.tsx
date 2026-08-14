@@ -60,7 +60,7 @@ export function ProgressBar({
           {showValue && <span>{valueFormatter(value)}</span>}
         </div>
       )}
-      <div className={`w-full bg-black/50 rounded-full overflow-hidden ${height} border border-white/10 p-0.5 backdrop-blur-sm`}>
+      <div className={`w-full bg-black/50 rounded-full overflow-hidden ${height} border border-[#222] p-0.5 `}>
         <div 
           className={`h-full ${colorClass} transition-all duration-500 rounded-full shadow-sm`} 
           style={{ width: `${percentage}%` }}

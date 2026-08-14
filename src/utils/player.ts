@@ -18,7 +18,9 @@ export function evaluateHierarchyTier(
   managerTrust: number, 
   managerDiscipline: number, 
   clubRep: number, 
-  isInjured: boolean
+  isInjured: boolean,
+  currentTier?: SquadHierarchyTier,
+  age?: number
 ): SquadHierarchyTier {
   // If injured heavily/missing many games, might drop, but currently basic check
   
@@ -32,6 +34,27 @@ export function evaluateHierarchyTier(
   
   // High club rep overrides normal dropping
   if (clubRep > 90 && standingScore > 60) return 'Club Legend';
+  
+  // Youth logic
+  if (currentTier === 'Youth') {
+    if (age && age > 18) {
+      // Must graduate
+      if (standingScore < 35) return 'Exile';
+      if (standingScore < 50) return 'Backup';
+      return 'Rotation';
+    } else {
+      // Still eligible for youth
+      if (standingScore > 50) {
+        return 'Backup'; // Call up to senior squad
+      }
+      return 'Youth'; // Stay in academy
+    }
+  }
+
+  // If age <= 18 and very low standing, they can be demoted to youth
+  if (age && age <= 18 && standingScore < 30 && currentTier === 'Exile') {
+    return 'Youth';
+  }
   
   if (standingScore < 20) return 'Exile';
   if (standingScore < 35) return 'Squad Player';

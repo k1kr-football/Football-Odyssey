@@ -71,7 +71,7 @@ export function GlossaryTooltip({ term, children, className = '' }: GlossaryTool
       </span>
 
       {isOpen && (
-        <div className={`absolute z-50 left-1/2 transform -translate-x-1/2 mt-2 w-72 p-4 rounded-lg bg-[#111] border ${borderColors[entry.category]} shadow-2xl backdrop-blur-md text-left font-mono pointer-events-auto`}>
+        <div className={`absolute z-50 left-1/2 transform -translate-x-1/2 mt-2 w-72 p-4 bg-[#111] border ${borderColors[entry.category]} text-left font-mono pointer-events-auto`}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-white font-bold text-xs uppercase tracking-wider">{entry.term}</span>
             <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 border rounded ${categoryColors[entry.category]}`}>
@@ -83,7 +83,7 @@ export function GlossaryTooltip({ term, children, className = '' }: GlossaryTool
             {entry.definition}
           </p>
 
-          <div className="border-t border-white/5 pt-2 mt-2 space-y-1.5 text-[10px]">
+          <div className="border-t border-[#111] pt-2 mt-2 space-y-1.5 text-[10px]">
             <div>
               <span className="text-white/40 uppercase tracking-widest block text-[8px] font-bold">How it shifts:</span>
               <span className="text-white/70">{entry.raisesLoweres}</span>
@@ -97,7 +97,7 @@ export function GlossaryTooltip({ term, children, className = '' }: GlossaryTool
           </div>
 
           {entry.seeAlso.length > 0 && (
-            <div className="border-t border-white/5 pt-1.5 mt-2 flex flex-wrap items-center gap-1.5 text-[8px]">
+            <div className="border-t border-[#111] pt-1.5 mt-2 flex flex-wrap items-center gap-1.5 text-[8px]">
               <span className="text-white/40 uppercase tracking-widest font-bold">See Also:</span>
               {entry.seeAlso.map((sa) => (
                 <span key={sa} className="text-white/60 bg-white/5 px-1 py-0.5 rounded">

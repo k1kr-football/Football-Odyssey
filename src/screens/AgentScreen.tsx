@@ -234,9 +234,9 @@ export function AgentScreen() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0E0E0E] text-white overflow-hidden p-6 font-mono">
+    <div className="flex-1 flex flex-col h-full bg-black text-white overflow-hidden p-6 font-mono">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-white/10 shrink-0 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-[#222] shrink-0 gap-4">
         <div>
           <div className="flex items-center gap-2 text-[#00FF88] text-xs font-bold uppercase tracking-widest mb-1">
             <Briefcase size={16} />
@@ -246,7 +246,7 @@ export function AgentScreen() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 bg-[#141414] p-1 border border-white/10 rounded-lg">
+        <div className="flex gap-2 bg-[#141414] p-1 border border-[#222] ">
           {[
             { id: 'OVERVIEW', label: 'Current Agent' },
             { id: 'MARKET', label: 'Agency Market' },
@@ -256,9 +256,9 @@ export function AgentScreen() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded-md ${
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                 activeTab === tab.id 
-                  ? 'bg-[#00FF88] text-black shadow-lg shadow-[#00FF88]/20' 
+                  ? 'bg-[#00FF88] text-black shadow-[#00FF88]/20' 
                   : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -270,7 +270,7 @@ export function AgentScreen() {
 
       {/* Feedback Notification Banner */}
       {feedbackMessage && (
-        <div className="mt-4 bg-[#112217] border border-[#00FF88]/40 text-[#00FF88] px-4 py-3 rounded-xl text-xs font-mono animate-fadeIn flex items-center gap-3 shadow-xl shrink-0">
+        <div className="mt-4 bg-[#112217] border border-[#00FF88]/40 text-[#00FF88] px-4 py-3 text-xs font-mono animate-fadeIn flex items-center gap-3 shrink-0">
           <Sparkles size={18} className="shrink-0 animate-pulse" />
           <span>{feedbackMessage}</span>
         </div>
@@ -281,13 +281,13 @@ export function AgentScreen() {
         {activeTab === 'OVERVIEW' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left 2 Cols: Agent Card */}
-            <div className="lg:col-span-2 bg-[#121212] border border-white/10 rounded-2xl p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div className="lg:col-span-2 bg-[#050505] border border-[#222] p-8 flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#00FF88]/5 rounded-full blur-3xl pointer-events-none" />
 
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#00FF88] shadow-inner">
+                    <div className="w-16 h-16 bg-white/5 border border-[#222] flex items-center justify-center text-[#00FF88] shadow-inner">
                       <Briefcase size={32} />
                     </div>
                     <div>
@@ -302,7 +302,7 @@ export function AgentScreen() {
                   </span>
                 </div>
 
-                <p className="text-sm text-white/80 font-sans italic bg-black/40 p-4 rounded-xl border border-white/5 mb-6">
+                <p className="text-sm text-white/80 font-sans italic bg-black/40 p-4 border border-[#111] mb-6">
                   "{currentAgentObj.quote}"
                 </p>
 
@@ -312,30 +312,30 @@ export function AgentScreen() {
 
                 {/* Agent Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                  <div className="bg-black/40 p-4 border border-[#222]">
                     <span className="text-[10px] text-white/40 uppercase block mb-1">Commission</span>
                     <span className="text-lg font-black text-white">{currentAgentObj.commission}%</span>
                   </div>
-                  <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                  <div className="bg-black/40 p-4 border border-[#222]">
                     <span className="text-[10px] text-white/40 uppercase block mb-1">Weekly Retainer</span>
                     <span className="text-lg font-black text-white">£{currentAgentObj.retainer.toLocaleString()}</span>
                   </div>
-                  <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                  <div className="bg-black/40 p-4 border border-[#222]">
                     <span className="text-[10px] text-white/40 uppercase block mb-1">Relationship</span>
                     <span className="text-lg font-black text-[#00FF88]">{Math.round(player.relationships?.agent || 80)}/100</span>
                   </div>
-                  <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                  <div className="bg-black/40 p-4 border border-[#222]">
                     <span className="text-[10px] text-white/40 uppercase block mb-1">Transfer Pull</span>
                     <span className="text-lg font-black text-cyan-400">+{currentAgentObj.skills.transferAttraction}%</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="pt-4 border-t border-[#222] flex items-center justify-between">
                 <span className="text-xs text-white/40">Active Representation Agreement</span>
                 <button
                   onClick={() => setActiveTab('MARKET')}
-                  className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center gap-2"
+                  className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider transition-all border border-[#222] flex items-center gap-2"
                 >
                   <span>Switch Agency</span>
                   <ArrowRight size={14} />
@@ -344,7 +344,7 @@ export function AgentScreen() {
             </div>
 
             {/* Right Col: Quick Tips & Summary */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-2xl">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between ">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2">
                   <Star size={16} className="text-[#00FF88]" />
@@ -384,7 +384,7 @@ export function AgentScreen() {
                 </div>
               </div>
 
-              <div className="mt-8 bg-[#181818] p-4 rounded-xl border border-white/10">
+              <div className="mt-8 bg-[#181818] p-4 border border-[#222]">
                 <span className="text-[10px] text-[#00FF88] font-bold uppercase tracking-wider block mb-1">💡 Pro Career Tip</span>
                 <p className="text-[11px] text-white/70 leading-relaxed">
                   Upgrading your agent as your world reputation grows is crucial for accessing elite clubs in the Premier League, La Liga, and Champions League.
@@ -404,8 +404,8 @@ export function AgentScreen() {
               return (
                 <div 
                   key={agent.id}
-                  className={`bg-[#121212] border rounded-2xl p-6 flex flex-col justify-between transition-all duration-200 ${
-                    isCurrent ? 'border-[#00FF88] shadow-lg shadow-[#00FF88]/10 bg-[#121c16]' : 'border-white/10 hover:border-white/30'
+                  className={`bg-[#050505] border p-6 flex flex-col justify-between transition-all duration-200 ${
+                    isCurrent ? 'border-[#00FF88] shadow-[#00FF88]/10 bg-[#121c16]' : 'border-[#222] hover:border-white/30'
                   }`}
                 >
                   <div>
@@ -415,7 +415,7 @@ export function AgentScreen() {
                         agent.tier === 'Super Agent' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
                         agent.tier === 'Shark' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' :
                         agent.tier === 'Hungry' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
-                        'bg-white/5 text-white/50 border-white/10'
+                        'bg-white/5 text-white/50 border-[#222]'
                       }`}>
                         {agent.tier}
                       </span>
@@ -426,7 +426,7 @@ export function AgentScreen() {
                     <p className="text-xs text-[#00FF88] font-mono mb-3">{agent.agency}</p>
                     <p className="text-xs text-white/60 leading-relaxed font-sans mb-4 line-clamp-3">{agent.bio}</p>
 
-                    <div className="space-y-2 mb-6 font-mono text-xs bg-black/40 p-3.5 rounded-xl border border-white/5">
+                    <div className="space-y-2 mb-6 font-mono text-xs bg-black/40 p-3.5 border border-[#111]">
                       <div className="flex justify-between">
                         <span className="text-white/40">Upfront Fee:</span>
                         <span className="text-white font-bold">£{agent.upfrontCost.toLocaleString()}</span>
@@ -444,16 +444,16 @@ export function AgentScreen() {
 
                   <div>
                     {isCurrent ? (
-                      <div className="w-full py-3 bg-[#00FF88]/10 border border-[#00FF88]/30 text-[#00FF88] text-xs font-black uppercase tracking-widest rounded-xl text-center">
+                      <div className="w-full py-3 bg-[#00FF88]/10 border border-[#00FF88]/30 text-[#00FF88] text-xs font-black uppercase tracking-widest text-center">
                         Active Representation
                       </div>
                     ) : (
                       <button
                         onClick={() => handleHireAgent(agent)}
                         disabled={!meetsRep || !hasFunds}
-                        className={`w-full py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md ${
+                        className={`w-full py-3 text-xs font-black uppercase tracking-widest transition-all ${
                           !meetsRep || !hasFunds
-                            ? 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
+                            ? 'bg-white/5 text-white/30 border border-[#111] cursor-not-allowed'
                             : 'bg-[#00FF88] text-black hover:bg-white'
                         }`}
                       >
@@ -471,10 +471,10 @@ export function AgentScreen() {
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Action 1: Demand Contract Upgrade */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between ">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-[#00FF88]/10 text-[#00FF88] rounded-xl border border-[#00FF88]/20">
+                  <div className="p-3 bg-[#00FF88]/10 text-[#00FF88] border border-[#00FF88]/20">
                     <DollarSign size={22} />
                   </div>
                   <div>
@@ -487,7 +487,7 @@ export function AgentScreen() {
                   Your agent will approach the club board to negotiate an improved wage package based on recent performances and contract terms.
                 </p>
 
-                <div className="bg-black/40 p-4 rounded-xl border border-white/10 mb-6 font-mono text-xs space-y-2">
+                <div className="bg-black/40 p-4 border border-[#222] mb-6 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
                     <span className="text-white/50">Requirement:</span>
                     <span className="text-white font-bold">10+ Appearances & 70+ Trust</span>
@@ -503,17 +503,17 @@ export function AgentScreen() {
 
               <button
                 onClick={handleActionRequestContract}
-                className="w-full py-3 bg-[#00FF88] text-black hover:bg-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md"
+                className="w-full py-3 bg-[#00FF88] text-black hover:bg-white text-xs font-black uppercase tracking-wider transition-all "
               >
                 Launch Contract Talks
               </button>
             </div>
 
             {/* Action 2: Sound Out Transfer Market */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between ">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+                  <div className="p-3 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                     <Users size={22} />
                   </div>
                   <div>
@@ -526,7 +526,7 @@ export function AgentScreen() {
                   Leverage your agent's network to sound out sporting directors across the league before the transfer window officially opens.
                 </p>
 
-                <div className="bg-black/40 p-4 rounded-xl border border-white/10 mb-6 font-mono text-xs space-y-2">
+                <div className="bg-black/40 p-4 border border-[#222] mb-6 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
                     <span className="text-white/50">Requirement:</span>
                     <span className="text-white font-bold">Hungry Agent Tier or Higher</span>
@@ -540,17 +540,17 @@ export function AgentScreen() {
 
               <button
                 onClick={handleActionSoundOutClubs}
-                className="w-full py-3 bg-cyan-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md"
+                className="w-full py-3 bg-cyan-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider transition-all "
               >
                 Initiate Market Probe
               </button>
             </div>
 
             {/* Action 3: PR & Media Shielding */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between ">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                  <div className="p-3 bg-amber-500/10 text-amber-400 border border-amber-500/20">
                     <Shield size={22} />
                   </div>
                   <div>
@@ -563,7 +563,7 @@ export function AgentScreen() {
                   Deploy your agent's PR team to manage tabloid rumors, smooth over press conference slip-ups, and boost public standing.
                 </p>
 
-                <div className="bg-black/40 p-4 rounded-xl border border-white/10 mb-6 font-mono text-xs space-y-2">
+                <div className="bg-black/40 p-4 border border-[#222] mb-6 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
                     <span className="text-white/50">Effect:</span>
                     <span className="text-amber-400 font-bold">+15 Media Perception</span>
@@ -577,17 +577,17 @@ export function AgentScreen() {
 
               <button
                 onClick={handleActionPRShield}
-                className="w-full py-3 bg-amber-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md"
+                className="w-full py-3 bg-amber-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider transition-all "
               >
                 Execute PR Campaign
               </button>
             </div>
 
             {/* Action 4: Endorsement / Sponsorship Pitch */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between ">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
+                  <div className="p-3 bg-purple-500/10 text-purple-400 border border-purple-500/20">
                     <Sparkles size={22} />
                   </div>
                   <div>
@@ -600,7 +600,7 @@ export function AgentScreen() {
                   Your agent scouts boot manufacturers and lifestyle brands eager to sign rising football talents for commercial campaigns.
                 </p>
 
-                <div className="bg-black/40 p-4 rounded-xl border border-white/10 mb-6 font-mono text-xs space-y-2">
+                <div className="bg-black/40 p-4 border border-[#222] mb-6 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
                     <span className="text-white/50">Requirement:</span>
                     <span className="text-white font-bold">World Rep 30+ & Active Agent</span>
@@ -628,7 +628,7 @@ export function AgentScreen() {
                   });
                   triggerNotification(`💼 Sponsorship secured! £10,000 added to your personal finances.`);
                 }}
-                className="w-full py-3 bg-purple-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md"
+                className="w-full py-3 bg-purple-500 text-black hover:bg-white text-xs font-black uppercase tracking-wider transition-all "
               >
                 Secure Brand Deal (£10k)
               </button>
@@ -636,10 +636,10 @@ export function AgentScreen() {
           </div>
             
             {/* Action 3: Schedule Agent Meeting */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col justify-between shadow-xl md:col-span-2">
+            <div className="bg-[#050505] border border-[#222] p-6 flex flex-col justify-between md:col-span-2">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+                  <div className="p-3 bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     <MessageSquare size={22} />
                   </div>
                   <div>
@@ -655,7 +655,7 @@ export function AgentScreen() {
 
               <button
                 onClick={() => setIsMeetingModalOpen(true)}
-                className="w-full py-3 bg-blue-500 text-white hover:bg-blue-400 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-500/20"
+                className="w-full py-3 bg-blue-500 text-white hover:bg-blue-400 text-xs font-black uppercase tracking-wider transition-all "
               >
                 Schedule Meeting
               </button>

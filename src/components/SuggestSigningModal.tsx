@@ -59,14 +59,14 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-[#121620] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl text-white flex flex-col my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
+      <div className="bg-[#121620] border border-[#222] w-full max-w-2xl overflow-hidden text-white flex flex-col my-auto">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 border-b border-white/10 flex items-center justify-between">
+        <div className="p-6 border-b border-[#222] flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <CharacterPortrait type="manager" size={54} name={dof.fullName} className="rounded-xl border border-white/20 shadow-md" />
+              <CharacterPortrait type="manager" size={54} name={dof.fullName} className="border border-[#333] " />
               <div className="absolute -bottom-1 -right-1 bg-amber-400 p-1 rounded-full text-black">
                 <Lightbulb className="w-3.5 h-3.5" />
               </div>
@@ -85,7 +85,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+            className="p-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,10 +96,10 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
           {result ? (
             /* Outcome View */
             <div className="space-y-6 animate-fadeIn">
-              <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 p-6 rounded-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="border border-[#222] p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#222] pb-4">
                   <div className="flex items-center gap-3">
-                    <CharacterPortrait type="manager" size={44} name={dof.fullName} className="rounded-lg" />
+                    <CharacterPortrait type="manager" size={44} name={dof.fullName} className="" />
                     <div>
                       <h3 className="font-bold text-base text-white">{dof.fullName}'s Verdict</h3>
                       <p className="text-xs text-white/50">{dofTitle}</p>
@@ -122,19 +122,19 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
 
                 {/* Consequences */}
                 <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div className={`p-3 rounded-lg border flex items-center justify-between ${result.trustChange >= 0 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
+                  <div className={`p-3 border flex items-center justify-between ${result.trustChange >= 0 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
                     <span className="text-xs font-bold uppercase">Manager Trust</span>
                     <span className="font-extrabold text-sm">+{result.trustChange}%</span>
                   </div>
 
-                  <div className={`p-3 rounded-lg border flex items-center justify-between ${result.peerRespectChange >= 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
+                  <div className={`p-3 border flex items-center justify-between ${result.peerRespectChange >= 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
                     <span className="text-xs font-bold uppercase">Peer Respect</span>
                     <span className="font-extrabold text-sm">+{result.peerRespectChange}%</span>
                   </div>
                 </div>
 
                 {result.inboxMsg && (
-                  <div className="bg-[#00FF88]/10 border border-[#00FF88]/30 p-3 rounded-lg flex items-center gap-2 text-xs text-[#00FF88]">
+                  <div className="bg-[#00FF88]/10 border border-[#00FF88]/30 p-3 flex items-center gap-2 text-xs text-[#00FF88]">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>Official confirmation message sent to your Inbox!</span>
                   </div>
@@ -143,7 +143,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
 
               <button
                 onClick={onClose}
-                className="w-full py-3 bg-[#00FF88] text-black font-extrabold rounded-xl uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all shadow-lg"
+                className="w-full py-3 bg-[#00FF88] text-black font-extrabold uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all "
               >
                 Close Transfer Desk
               </button>
@@ -151,7 +151,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
           ) : !cooldown.allowed ? (
             /* Cooldown View */
             <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
                 <Lock className="w-8 h-8" />
               </div>
               <div>
@@ -162,7 +162,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
               </div>
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors text-sm"
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold transition-colors text-sm"
               >
                 Return to Transfers
               </button>
@@ -171,9 +171,9 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
             /* Candidate Selection View */
             <div className="space-y-6">
               {/* Financial Health Header */}
-              <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-white/5 border border-[#222] p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                  <div className="p-2 bg-emerald-500/20 text-emerald-400 ">
                     <DollarSign className="w-5 h-5" />
                   </div>
                   <div>
@@ -196,15 +196,15 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
                     <div
                       key={cand.id}
                       onClick={() => setSelectedCandidateId(cand.id)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                      className={`p-4 border transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-amber-400/10 border-amber-400 shadow-lg shadow-amber-400/5'
-                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                          ? 'bg-amber-400/10 border-amber-400 '
+                          : 'bg-white/5 border-[#222] hover:bg-white/10'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center font-black text-sm text-[#00FF88]">
+                          <div className="w-10 h-10 bg-black/40 border border-[#222] flex items-center justify-center font-black text-sm text-[#00FF88]">
                             {cand.ovr}
                           </div>
                           <div>
@@ -223,7 +223,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
                           <div className="text-[10px] text-white/40 font-mono">£{cand.weeklyWage.toLocaleString()}/wk</div>
                         </div>
                       </div>
-                      <p className="text-xs text-white/70 mt-2 bg-black/20 p-2.5 rounded-lg border border-white/5 italic">
+                      <p className="text-xs text-white/70 mt-2 bg-black/20 p-2.5 border border-[#111] italic">
                         "{cand.reasoning}"
                       </p>
                     </div>
@@ -232,7 +232,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
               </div>
 
               {/* Standing Context */}
-              <div className="bg-purple-500/10 border border-purple-500/20 p-3.5 rounded-xl text-xs text-purple-200/80 flex items-start gap-3">
+              <div className="bg-purple-500/10 border border-purple-500/20 p-3.5 text-xs text-purple-200/80 flex items-start gap-3">
                 <Users className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                 <span>
                   Your influence as a <strong className="text-white">{player.hierarchyRole || 'Fringe'}</strong> player gives your recommendation extra weight with the Director of Football.
@@ -242,7 +242,7 @@ export const SuggestSigningModal: React.FC<SuggestSigningModalProps> = ({ isOpen
               {/* Submit Button */}
               <button
                 onClick={handleExecuteSuggestion}
-                className="w-full py-3.5 bg-amber-400 text-black font-black rounded-xl uppercase tracking-wider hover:bg-amber-300 transition-all shadow-lg flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-amber-400 text-black font-black uppercase tracking-wider hover:bg-amber-300 transition-all flex items-center justify-center gap-2"
               >
                 <Lightbulb className="w-4 h-4" /> Recommend Target to Director of Football
               </button>

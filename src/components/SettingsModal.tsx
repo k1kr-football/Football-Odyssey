@@ -44,10 +44,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex justify-center items-center backdrop-blur-sm p-4">
-      <div className="bg-[#111] border border-white/10 w-full max-w-2xl rounded-2xl flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 bg-black/80 flex justify-center items-center p-4">
+      <div className="bg-[#111] border border-[#222] w-full max-w-2xl flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+        <div className="p-6 border-b border-[#222] flex justify-between items-center">
           <h2 className="text-2xl font-black uppercase tracking-widest text-white">Settings</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={24} className="text-white/70 hover:text-white" />
@@ -69,15 +69,15 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 <Sparkles size={12} /> Lyria 3 Music & SFX Studio
               </button>
             </div>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Master Volume</span>
               <input type="range" className="accent-[#00FF88]" min="0" max="100" value={settings.masterVolume} onChange={(e) => updateSettings({ masterVolume: parseInt(e.target.value) })} />
             </div>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Music Volume</span>
               <input type="range" className="accent-[#00FF88]" min="0" max="100" value={settings.musicVolume} onChange={(e) => updateSettings({ musicVolume: parseInt(e.target.value) })} />
             </div>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>SFX Volume</span>
               <input type="range" className="accent-[#00FF88]" min="0" max="100" value={settings.sfxVolume} onChange={(e) => updateSettings({ sfxVolume: parseInt(e.target.value) })} />
             </div>
@@ -87,7 +87,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             <h3 className="text-sm font-bold text-[#00FF88] uppercase tracking-widest border-b border-[#00FF88]/20 pb-2 flex items-center gap-2">
               <Monitor size={16} /> Display
             </h3>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Fullscreen</span>
               <button 
                 onClick={() => handleToggle('fullscreen')}
@@ -96,7 +96,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 <span className={`absolute top-1 w-4 h-4 bg-black rounded-full transition-all ${settings.fullscreen ? 'right-1' : 'left-1'}`}></span>
               </button>
             </div>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Animations</span>
               <button 
                 onClick={() => handleToggle('animations')}
@@ -111,19 +111,19 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             <h3 className="text-sm font-bold text-[#00FF88] uppercase tracking-widest border-b border-[#00FF88]/20 pb-2 flex items-center gap-2">
               <Gamepad2 size={16} /> Gameplay
             </h3>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Match Engine Speed</span>
               <select 
                 value={settings.matchEngineSpeed}
                 onChange={(e) => updateSettings({ matchEngineSpeed: e.target.value as any })}
-                className="bg-black border border-white/20 text-white rounded p-1 outline-none focus:border-[#00FF88]"
+                className="bg-black border border-[#333] text-white rounded p-1 outline-none focus:border-[#00FF88]"
               >
                 <option value="Normal">Normal</option>
                 <option value="Fast">Fast</option>
                 <option value="Skip (Text Only)">Skip (Text Only)</option>
               </select>
             </div>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center bg-white/5 p-4 ">
               <span>Auto-Save</span>
               <button 
                 onClick={() => handleToggle('autoSave')}
@@ -138,7 +138,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             <h3 className="text-sm font-bold text-red-500 uppercase tracking-widest border-b border-red-500/20 pb-2 flex items-center gap-2">
               <AlertCircle size={16} /> Danger Zone
             </h3>
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-red-500/10">
+            <div className="flex justify-between items-center bg-white/5 p-4 border border-red-500/10">
               <span className="text-red-400">Reset All Data</span>
               {confirmReset ? (
                 <div className="flex gap-2 items-center">

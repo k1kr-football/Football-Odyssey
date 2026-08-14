@@ -2,7 +2,7 @@ import { Club, CalendarEntry, DayOfWeek, CalendarMatch } from '../types';
 import { CLUBS } from '../data/teams';
 
 // Generates the season calendar
-export function generateSeasonCalendar(club: Club): CalendarEntry[] {
+export function generateSeasonCalendar(club: Club, isYouth?: boolean): CalendarEntry[] {
   const entries: CalendarEntry[] = [];
   
   // A season runs roughly from July (Week 1) to May (Week 48). We have 52 weeks in a year.
@@ -25,9 +25,9 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
     const isHome = i % 2 === 0;
     leagueMatches.push({
       id: `L_${i}`,
-      opponentSymbol: opponents[i % opponents.length].symbol,
-      competition: club.league,
-      competitionType: 'LEAGUE',
+      opponentSymbol: isYouth ? opponents[i % opponents.length].symbol + ' U18' : opponents[i % opponents.length].symbol,
+      competition: isYouth ? `U18 ${club.league}` : club.league,
+      competitionType: isYouth ? 'YOUTH_LEAGUE' : 'LEAGUE',
       isHome: isHome,
       status: 'SCHEDULED'
     });
@@ -68,9 +68,9 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
           type: 'MATCH',
           match: {
               id: `F_${f.week}`,
-              opponentSymbol: f.opp.symbol,
-              competition: 'Preseason Friendly',
-              competitionType: 'FRIENDLY',
+              opponentSymbol: isYouth ? f.opp.symbol + ' U18' : f.opp.symbol,
+              competition: isYouth ? 'U18 Friendly' : 'Preseason Friendly',
+              competitionType: isYouth ? 'U18 Friendly' : 'FRIENDLY',
               isHome: idx % 2 === 0,
               round: f.type === 'high-profile' ? 'Showcase Match' : 'Warm-up',
               status: 'SCHEDULED'
@@ -92,9 +92,9 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
   // 2. European Matches (Midweek TUE/WED)
   // Let's assume club is in Champions League if OVR >= 85, UEL if OVR >= 80, UECL if OVR >= 75
   let europeanComp = '';
-  if (club.ovr >= 85) europeanComp = 'Champions League';
-  else if (club.ovr >= 80) europeanComp = 'Europa League';
-  else if (club.ovr >= 75) europeanComp = 'Conference League';
+  if (club.ovr >= 85) europeanComp = isYouth ? 'UEFA Youth League' : 'Champions League';
+  else if (club.ovr >= 80) europeanComp = isYouth ? 'UEFA Youth League' : 'Europa League';
+  else if (club.ovr >= 75) europeanComp = isYouth ? 'UEFA Youth League' : 'Conference League';
 
   if (europeanComp) {
     const euroWeeks = [12, 14, 16, 20, 22, 24]; // Group Stage weeks (example)
@@ -109,9 +109,9 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
           type: 'MATCH',
           match: {
             id: `E_${w}`,
-            opponentSymbol: opp.symbol,
+            opponentSymbol: isYouth ? opp.symbol + ' U19' : opp.symbol,
             competition: europeanComp,
-            competitionType: 'EUROPEAN',
+            competitionType: isYouth ? 'YOUTH_EUROPEAN' : 'EUROPEAN',
             isHome: index % 2 === 0,
             round: 'Group Stage',
             status: 'SCHEDULED'
@@ -130,7 +130,7 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
             id: `EKO_${w}`,
             opponentSymbol: 'TBD', // To be updated if they progress
             competition: europeanComp,
-            competitionType: 'EUROPEAN',
+            competitionType: isYouth ? 'YOUTH_EUROPEAN' : 'EUROPEAN',
             isHome: index % 2 === 0,
             round: 'Knockouts',
             status: 'SCHEDULED'
@@ -140,10 +140,10 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
   }
 
   // 3. Domestic Cup
-  const domesticCupName = club.country === 'England' ? 'FA Cup' : 
-                          club.country === 'France' ? 'Coupe de France' : 
-                          club.country === 'Germany' ? 'DFB-Pokal' : 
-                          club.country === 'Spain' ? 'Copa del Rey' : 'Domestic Cup';
+  const domesticCupName = club.country === 'England' ? (isYouth ? 'FA Youth Cup' : 'FA Cup') : 
+                          club.country === 'France' ? (isYouth ? 'Coupe Gambardella' : 'Coupe de France') : 
+                          club.country === 'Germany' ? (isYouth ? 'DFB-Pokal der Junioren' : 'DFB-Pokal') : 
+                          club.country === 'Spain' ? (isYouth ? 'Copa del Rey Juvenil' : 'Copa del Rey') : (isYouth ? 'Youth Domestic Cup' : 'Domestic Cup');
                           
   const cupWeeks = [27, 31, 35, 39, 43, 47]; // Random cup rounds (Jan to May)
   cupWeeks.forEach((w, index) => {
@@ -155,7 +155,7 @@ export function generateSeasonCalendar(club: Club): CalendarEntry[] {
             id: `C_${w}`,
             opponentSymbol: 'TBD',
             competition: domesticCupName,
-            competitionType: 'DOMESTIC_CUP',
+            competitionType: isYouth ? 'YOUTH_CUP' : 'DOMESTIC_CUP',
             isHome: index % 2 === 0,
             round: `Round ${index + 3}`,
             status: 'SCHEDULED'

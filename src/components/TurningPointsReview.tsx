@@ -35,17 +35,17 @@ export const TurningPointsReview: React.FC<TurningPointsReviewProps> = ({
       case 'TACTICAL':
         return <span className="px-2 py-0.5 text-[10px] font-black rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">TACTICAL</span>;
       default:
-        return <span className="px-2 py-0.5 text-[10px] font-black rounded bg-white/10 text-white/70 border border-white/20">MAJOR</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-black rounded bg-white/10 text-white/70 border border-[#333]">MAJOR</span>;
     }
   };
 
   return (
-    <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-5 shadow-xl font-mono">
+    <div className="bg-[#0e0e0e] border border-[#222] p-5 font-mono">
       
       {/* Header & Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#222] pb-4 mb-4">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-teal-500/20 text-teal-400 rounded-lg">
+          <div className="p-2 bg-teal-500/20 text-teal-400 ">
             <Activity size={18} />
           </div>
           <div>
@@ -65,10 +65,10 @@ export const TurningPointsReview: React.FC<TurningPointsReviewProps> = ({
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key as any)}
-              className={`px-3 py-1 text-[10px] font-bold uppercase rounded-lg border transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 text-[10px] font-bold uppercase border transition-all cursor-pointer whitespace-nowrap ${
                 filter === btn.key
                   ? 'bg-teal-500 text-black border-teal-400'
-                  : 'bg-black/40 text-white/60 border-white/10 hover:text-white'
+                  : 'bg-black/40 text-white/60 border-[#222] hover:text-white'
               }`}
             >
               {btn.label}
@@ -85,22 +85,22 @@ export const TurningPointsReview: React.FC<TurningPointsReviewProps> = ({
           filteredPoints.map((tp, idx) => (
             <div
               key={tp.id || idx}
-              className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${
+              className={`p-3.5 border transition-all flex items-start gap-3.5 ${
                 tp.impact === 'GOAL'
                   ? 'bg-[#00FF88]/5 border-[#00FF88]/30'
                   : tp.impact === 'CRITICAL' || tp.impact === 'RED_CARD'
                   ? 'bg-red-500/5 border-red-500/30'
-                  : 'bg-black/40 border-white/5'
+                  : 'bg-black/40 border-[#111]'
               }`}
             >
               {/* Minute Stamp Circle */}
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                className={`w-10 h-10 flex items-center justify-center font-black text-xs shrink-0 ${
                   tp.team === 'PLAYER'
                     ? 'bg-teal-500/20 text-teal-400 border border-teal-500/40'
                     : tp.team === 'OPPOSITION'
                     ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                    : 'bg-white/10 text-white/70 border border-white/20'
+                    : 'bg-white/10 text-white/70 border border-[#333]'
                 }`}
               >
                 {tp.minute}'

@@ -164,7 +164,7 @@ export function MediaMinigame() {
     </div>
 
     {/* Live Broadcast Feed */}
-    <div className="relative premium-card p-8 rounded-lg overflow-hidden flex flex-col min-h-[180px] justify-between shadow-2xl">
+    <div className="relative premium-card p-8 overflow-hidden flex flex-col min-h-[180px] justify-between ">
      <div className="absolute top-4 right-4 bg-red-600/20 border border-red-500/30 text-red-500 font-mono font-bold text-[9px] uppercase px-2 py-0.5 rounded tracking-widest">
      REC 1080P
      </div>
@@ -200,7 +200,7 @@ export function MediaMinigame() {
        >
         <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white/10 group-hover:bg-[#00FF88] transition-colors" />
         <span className="text-sm font-semibold uppercase font-display leading-snug group-hover:pl-1 transition-all">{opt.text}</span>
-        <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-white/5 text-[10px] font-mono">
+        <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-[#111] text-[10px] font-mono">
          {eff.trust !== undefined && (
           <span className={`px-2 py-0.5 rounded font-bold ${eff.trust >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
            Manager Trust: {eff.trust > 0 ? `+${eff.trust}%` : `${eff.trust}%`}
@@ -226,7 +226,7 @@ export function MediaMinigame() {
    </div>
 
    {/* Side Panel for Reputation & Team Impact */}
-   <div className="w-full lg:w-[320px] bg-[#121212] border-t lg:border-t-0 lg:border-l border-white/10 p-6 flex flex-col justify-between shrink-0">
+   <div className="w-full lg:w-[320px] bg-[#050505] border-t lg:border-t-0 lg:border-l border-[#222] p-6 flex flex-col justify-between shrink-0">
     <div>
      <h3 className="text-[#00FF88] text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
       <Award size={16} />
@@ -264,7 +264,7 @@ export function MediaMinigame() {
        </div>
       </div>
 
-      <div className="pt-4 border-t border-white/10">
+      <div className="pt-4 border-t border-[#222]">
        <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block mb-2">Active Stance / Tag</span>
        {(() => {
         const tags = getReputationTags(p);
@@ -282,7 +282,7 @@ export function MediaMinigame() {
      </div>
     </div>
 
-    <div className="mt-8 pt-4 border-t border-white/10 text-[10px] text-white/40 leading-relaxed font-mono">
+    <div className="mt-8 pt-4 border-t border-[#222] text-[10px] text-white/40 leading-relaxed font-mono">
      💡 <strong className="text-white/60">Media System:</strong> Every public quote directly shapes your Manager Trust and Fan Approval ratings across the club. Choose your posture wisely.
     </div>
    </div>

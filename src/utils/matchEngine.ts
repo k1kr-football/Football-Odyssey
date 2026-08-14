@@ -13,9 +13,59 @@ export interface ActionContext {
     squadChemistry?: number;
 }
 
+export function calculateExpectedGoals(options: {
+    shotDistanceYards: number;
+    shotAngleDegrees: number; // 90 is straight on, lower is tight angle
+    defenderPressure: 'NONE' | 'LIGHT' | 'HEAVY' | 'BLOCKED';
+    isWeakFoot: boolean;
+    composure: number;
+    pitchType?: PitchCondition['type'];
+}): number {
+    const { shotDistanceYards, shotAngleDegrees, defenderPressure, isWeakFoot, composure, pitchType } = options;
+    
+    // Base xG distance decay curve
+    // Distance < 6 yards: 0.60 base, 12 yards: 0.30 base, 20 yards: 0.08 base, 30+ yards: 0.02 base
+    let baseXg = 0.85 * Math.exp(-0.11 * shotDistanceYards);
+    
+    // Angle multiplier (straight on = 1.0, 30 deg angle = 0.45)
+    const angleRad = (shotAngleDegrees * Math.PI) / 180;
+    const angleMult = Math.max(0.15, Math.sin(angleRad));
+    baseXg *= angleMult;
+
+    // Defender pressure modifier
+    if (defenderPressure === 'NONE') baseXg *= 1.35;
+    else if (defenderPressure === 'LIGHT') baseXg *= 0.90;
+    else if (defenderPressure === 'HEAVY') baseXg *= 0.55;
+    else if (defenderPressure === 'BLOCKED') baseXg *= 0.25;
+
+    // Weak foot penalty
+    if (isWeakFoot) baseXg *= 0.75;
+
+    // Composure influence
+    const compMult = 0.85 + (composure / 100) * 0.30;
+    baseXg *= compMult;
+
+    // Pitch condition factor (waterlogged/muddy turf reduces shot velocity)
+    if (pitchType === 'WATERLOGGED' || pitchType === 'MUDDY') baseXg *= 0.88;
+
+    return Math.max(0.01, Math.min(0.92, Math.round(baseXg * 100) / 100));
+}
+
 export function calculateContextModifier(p: Player, ctx: ActionContext) {
     let modifier = 0;
     
+    // Sharpness (0 to 100)
+    const sharpness = p.sharpness ?? 75;
+    if (sharpness >= 85) modifier += 0.06; // Prime sharpness boost
+    else if (sharpness >= 70) modifier += 0.02;
+    else if (sharpness < 45) modifier -= 0.08; // Rusty match fitness
+    else if (sharpness < 25) modifier -= 0.14; // Unfit / cold
+
+    // Morale (0 to 100)
+    const morale = p.morale ?? 75;
+    if (morale >= 85) modifier += 0.04;
+    else if (morale < 40) modifier -= 0.06;
+
     // Momentum (0 to 100, 50 is neutral)
     if (ctx.momentum > 60) modifier += 0.05;
     if (ctx.momentum > 80) modifier += 0.10;

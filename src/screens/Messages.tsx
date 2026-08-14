@@ -54,7 +54,7 @@ export function Messages() {
   const activeGroup = activeContact ? groups[activeContact] : null;
 
   return (
-    <div className="flex h-full gap-4 select-none font-sans bg-[#0E0E0E] p-4">
+    <div className="flex h-full gap-4 select-none font-sans bg-black p-4">
       {/* Contacts Sidebar */}
       <div className="w-1/3 max-w-[300px] flex flex-col gap-4">
         <div className="flex items-center gap-2 px-2 text-white font-black uppercase text-xl tracking-tight">
@@ -62,12 +62,12 @@ export function Messages() {
           Chats
         </div>
         
-        <div className="flex-1 bg-[#111] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-white/5">
+        <div className="flex-1 bg-[#111] border border-[#111] overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-[#111]">
             <input 
               type="text" 
               placeholder="Search chats..." 
-              className="w-full bg-[#1a1a1a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#00FF88]"
+              className="w-full bg-[#1a1a1a] px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#00FF88]"
             />
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -83,7 +83,7 @@ export function Messages() {
                   className={`w-full p-4 flex items-center gap-3 transition-colors border-l-2 ${activeContact === contact.name ? 'bg-white/10 border-[#00FF88]' : 'hover:bg-white/5 border-transparent'}`}
                 >
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-lg border border-white/10">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg border border-[#222]">
                       {contact.name.substring(0, 2).toUpperCase()}
                     </div>
                     {contact.unread && (
@@ -107,13 +107,13 @@ export function Messages() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 bg-[#111] rounded-2xl border border-white/5 flex flex-col relative overflow-hidden">
+      <div className="flex-1 bg-[#111] border border-[#111] flex flex-col relative overflow-hidden">
         {activeContact && activeGroup ? (
           <>
             {/* Header */}
-            <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#161616]">
+            <div className="h-16 border-b border-[#111] flex items-center justify-between px-6 bg-[#161616]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-sm border border-white/10">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm border border-[#222]">
                   {activeContact.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -147,7 +147,7 @@ export function Messages() {
                       <div className="w-8 h-8 rounded-full bg-gray-800 shrink-0 mb-1 flex items-center justify-center text-[10px] text-white">
                         {activeContact.substring(0, 2).toUpperCase()}
                       </div>
-                      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl rounded-bl-sm p-4 text-sm text-white/90">
+                      <div className="bg-[#1a1a1a] border border-[#222] rounded-bl-sm p-4 text-sm text-white/90">
                         {msg.content}
                         <div className="text-[9px] text-white/30 mt-2 text-right font-mono">
                           {msg.timestamp.split(' ')[1] || '12:00'}
@@ -159,7 +159,7 @@ export function Messages() {
                     {msg.handled ? (
                       <div className="flex justify-end w-full">
                         <div className="flex items-end gap-2 max-w-[80%] flex-row-reverse">
-                          <div className="bg-[#00FF88] text-black rounded-2xl rounded-br-sm p-4 text-sm font-medium">
+                          <div className="bg-[#00FF88] text-black rounded-br-sm p-4 text-sm font-medium">
                             {msg.actionTaken}
                             <div className="text-[9px] text-black/50 mt-2 text-right font-mono flex items-center justify-end gap-1">
                               {msg.timestamp.split(' ')[1] || '12:01'} <Check size={10} />
@@ -169,14 +169,14 @@ export function Messages() {
                       </div>
                     ) : (
                       <div className="flex justify-end w-full mt-2">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-3 max-w-[80%]">
+                        <div className="bg-white/5 border border-[#222] p-3 max-w-[80%]">
                           <div className="text-[10px] uppercase font-bold text-white/40 mb-3 px-1">How to reply?</div>
                           <div className="flex flex-col gap-2">
                             {msg.choices?.map((choice: any, cIdx: number) => (
                               <button
                                 key={cIdx}
                                 onClick={() => handleAction(msg.id, choice)}
-                                className="w-full text-left bg-white/10 hover:bg-[#00FF88] hover:text-black text-white px-4 py-2.5 rounded-lg text-sm transition-all group"
+                                className="w-full text-left bg-white/10 hover:bg-[#00FF88] hover:text-black text-white px-4 py-2.5 text-sm transition-all group"
                               >
                                 {choice.text}
                               </button>
@@ -187,7 +187,7 @@ export function Messages() {
                                   const updated = state.inbox.map((m) => m.id === msg.id ? { ...m, read: true, handled: true, actionTaken: 'Seen' } : m);
                                   setInbox(updated);
                                 }}
-                                className="w-full text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                                className="w-full text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 text-sm transition-all"
                               >
                                 Mark as Read
                               </button>
@@ -202,8 +202,8 @@ export function Messages() {
             </div>
             
             {/* Input Area (Mock) */}
-            <div className="p-4 bg-[#161616] border-t border-white/5 flex items-center gap-3">
-              <div className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-3 text-sm text-white/40 font-mono">
+            <div className="p-4 bg-[#161616] border-t border-[#111] flex items-center gap-3">
+              <div className="flex-1 bg-[#1a1a1a] border border-[#222] rounded-full px-4 py-3 text-sm text-white/40 font-mono">
                 Reply from options above...
               </div>
               <div className="w-12 h-12 rounded-full bg-[#00FF88]/20 text-[#00FF88] flex items-center justify-center">

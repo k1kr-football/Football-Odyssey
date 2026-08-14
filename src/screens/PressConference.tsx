@@ -167,7 +167,7 @@ export function PressConference() {
   {/* Subtle Press Conference backdrop grid background */}
   <div className="absolute inset-0 grid grid-cols-6 md:grid-cols-8 gap-4 p-8 opacity-[0.03] pointer-events-none select-none">
    {Array.from({ length: 48 }).map((_, idx) => (
-   <div key={idx} className="flex flex-col items-center justify-center border border-white/20 p-2 rounded">
+   <div key={idx} className="flex flex-col items-center justify-center border border-[#333] p-2 rounded">
     <TeamLogo
     symbol={club.symbol}
     name={club.name}
@@ -197,15 +197,15 @@ export function PressConference() {
     primaryColor={club.primaryColor}
     secondaryColor={club.secondaryColor}
     size={56}
-    className="flex-shrink-0 bg-[#151515] p-2 rounded-lg shadow-xl"
+    className="flex-shrink-0 bg-[#151515] p-2 "
    />
    </div>
    
    <div className="mb-10">
-   <div className="glass-panel p-6 relative rounded-lg shadow-lg flex items-start gap-4">
+   <div className="glass-panel p-6 relative flex items-start gap-4">
     <CharacterPortrait type="agent" size={48} name="Reporter" showBorder={false} className="rounded shadow-inner shrink-0" />
     <div className="flex-1 min-w-0">
-    <div className="absolute -top-3 left-6 premium-card px-3 py-0.5 text-white/50 text-[9px] font-bold uppercase tracking-widest rounded-md font-mono">
+    <div className="absolute -top-3 left-6 premium-card px-3 py-0.5 text-white/50 text-[9px] font-bold uppercase tracking-widest font-mono">
      REPORTER &middot; Q {questionIndex + 1} of {questions.length}
     </div>
     <p className="text-white text-lg font-semibold leading-relaxed mt-2">"{currentQ.text}"</p>
@@ -218,7 +218,7 @@ export function PressConference() {
     <button 
      key={i}
      onClick={() => handleAnswer(opt.effects, opt.tone)}
-     className="group flex flex-col items-start p-5 hover:border-[#00FF88] glass-panel transition-all text-left w-full relative overflow-hidden rounded-md shadow-md hover:translate-x-1"
+     className="group flex flex-col items-start p-5 hover:border-[#00FF88] glass-panel transition-all text-left w-full relative overflow-hidden hover:translate-x-1"
     >
      <div className="absolute right-0 top-0 bottom-0 w-2 transition-colors duration-300
      group-hover:bg-[#00FF88] bg-white/10" />
@@ -233,7 +233,7 @@ export function PressConference() {
   </div>
 
   {/* Side HUD for seeing exact consequences visually */}
-  <div className="w-full md:w-[320px] border-t md:border-t-0 md:border-l border-white/10 bg-[#151515] p-8 shrink-0 flex flex-col justify-between relative z-20">
+  <div className="w-full md:w-[320px] border-t md:border-t-0 md:border-l border-[#222] bg-[#151515] p-8 shrink-0 flex flex-col justify-between relative z-20">
   <div>
    <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-8">Public Image</h3>
    
@@ -276,7 +276,7 @@ export function PressConference() {
    </div>
 
    {/* Media Stance Meter */}
-   <div className="pt-4 border-t border-white/5">
+   <div className="pt-4 border-t border-[#111]">
     <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest block mb-2">Media Stance</span>
     {(() => {
       const tags = getReputationTags(p);
@@ -307,7 +307,7 @@ export function PressConference() {
       }
 
       return (
-        <div className={`p-3 rounded-lg border ${stanceColor} transition-all`}>
+        <div className={`p-3 border ${stanceColor} transition-all`}>
           <div className="font-bold text-xs uppercase tracking-wider mb-1">{stanceLabel}</div>
           <p className="text-[10px] leading-tight opacity-80">{stanceDesc}</p>
         </div>
@@ -318,7 +318,7 @@ export function PressConference() {
   </div>
 
    {/* Journalists Dossier */}
-   <div className="mt-8 pt-6 border-t border-white/10">
+   <div className="mt-8 pt-6 border-t border-[#222]">
     <h3 className="text-[#00FF88] text-[10px] font-bold uppercase tracking-widest mb-4">Press Room Dossier</h3>
     <div className="space-y-3">
      {[
@@ -333,7 +333,7 @@ export function PressConference() {
        const isAsking = currentQ?.journalist === j.name;
 
        return (
-         <div key={j.name} className={`p-3 rounded-lg border transition-all ${isAsking ? 'bg-white/5 border-[#00FF88]/40' : 'bg-black/20 border-white/5'}`}>
+         <div key={j.name} className={`p-3 border transition-all ${isAsking ? 'bg-white/5 border-[#00FF88]/40' : 'bg-black/20 border-[#111]'}`}>
            <div className="flex justify-between items-start mb-1">
              <div>
                <div className="flex items-center gap-1.5">

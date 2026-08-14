@@ -197,7 +197,7 @@ export function processManagerMeeting(state: GameState, optionId: string): Meeti
       // Volatile manager reacts strongly based on recent club form / mood
       const recentForm = worldClub?.form || [1];
       const lastForm = recentForm.length > 0 ? recentForm[recentForm.length - 1] : 1;
-      if (lastForm >= 1) {
+      if (lastForm === 'W' || lastForm === 1 || Number(lastForm) >= 1) {
         // Winning streak / happy mood
         if (optionId === 'HINT_STEP_UP') {
           trustChange = -10;

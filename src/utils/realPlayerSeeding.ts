@@ -3,7 +3,14 @@ import { getClubSquad, normalizeClubString } from '../data/sheetSquads';
 import { Club, Position } from '../types';
 import { GeneratedClub, GeneratedPlayer } from './careerSystems';
 import { UnifiedNPCEngine } from './npcEngine';
-import { calculateAcademyProspectPotentialBonus } from './clubPrestige';
+import { 
+  calculateAcademyProspectPotentialBonus, 
+  getClubAcademyRating, 
+  getClubPrestigeScore, 
+  getClubWorldReputationBoost, 
+  getManagerPhilosophyForClub, 
+  getClubStadiumCapacity 
+} from './clubPrestige';
 
 export type DataSourceTag = 'CURATED_REAL_DATA' | 'REAL_PROFILE_SEEDED' | 'PROCEDURAL_PENDING_REAL_DATA' | 'PROCEDURAL';
 
@@ -52,10 +59,10 @@ export function seedClubRoster(club: Club, engine: UnifiedNPCEngine): GeneratedC
   const positionsPool: Position[] = ['GK', 'CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'AM', 'LW', 'RW', 'ST'];
 
   let avgStarterOvr = 78;
-  if (club.tier === 'Elite') avgStarterOvr = 84;
-  else if (club.tier === 'Strong') avgStarterOvr = 75;
-  else if (club.tier === 'Mid') avgStarterOvr = 68;
-  else avgStarterOvr = 60;
+  if (club.tier === 'Elite') avgStarterOvr = 86;
+  else if (club.tier === 'Strong') avgStarterOvr = 74;
+  else if (club.tier === 'Mid') avgStarterOvr = 62;
+  else avgStarterOvr = 50;
 
   if (isBrazil) {
     // Procedurally generate Brazil for now, tagged for a future real-data swap
@@ -94,6 +101,7 @@ export function seedClubRoster(club: Club, engine: UnifiedNPCEngine): GeneratedC
     return {
       symbol: club.symbol,
       name: club.name,
+      league: club.league || 'Série A',
       managerName: `${mgr.firstName} ${mgr.lastName}`,
       dataSourceTag: 'PROCEDURAL_PENDING_REAL_DATA',
       isProceduralPendingRealData: true,
@@ -124,11 +132,11 @@ export function seedClubRoster(club: Club, engine: UnifiedNPCEngine): GeneratedC
   const createSeededPlayer = (role: 'STARTER' | 'SUB' | 'RES' | 'YOUTH', pos: Position, idx: number): GeneratedPlayer => {
     let name = '';
     let targetOvr = avgStarterOvr;
-    if (role === 'SUB') targetOvr = Math.max(50, avgStarterOvr - 4);
-    else if (role === 'RES') targetOvr = Math.max(48, avgStarterOvr - 8);
-    else if (role === 'YOUTH') targetOvr = Math.max(45, avgStarterOvr - 14);
+    if (role === 'SUB') targetOvr = Math.max(40, avgStarterOvr - 5);
+    else if (role === 'RES') targetOvr = Math.max(40, avgStarterOvr - 10);
+    else if (role === 'YOUTH') targetOvr = Math.max(40, avgStarterOvr - 15);
 
-    let ovr = targetOvr;
+    let ovr = Math.max(40, targetOvr);
     let potential = Math.min(99, ovr + Math.floor(Math.random() * 8));
     let age = 18 + Math.floor(Math.random() * 14);
     let position = pos;
@@ -178,8 +186,20 @@ export function seedClubRoster(club: Club, engine: UnifiedNPCEngine): GeneratedC
     }
 
     if (role === 'YOUTH') {
-      const bonus = calculateAcademyProspectPotentialBonus(club);
+      const prestigeScore = getClubPrestigeScore(club);
+      const worldRepBoost = getClubWorldReputationBoost(club);
+      const academyRating = getClubAcademyRating(club);
+      const managerPhilosophy = getManagerPhilosophyForClub(club);
+      const stadiumCapacity = getClubStadiumCapacity(club);
+
+      const bonus = calculateAcademyProspectPotentialBonus(club, academyRating);
       potential = Math.min(99, Math.max(ovr + 5, potential + bonus));
+
+      console.log(`[Youth-Generation System] Seeding Youth Player '${name}' for ${club.name}:`);
+      console.log(`  ✓ 1. Academy Rating: ${academyRating}/100 -> Potential Boost: +${bonus} (Final PA: ${potential})`);
+      console.log(`  ✓ 2. World Reputation / Prestige: Prestige Score ${prestigeScore}/100 (World Rep Boost +${worldRepBoost})`);
+      console.log(`  ✓ 3. Manager Philosophy: ${managerPhilosophy} -> Tactical Blueprint initialized`);
+      console.log(`  ✓ 4. Stadium Capacity: ${stadiumCapacity.toLocaleString()} seats -> Home Academy Venue size`);
     }
 
     return {
@@ -235,6 +255,7 @@ export function seedClubRoster(club: Club, engine: UnifiedNPCEngine): GeneratedC
   return {
     symbol: club.symbol,
     name: club.name,
+    league: club.league || 'League',
     managerName: mName,
     dataSourceTag: hasRealPlayers ? 'REAL_PROFILE_SEEDED' : 'PROCEDURAL',
     isProceduralPendingRealData: false,

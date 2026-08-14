@@ -44,14 +44,14 @@ export function WeeklyBalanceIndicator({
       case 'MANDATORY':
         return { icon: '⚽', label: 'Mandatory', bg: 'bg-amber-500/10 border-amber-500/30 text-amber-400' };
       default:
-        return { icon: '•', label: 'Pending', bg: 'bg-white/5 border-white/10 text-white/40' };
+        return { icon: '•', label: 'Pending', bg: 'bg-white/5 border-[#222] text-white/40' };
     }
   };
 
   return (
-    <div className="bg-[#121212]/90 border border-white/15 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-xl backdrop-blur-md mb-3 sm:mb-4">
+    <div className="bg-[#050505] border border-white/15 sm:p-2.5 sm:p-4 mb-3 sm:mb-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 sm:gap-2 pb-2 mb-2 sm:mb-3 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 sm:gap-2 pb-2 mb-2 sm:mb-3 border-b border-[#222]">
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Activity size={16} className="text-[#00FF88]" />
           <div>
@@ -94,8 +94,8 @@ export function WeeklyBalanceIndicator({
             <button
               key={d}
               onClick={() => onOpenDayModal && onOpenDayModal(d)}
-              className={`p-1 sm:p-2 rounded-lg sm:rounded-xl border flex flex-col items-center text-center transition-all cursor-pointer ${badge.bg} ${
-                isCurrent ? 'ring-2 ring-[#00FF88] shadow-lg shadow-[#00FF88]/10 scale-102' : 'hover:scale-[1.02] hover:border-white/30'
+              className={`p-1 sm:p-2 sm:border flex flex-col items-center text-center transition-all cursor-pointer ${badge.bg} ${
+                isCurrent ? 'ring-2 ring-[#00FF88] shadow-[#00FF88]/10 scale-102' : 'hover:scale-[1.02] hover:border-white/30'
               }`}
               title={isMand ? `${d}: Mandatory Obligation` : `${d}: Click to select Focus Activity (${recordedAction || 'Pending'})`}
             >
@@ -113,7 +113,7 @@ export function WeeklyBalanceIndicator({
 
       {/* Warnings & Active Status Indicators */}
       {isImbalancedOvertraining && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex items-center gap-2 text-red-400 text-xs font-mono mt-2">
+        <div className="bg-red-500/10 border border-red-500/30 p-2.5 flex items-center gap-2 text-red-400 text-xs font-mono mt-2">
           <ShieldAlert size={16} className="shrink-0" />
           <span>
             <strong>Overtraining Warning:</strong> 4+ Training days with 0 Recovery/Rest will incur an extra +15 Mental Fatigue & Recovery Debt penalty at week end.
@@ -122,7 +122,7 @@ export function WeeklyBalanceIndicator({
       )}
 
       {isZeroSocial && !isImbalancedOvertraining && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center gap-2 text-amber-400 text-xs font-mono mt-2">
+        <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 flex items-center gap-2 text-amber-400 text-xs font-mono mt-2">
           <ShieldAlert size={16} className="shrink-0" />
           <span>
             <strong>Social Drift Warning:</strong> Zero Social/PR days this week will cause Squad Chemistry & Media Perception decay (-3).

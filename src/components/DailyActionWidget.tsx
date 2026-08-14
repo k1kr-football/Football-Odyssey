@@ -43,9 +43,9 @@ export function DailyActionWidget({
     }
 
     return (
-      <div className="bg-[#121212]/90 border border-amber-500/30 rounded-2xl p-4 shadow-xl backdrop-blur-md mb-6">
+      <div className="bg-[#050505] border border-amber-500/30 p-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <div className="p-2.5 bg-amber-500/20 text-amber-400 border border-amber-500/30">
             <Lock size={20} />
           </div>
           <div>
@@ -67,8 +67,8 @@ export function DailyActionWidget({
   }
 
   return (
-    <div className="bg-[#121212]/90 border border-white/15 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xl backdrop-blur-md mb-3 sm:mb-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 mb-3 border-b border-white/10 gap-1.5">
+    <div className="bg-[#050505] border border-white/15 sm:p-3 sm:p-4 mb-3 sm:mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 mb-3 border-b border-[#222] gap-1.5">
         <div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="bg-[#00FF88]/20 text-[#00FF88] text-[9px] sm:text-[10px] font-black uppercase px-1.5 py-0.5 rounded border border-[#00FF88]/30 font-mono">
@@ -84,7 +84,7 @@ export function DailyActionWidget({
         </div>
 
         {currentChoice && currentChoice !== 'MANDATORY' && (
-          <span className="text-[10px] sm:text-xs font-mono font-bold text-[#00FF88] bg-[#00FF88]/10 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl border border-[#00FF88]/30 flex items-center gap-1">
+          <span className="text-[10px] sm:text-xs font-mono font-bold text-[#00FF88] bg-[#00FF88]/10 px-2 sm:px-3 py-0.5 sm:py-1 sm:border border-[#00FF88]/30 flex items-center gap-1">
             <CheckCircle2 size={12} /> Focus Set: {currentChoice}
           </span>
         )}
@@ -98,16 +98,16 @@ export function DailyActionWidget({
             <button
               key={option.id}
               onClick={() => onSelectAction(option.id)}
-              className={`p-4 rounded-xl border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
+              className={`p-4 border text-left flex flex-col justify-between transition-all relative cursor-pointer ${
                 isSelected
-                  ? 'bg-[#00FF88]/15 border-[#00FF88] text-white shadow-lg shadow-[#00FF88]/10 ring-1 ring-[#00FF88]'
-                  : 'bg-black/40 border-white/10 hover:border-white/30 text-white/90 hover:bg-black/60'
+                  ? 'bg-[#00FF88]/15 border-[#00FF88] text-white shadow-[#00FF88]/10 ring-1 ring-[#00FF88]'
+                  : 'bg-black/40 border-[#222] hover:border-white/30 text-white/90 hover:bg-black/60'
               }`}
             >
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-2xl">{option.icon}</span>
-                  <span className="text-[9px] font-mono font-bold uppercase text-white/40 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                  <span className="text-[9px] font-mono font-bold uppercase text-white/40 bg-white/5 px-2 py-0.5 rounded border border-[#222]">
                     {option.category}
                   </span>
                 </div>
@@ -129,7 +129,7 @@ export function DailyActionWidget({
                 </div>
 
                 {/* Costs */}
-                <div className="space-y-1 mb-3 border-t border-white/10 pt-2">
+                <div className="space-y-1 mb-3 border-t border-[#222] pt-2">
                   {option.costs.map((c, idx) => (
                     <div key={idx} className="text-[10px] font-mono text-white/40 flex items-center gap-1">
                       <span>•</span> {c}
@@ -138,7 +138,7 @@ export function DailyActionWidget({
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+              <div className="pt-2 border-t border-[#222] flex justify-between items-center">
                 <span className={`text-[10px] font-bold uppercase ${isSelected ? 'text-[#00FF88]' : 'text-white/40'}`}>
                   {isSelected ? 'Selected Active Focus' : 'Select Focus'}
                 </span>

@@ -80,7 +80,7 @@ export const RadarChartComparison: React.FC<RadarChartComparisonProps> = ({ play
   }, [playerPosition, playerAttributes, state.npcRegistry]);
 
   return (
-    <div className={`glass-panel rounded-xl p-4 flex flex-col w-full ${isMatchContext ? 'h-64' : 'h-80'}`}>
+    <div className={`glass-panel p-4 flex flex-col w-full ${isMatchContext ? 'h-64' : 'h-80'}`}>
       <h3 className="text-white/80 font-black uppercase tracking-widest text-xs text-center mb-2">
         Attribute Comparison vs League Average
       </h3>

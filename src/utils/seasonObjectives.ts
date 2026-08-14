@@ -3,6 +3,7 @@ import { Club, Player, TimelineEvent } from '../types';
 import { CLUBS } from '../data/teams';
 import { getClubSquad } from '../data/sheetSquads';
 import { UnifiedNPCEngine } from './npcEngine';
+import { getManagerPhilosophyForClub } from './clubPrestige';
 
 export interface SeasonObjective {
   type: 'avoid_relegation' | 'mid_table' | 'top_half' | 'promotion' | 'playoffs' | 'europe' | 'silverware';
@@ -348,8 +349,16 @@ export function generateRandomNewManager(currentClubSymbol: string, worldState?:
   const personalities: ('Demanding' | 'Nurturing' | 'Tactical' | 'Pragmatic')[] = ['Demanding', 'Nurturing', 'Tactical', 'Pragmatic'];
   const personality = personalities[Math.floor(Math.random() * personalities.length)];
 
-  const tactics = ['Gegenpress', 'Tiki-Taka', 'Low Block', 'Direct Counter'];
-  const tacticalSystem = tactics[Math.floor(Math.random() * tactics.length)] as any;
+  const clubPhilosophy = getManagerPhilosophyForClub(clubObj);
+  let tacticalSystem: any = 'Gegenpress';
+  if (clubPhilosophy === 'HIGH_PRESS') tacticalSystem = 'Gegenpress';
+  else if (clubPhilosophy === 'FREE_FLOWING') tacticalSystem = 'Tiki-Taka';
+  else if (clubPhilosophy === 'DEFENSIVE_SOLIDITY' || clubPhilosophy === 'TACTICAL_RIGID') tacticalSystem = 'Low Block';
+  else if (clubPhilosophy === 'DIRECT_PLAY') tacticalSystem = 'Direct Counter';
+  else {
+    const tactics = ['Gegenpress', 'Tiki-Taka', 'Low Block', 'Direct Counter'];
+    tacticalSystem = tactics[Math.floor(Math.random() * tactics.length)];
+  }
 
   let valuedAttributes: string[] = [];
   let attitudeText = '';

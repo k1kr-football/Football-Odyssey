@@ -432,11 +432,11 @@ export function TrialMatch() {
  else if (rating < 6.5) ratingColor = 'text-[#ef4444]'; // Red
 
  return (
- <div className="flex flex-col h-full bg-[#0E0E0E] text-[#cccccc] font-sans overflow-y-auto w-full p-8">
+ <div className="flex flex-col h-full bg-black text-[#cccccc] font-sans overflow-y-auto w-full p-8">
   <div className="max-w-[1000px] w-full mx-auto flex flex-col gap-8 h-full">
   
   {/* Header */}
-  <div className="border-b border-white/10 pb-6">
+  <div className="border-b border-[#222] pb-6">
    <div className="text-[#00FF88] text-xs font-bold tracking-widest uppercase mb-2">Step 02 &middot; Trial Showcase</div>
    <h1 className="text-white text-4xl font-black uppercase tracking-tight">The Trial Match</h1>
   </div>
@@ -489,7 +489,7 @@ export function TrialMatch() {
     <span className="text-white/50 text-xs font-bold uppercase tracking-widest">Match Rating</span>
     <span className={`text-6xl font-black ${ratingColor}`}>{rating.toFixed(1)}</span>
     
-    <div className="border-t border-white/10 pt-4 text-left">
+    <div className="border-t border-[#222] pt-4 text-left">
      <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest block mb-2">My Attributes Checked</span>
      <div className="grid grid-cols-2 gap-2 text-xs font-mono">
      {currentScenario.options.map((opt, i) => (
@@ -509,7 +509,7 @@ export function TrialMatch() {
      <div className="text-[#555] italic">Kick-off approaching...</div>
      ) : (
      outcomes.map((out, idx) => (
-      <div key={idx} className="text-white pb-1.5 border-b border-white/10 last:border-0">{out}</div>
+      <div key={idx} className="text-white pb-1.5 border-b border-[#222] last:border-0">{out}</div>
      ))
      )}
     </div>
@@ -520,7 +520,7 @@ export function TrialMatch() {
    /* Scouting Offers Screen */
    <div className="flex flex-col gap-6">
    <div className="premium-card p-8 rounded flex flex-col gap-6">
-    <div className="text-center pb-6 border-b border-white/10">
+    <div className="text-center pb-6 border-b border-[#222]">
     <h2 className="text-white text-2xl font-bold uppercase tracking-wider mb-2">Trial Match Concluded</h2>
     <div className="flex justify-center items-baseline gap-2">
      <span className="text-gray-400 text-sm">Final Scout Rating:</span>

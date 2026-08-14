@@ -47,7 +47,7 @@ export function StoryOverlay() {
          <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Season {state.season} • {getFormattedCalendarDate(state.currentWeek, state.currentDay)}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col justify-end px-8 md:px-24 lg:px-48 py-12 relative bg-gradient-to-b from-[#120f0c] via-[#080706] to-[#040404]">
+      <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col justify-end px-8 md:px-24 lg:px-48 py-12 relative ">
         
         {/* Nostalgic Sepia Vignette overlay */}
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(20,10,0,0.85)_100%)]"></div>
@@ -85,7 +85,7 @@ export function StoryOverlay() {
                   <button 
                     key={idx}
                     onClick={() => resolveCutscene(idx)}
-                    className="w-full text-left p-6 bg-amber-950/10 hover:bg-amber-900/20 border border-amber-500/20 hover:border-amber-500/50 transition-all group rounded-xl shadow-lg"
+                    className="w-full text-left p-6 bg-amber-950/10 hover:bg-amber-900/20 border border-amber-500/20 hover:border-amber-500/50 transition-all group "
                   >
                     <div className="text-base md:text-lg font-medium group-hover:text-amber-200 text-amber-100 transition-colors font-serif">
                        {choice.text}
@@ -100,7 +100,7 @@ export function StoryOverlay() {
               ) : (
                 <button 
                   onClick={() => resolveCutscene(-1)}
-                  className="mx-auto block px-12 py-4 bg-amber-500 text-black font-sans uppercase tracking-widest font-black rounded-lg hover:bg-amber-400 transition-all shadow-xl"
+                  className="mx-auto block px-12 py-4 bg-amber-500 text-black font-sans uppercase tracking-widest font-black hover:bg-amber-400 transition-all "
                 >
                   Return to Present
                 </button>

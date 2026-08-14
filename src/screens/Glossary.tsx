@@ -30,10 +30,10 @@ export function Glossary() {
   };
 
   const categoryBg: Record<GlossaryEntry['category'], string> = {
-    Performance: 'from-[#111] to-[#111921] border-[#38bdf8]/20',
-    Relationships: 'from-[#111] to-[#1e1315] border-rose-950/40',
-    Financial: 'from-[#111] to-[#121c16] border-emerald-950/40',
-    Career: 'from-[#111] to-[#1a1712] border-amber-950/40'
+    Performance: 'border-[#38bdf8]/20',
+    Relationships: 'border-rose-950/40',
+    Financial: 'border-emerald-950/40',
+    Career: 'border-amber-950/40'
   };
 
   const accentColors: Record<GlossaryEntry['category'], string> = {
@@ -53,7 +53,7 @@ export function Glossary() {
   return (
     <div className="flex flex-col gap-6 animate-fade-in font-mono h-full w-full">
       {/* Title block */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#222] pb-6 shrink-0">
         <div>
           <span className="text-[#00FF88] text-[9px] font-black uppercase tracking-widest border border-[#00FF88]/20 px-3 py-1 rounded bg-[#00FF88]/5 mb-2 inline-block">SYSTEM DIRECTORY</span>
           <h1 className="text-white text-3xl font-black uppercase tracking-tighter">Athletic Glossary</h1>
@@ -70,7 +70,7 @@ export function Glossary() {
             placeholder="SEARCH STATS, METERS, AND CONTRACT RULES..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#111] border border-white/10 rounded-lg pl-11 pr-4 py-3 text-xs text-white placeholder-white/30 uppercase tracking-wider focus:outline-none focus:border-[#00FF88] transition-colors font-mono"
+            className="w-full bg-[#111] border border-[#222] pl-11 pr-4 py-3 text-xs text-white placeholder-white/30 uppercase tracking-wider focus:outline-none focus:border-[#00FF88] transition-colors font-mono"
           />
         </div>
 
@@ -80,10 +80,10 @@ export function Glossary() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-[10px] font-bold uppercase tracking-widest transition-all
+              className={`flex items-center gap-2 px-4 py-2.5 border text-[10px] font-bold uppercase tracking-widest transition-all
                 ${activeCategory === cat
-                  ? 'bg-[#00FF88] border-[#00FF88] text-[#0e0e0e] shadow-lg shadow-[#00FF88]/10'
-                  : 'bg-[#111] border-white/5 text-white/50 hover:text-white hover:border-white/20'
+                  ? 'bg-[#00FF88] border-[#00FF88] text-[#0e0e0e] shadow-[#00FF88]/10'
+                  : 'bg-[#111] border-[#111] text-white/50 hover:text-white hover:border-[#333]'
                 }`}
             >
               {categoryIcons[cat]}
@@ -99,7 +99,7 @@ export function Glossary() {
           {filteredEntries.map((entry) => (
             <div
               key={entry.term}
-              className={`bg-gradient-to-br ${categoryBg[entry.category]} border rounded-xl p-6 relative overflow-hidden flex flex-col justify-between`}
+              className={`${categoryBg[entry.category]} border p-6 relative overflow-hidden flex flex-col justify-between`}
             >
               {/* Background accent badge */}
               <div className="absolute top-4 right-4 shrink-0">
@@ -119,7 +119,7 @@ export function Glossary() {
                 </p>
 
                 {/* Subsections */}
-                <div className="space-y-3 border-t border-white/5 pt-4">
+                <div className="space-y-3 border-t border-[#111] pt-4">
                   <div>
                     <span className="text-white/30 text-[8px] font-black uppercase tracking-widest block mb-0.5">Dynamic Shift Factors:</span>
                     <span className="text-[#ccc] text-[11px] leading-relaxed block">{entry.raisesLoweres}</span>
@@ -134,7 +134,7 @@ export function Glossary() {
 
               {/* Related terms footer */}
               {entry.seeAlso.length > 0 && (
-                <div className="border-t border-white/5 pt-3 mt-4 flex flex-wrap items-center gap-2 text-[9px]">
+                <div className="border-t border-[#111] pt-3 mt-4 flex flex-wrap items-center gap-2 text-[9px]">
                   <span className="text-white/40 uppercase tracking-widest font-bold">Related Mechanics:</span>
                   {entry.seeAlso.map((sa) => (
                     <button
@@ -154,7 +154,7 @@ export function Glossary() {
           ))}
         </div>
       ) : (
-        <div className="bg-[#111] border border-white/5 rounded-xl p-12 text-center flex flex-col items-center justify-center">
+        <div className="bg-[#111] border border-[#111] p-12 text-center flex flex-col items-center justify-center">
           <HelpCircle size={48} className="text-white/20 mb-3 animate-pulse" />
           <h3 className="text-white text-md font-bold uppercase tracking-wider mb-1">No glossary terms match your search</h3>
           <p className="text-white/40 text-xs uppercase tracking-widest max-w-md">Try modifying your query or category filter to inspect other game system properties.</p>

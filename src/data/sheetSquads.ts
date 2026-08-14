@@ -1,9 +1,13 @@
 import { CLUBS } from './teams';
 import { FM_SHEET_SQUADS } from './fmSheetSquads';
+import { UnifiedNPCEngine } from '../utils/npcEngine';
+
+const globalNpcEngine = new UnifiedNPCEngine();
 
 export interface SheetPlayer {
   name: string;
   ovr: number;
+  isYouth?: boolean;
 }
 
 export interface ClubSquad {
@@ -2948,11 +2952,6 @@ const CURATED_SHEET_SQUADS: Record<string, ClubSquad> = {
   }
 };
 
-export const SHEET_SQUADS: Record<string, ClubSquad> = {
-  ...CURATED_SHEET_SQUADS,
-  ...FM_SHEET_SQUADS
-};
-
 export function normalizeClubString(str: string): string {
   return str
     .normalize("NFD")
@@ -2964,6 +2963,194 @@ export function normalizeClubString(str: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Localized name pools for realistic squad padding
+const REGIONAL_NAMES: Record<string, { first: string[]; last: string[]; managers: string[] }> = {
+  England: {
+    first: ['Jack', 'Harry', 'Oliver', 'Charlie', 'Thomas', 'George', 'James', 'Lewis', 'Samuel', 'Ethan', 'Callum', 'Liam', 'Mason', 'Luke', 'Daniel', 'Ryan', 'Joshua', 'Connor', 'Jordan', 'Alfie', 'Archie', 'Toby', 'Tyler', 'Ben', 'Harrison', 'Owen', 'Elliot', 'Harvey', 'Jayden', 'Finley'],
+    last: ['Smith', 'Jones', 'Taylor', 'Williams', 'Brown', 'Davies', 'Evans', 'Wilson', 'Thomas', 'Roberts', 'Johnson', 'Walker', 'Wright', 'Robinson', 'Thompson', 'White', 'Hughes', 'Edwards', 'Green', 'Hall', 'Wood', 'Harris', 'Martin', 'Jackson', 'Clarke', 'Clark', 'Turner', 'Hill', 'Scott', 'Cooper'],
+    managers: ['Steve Cooper', 'Sean Dyche', 'Dean Smith', 'Mark Robins', 'Paul Warne', 'Michael Duff', 'Darren Moore', 'Gary Rowett', 'Gareth Ainsworth', 'Neil Harris']
+  },
+  Spain: {
+    first: ['Alejandro', 'Pablo', 'Daniel', 'Adrian', 'Alvaro', 'David', 'Hugo', 'Mario', 'Diego', 'Javier', 'Carlos', 'Sergio', 'Gonzalo', 'Rodrigo', 'Lucas', 'Iker', 'Mateo', 'Marcos', 'Jorge', 'Raul', 'Ivan', 'Manuel', 'Fernando', 'Guillermo', 'Ruben'],
+    last: ['Garcia', 'Gonzalez', 'Rodriguez', 'Fernandez', 'Lopez', 'Martinez', 'Sanchez', 'Perez', 'Gomez', 'Martin', 'Ruiz', 'Hernandez', 'Diaz', 'Moreno', 'Alvarez', 'Romero', 'Alonso', 'Gutierrez', 'Navarro', 'Torres', 'Dominguez', 'Vazquez', 'Ramos', 'Gil', 'Serrano'],
+    managers: ['Carlos Corberán', 'Paco López', 'José Luis Mendilibar', 'Diego Martínez', 'Javi Gracia', 'Rubi', 'Asier Garitano', 'Pepe Mel']
+  },
+  Italy: {
+    first: ['Leonardo', 'Francesco', 'Alessandro', 'Lorenzo', 'Mattia', 'Andrea', 'Gabriele', 'Riccardo', 'Tommaso', 'Edoardo', 'Marco', 'Luca', 'Matteo', 'Filippo', 'Davide', 'Antonio', 'Federico', 'Giuseppe', 'Simone', 'Samuele', 'Stefano', 'Giovanni', 'Enrico', 'Pietro'],
+    last: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Costa', 'Giordano', 'Mancini', 'Rizzo', 'Lombardi', 'Moretti', 'Barone', 'Santoro', 'Carbone'],
+    managers: ['Marco Giampaolo', 'Davide Nicola', 'Leonardo Semplici', 'Roberto D\'Aversa', 'Giuseppe Iachini', 'Rolando Maran']
+  },
+  France: {
+    first: ['Hugo', 'Lucas', 'Leo', 'Mathis', 'Enzo', 'Nathan', 'Louis', 'Arthur', 'Gabin', 'Raphael', 'Jules', 'Gabriel', 'Theo', 'Paul', 'Antoine', 'Clement', 'Thomas', 'Nicolas', 'Alex', 'Maxime', 'Romain', 'Julien', 'Pierre', 'Alexis'],
+    last: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'Bertrand', 'Roux', 'Fournier', 'Morel', 'Girard', 'Bonnet', 'Dupont', 'Lambert', 'Fontaine'],
+    managers: ['Jean-Louis Gasset', 'Frédéric Hantz', 'Thierry Laurey', 'Pascal Dupraz', 'Stéphane Moulin', 'Jocelyn Gourvennec']
+  },
+  Germany: {
+    first: ['Maximilian', 'Leon', 'Lukas', 'Paul', 'Jonas', 'Finn', 'Felix', 'Elias', 'Luis', 'Noah', 'Tim', 'Julian', 'David', 'Jan', 'Philipp', 'Niklas', 'Alexander', 'Simon', 'Moritz', 'Fabian', 'Sven', 'Tobias', 'Florian', 'Sebastian'],
+    last: ['Muller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schafer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schroder', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun', 'Kruger'],
+    managers: ['Markus Gisdol', 'Florian Kohfeldt', 'Andre Breitenreiter', 'Bruno Labbadia', 'David Wagner', 'Achim Beierlorzer']
+  },
+  "Saudi Arabia": {
+    first: ['Salem', 'Fahad', 'Ali', 'Mohammed', 'Abdulrahman', 'Sultan', 'Yasser', 'Nawaf', 'Hassan', 'Abdullah', 'Saud', 'Firas', 'Ziyad', 'Sami', 'Khalid', 'Hussain', 'Majed', 'Omar', 'Bader', 'Tariq'],
+    last: ['Al-Dawsari', 'Al-Muwallad', 'Al-Bulaihi', 'Al-Ghannam', 'Al-Shahrani', 'Al-Faraj', 'Al-Khaibari', 'Al-Buraikan', 'Al-Owais', 'Al-Najei', 'Al-Kassar', 'Al-Ghamdi', 'Al-Shehri', 'Al-Harbi', 'Al-Zahrani'],
+    managers: ['Nuno Espírito Santo', 'Pedro Emanuel', 'Pítso Mosimane', 'José Luis Sierra', 'Daniel Carreño']
+  },
+  Generic: {
+    first: ['Alex', 'Gabriel', 'Lucas', 'Mateo', 'Daniel', 'Oliver', 'Samuel', 'David', 'Victor', 'Marcus', 'Carlos', 'Thomas', 'Julian', 'Adrian', 'Christian', 'Liam', 'Noah', 'Benjamin', 'Dominic', 'Elias'],
+    last: ['Silva', 'Santos', 'Schmidt', 'Weber', 'Martin', 'Varga', 'Novak', 'Smith', 'Jones', 'Costa', 'Rossi', 'Fernandez', 'Jansen', 'Jensen', 'Nielsen', 'Kovac', 'Popov', 'Dimitrov', 'Petrov'],
+    managers: ['Manager Smith', 'Head Coach Davies', 'Manager Garcia', 'Gaffer Jones']
+  }
+};
+
+/**
+ * Ensures every club squad has a complete senior roster (minimum 20 players)
+ * with realistic depth-appropriate OVR distribution based on league tier.
+ */
+export function padAndCalibrateSquad(squad: ClubSquad, clubName: string): ClubSquad {
+  const normName = normalizeClubString(clubName);
+  const clubObj = CLUBS.find(c => 
+    normalizeClubString(c.name) === normName || 
+    c.symbol.toLowerCase() === clubName.toLowerCase() ||
+    c.name.toLowerCase() === clubName.toLowerCase()
+  );
+
+  const country = clubObj?.country || "England";
+  const namePool = REGIONAL_NAMES[country] || REGIONAL_NAMES[clubObj?.league?.includes("Spain") ? "Spain" : clubObj?.league?.includes("Italy") ? "Italy" : clubObj?.league?.includes("France") ? "France" : clubObj?.league?.includes("Germany") ? "Germany" : "England"] || REGIONAL_NAMES.Generic;
+
+  const existingPlayers = [...(squad.players || [])];
+  const usedNames = new Set(existingPlayers.map(p => p.name.toLowerCase()));
+
+  // Calculate league / tier depth OVR range (Piecewise OVR distribution)
+  let depthMinOvr = 40;
+  let depthMaxOvr = 50;
+
+  if (clubObj) {
+    if (clubObj.tier === 'Elite' || clubObj.league === 'Premier League' || clubObj.league === 'La Liga' || clubObj.league === 'Serie A' || clubObj.league === 'Bundesliga') {
+      depthMinOvr = 62;
+      depthMaxOvr = 78;
+    } else if (clubObj.tier === 'Strong' || clubObj.league === 'EFL Championship') {
+      depthMinOvr = 52;
+      depthMaxOvr = 68;
+    } else if (clubObj.league === 'EFL League One') {
+      depthMinOvr = 45;
+      depthMaxOvr = 58;
+    } else {
+      // EFL League Two / Lower / Foundation tier
+      depthMinOvr = 40;
+      depthMaxOvr = 50; // Calibrated for low-tier fringe squad depth in 40s range
+    }
+  }
+
+  // Target minimum 20 players (exceeds 18-player threshold)
+  const TARGET_SQUAD_SIZE = 20;
+  const POSITIONS: ("ST" | "LW" | "RW" | "CAM" | "CM" | "CDM" | "LB" | "RB" | "CB" | "GK")[] = [
+    "CB", "CM", "ST", "LB", "RB", "GK", "CDM", "CAM", "LW", "RW"
+  ];
+  let posIdx = 0;
+
+  while (existingPlayers.length < TARGET_SQUAD_SIZE) {
+    const pos = POSITIONS[posIdx % POSITIONS.length];
+    posIdx++;
+
+    // Squad depth players added later receive lower calibrated OVRs within the depth range
+    const progressFraction = existingPlayers.length / TARGET_SQUAD_SIZE;
+    const playerOvr = Math.max(40, Math.round(depthMaxOvr - progressFraction * (depthMaxOvr - depthMinOvr) + (Math.random() * 4 - 2)));
+    const playerAge = 18 + Math.floor(Math.random() * 12);
+
+    let fullName = "";
+    let attempts = 0;
+
+    // Generate NPC player using UnifiedNPCEngine
+    const npcPlayer = globalNpcEngine.generatePlayer(
+      'TEAMMATE',
+      country,
+      playerOvr,
+      playerAge,
+      pos,
+      clubObj?.symbol
+    );
+
+    fullName = `${npcPlayer.firstName} ${npcPlayer.lastName}`;
+
+    while (usedNames.has(fullName.toLowerCase()) && attempts < 30) {
+      const firstName = namePool.first[Math.floor(Math.random() * namePool.first.length)];
+      const lastName = namePool.last[Math.floor(Math.random() * namePool.last.length)];
+      fullName = `${firstName} ${lastName}`;
+      attempts++;
+    }
+
+    usedNames.add(fullName.toLowerCase());
+
+    existingPlayers.push({
+      name: fullName,
+      ovr: playerOvr
+    });
+  }
+
+  // Generate Youth Academy depth (U18s)
+  const YOUTH_SQUAD_SIZE = 14;
+  let youthPlayersAdded = 0;
+  posIdx = 0;
+  
+  while (youthPlayersAdded < YOUTH_SQUAD_SIZE) {
+    const pos = POSITIONS[posIdx % POSITIONS.length];
+    posIdx++;
+    
+    // Youth are 15-20 points lower than the fringe senior depth, but max out around 60
+    const youthOvr = Math.min(60, Math.max(35, Math.round(depthMinOvr - 15 + (Math.random() * 8 - 4))));
+    const youthAge = 16 + Math.floor(Math.random() * 3);
+    
+    const npcPlayer = globalNpcEngine.generatePlayer(
+      'TEAMMATE',
+      country,
+      youthOvr,
+      youthAge,
+      pos,
+      clubObj?.symbol
+    );
+
+    let fullName = `${npcPlayer.firstName} ${npcPlayer.lastName}`;
+    let attempts = 0;
+    while (usedNames.has(fullName.toLowerCase()) && attempts < 30) {
+      const firstName = namePool.first[Math.floor(Math.random() * namePool.first.length)];
+      const lastName = namePool.last[Math.floor(Math.random() * namePool.last.length)];
+      fullName = `${firstName} ${lastName}`;
+      attempts++;
+    }
+    
+    usedNames.add(fullName.toLowerCase());
+    existingPlayers.push({
+      name: fullName,
+      ovr: youthOvr,
+      isYouth: true
+    });
+    
+    youthPlayersAdded++;
+  }
+
+  let managerName = squad.manager;
+  if (!managerName || managerName === "Gaffer") {
+    managerName = namePool.managers[Math.floor(Math.random() * namePool.managers.length)];
+  }
+
+  return {
+    manager: managerName,
+    players: existingPlayers
+  };
+}
+
+// Instantiate and pre-pad all SHEET_SQUADS
+const RAW_SHEET_SQUADS: Record<string, ClubSquad> = {
+  ...CURATED_SHEET_SQUADS,
+  ...FM_SHEET_SQUADS
+};
+
+export const SHEET_SQUADS: Record<string, ClubSquad> = {};
+
+Object.keys(RAW_SHEET_SQUADS).forEach((key) => {
+  SHEET_SQUADS[key] = padAndCalibrateSquad(RAW_SHEET_SQUADS[key], key);
+});
 
 export function getClubSquad(clubName: string): ClubSquad {
   const keys = Object.keys(SHEET_SQUADS);
@@ -2986,26 +3173,23 @@ export function getClubSquad(clubName: string): ClubSquad {
     }
   }
 
+  let squad: ClubSquad;
+
   if (matchedKey && SHEET_SQUADS[matchedKey]) {
-    return SHEET_SQUADS[matchedKey];
+    squad = SHEET_SQUADS[matchedKey];
+  } else {
+    // Safe fallback if not found in dictionary
+    squad = { manager: "Gaffer", players: [] };
+    matchedKey = clubName;
   }
 
-  // Safe fallback if not found in dictionary
-  return {
-    manager: "Gaffer",
-    players: [
-      { name: "Tom Maddison", ovr: 78 },
-      { name: "Mason Saka", ovr: 81 },
-      { name: "Harry Kane", ovr: 89 },
-      { name: "Luke Shaw", ovr: 80 },
-      { name: "John Stones", ovr: 84 },
-      { name: "Kalvin Walker", ovr: 76 },
-      { name: "Marcus Rashford", ovr: 82 },
-      { name: "Jordan Pickford", ovr: 83 },
-      { name: "Conor Gallagher", ovr: 79 },
-      { name: "Jack Grealish", ovr: 84 },
-      { name: "Kieran Trippier", ovr: 82 },
-      { name: "Kyle Walker", ovr: 85 }
-    ]
-  };
+  // ACTIVE RUNTIME CHECK: Force every club to have a minimum of 18 players
+  const MINIMUM_SQUAD_THRESHOLD = 18;
+  if (!squad.players || squad.players.length < MINIMUM_SQUAD_THRESHOLD) {
+    squad = padAndCalibrateSquad(squad, matchedKey);
+    SHEET_SQUADS[matchedKey] = squad;
+  }
+
+  return squad;
 }
+

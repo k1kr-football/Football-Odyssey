@@ -1,9 +1,10 @@
 import { Player, InboxMessage, TimelineEvent } from '../types';
 
 export function checkTestimonialEligibility(player: Player): boolean {
+  if (!player) return false;
   const clubApps = player.stats?.apps || 0;
-  const isLateCareer = player.age >= 33 || Boolean(player.stateFlags?.retired) || player.contract.yearsLeft <= 1;
-  const hasLongTenure = clubApps >= 250;
+  const isLateCareer = player.age >= 33 || Boolean(player.stateFlags?.retired) || ((player.contract?.yearsLeft ?? 99) <= 1);
+  const hasLongTenure = clubApps >= 150 || (Boolean(player.stateFlags?.retired) && clubApps >= 80) || ((player.reputation?.club || 0) >= 70 && clubApps >= 100);
   const alreadyHosted = Boolean(player.stateFlags?.testimonialHosted);
 
   return hasLongTenure && isLateCareer && !alreadyHosted;
@@ -16,12 +17,14 @@ export function generateTestimonialProposal(player: Player): InboxMessage | null
     id: `testimonial_proposal_${Date.now()}`,
     sender: `${player.currentClubSymbol} Board & Supporters Trust`,
     subject: `⭐ CLUB TESTIMONIAL MATCH & FAREWELL TOUR PROPOSAL`,
-    content: `In recognition of your exceptional service, ${player.stats.apps} appearances, and legendary dedication to ${player.currentClubSymbol}, the Supporters Trust and Board wish to organize an official Testimonial Exhibition Match against the Club Legends XI. Proceeds will be gifted to your personal foundation and career ledger.`,
+    content: `In recognition of your exceptional service, ${player.stats?.apps || 0} appearances, and legendary dedication to ${player.currentClubSymbol}, the Supporters Trust and Board wish to organize an official Testimonial Exhibition Match against the Club Legends XI. Proceeds will be gifted to your personal foundation and career ledger.`,
     read: false,
     type: 'CONTRACT',
     timestamp: 'MON 09:00',
     choices: [
-      { text: 'Accept Testimonial Match & Farewell Celebration', type: 'TESTIMONIAL_ACCEPT' },
+      { text: '🎙️ Accept & Give Humble Speech ("Owe Everything To This Club")', type: 'TESTIMONIAL_ACCEPT_HUMBLE' },
+      { text: '🔥 Accept & Pass The Torch ("The Future Is In Good Hands")', type: 'TESTIMONIAL_ACCEPT_TORCH' },
+      { text: '⚡ Accept & Defiant Farewell ("Proved All Critics Wrong")', type: 'TESTIMONIAL_ACCEPT_DEFIANT' },
       { text: 'Decline Politely (Stay Focused Purely on League)', type: 'TESTIMONIAL_DECLINE' }
     ]
   };

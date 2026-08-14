@@ -43,7 +43,7 @@ export function getDirectAction(
         setScreen('INBOX', true);
         if (onOpenFullInbox) onOpenFullInbox();
       },
-      styleClass: 'bg-red-500 hover:bg-red-600 text-white font-black shadow-md shadow-red-500/20 border border-red-400',
+      styleClass: 'bg-red-500 hover:bg-red-600 text-white font-black border border-red-400',
       badgeText: 'ACTION REQUIRED'
     };
   }
@@ -228,7 +228,7 @@ export function getDirectAction(
       setScreen('INBOX', true);
       if (onOpenFullInbox) onOpenFullInbox();
     },
-    styleClass: 'bg-white/10 hover:bg-white/20 text-white/80 border border-white/10 font-medium',
+    styleClass: 'bg-white/10 hover:bg-white/20 text-white/80 border border-[#222] font-medium',
     badgeText: 'MAIL'
   };
 }
@@ -248,7 +248,7 @@ export function DirectActionButton({ msg, onOpenFullInbox, compact = false }: Di
     <button
       onClick={action.onClick}
       title={`Direct Action: Jump to ${action.label}`}
-      className={`inline-flex items-center gap-1.5 rounded-lg text-[10px] font-mono transition-all duration-200 shrink-0 cursor-pointer ${
+      className={`inline-flex items-center gap-1.5 text-[10px] font-mono transition-all duration-200 shrink-0 cursor-pointer ${
         compact 
           ? 'px-2 py-1 text-[9px]' 
           : 'px-2.5 py-1.5 text-[10px]'
@@ -346,16 +346,16 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
   };
 
   return (
-    <div className={`premium-card rounded-2xl p-6 shadow-2xl relative overflow-hidden border border-white/10 bg-[#0f0f12] ${className}`}>
+    <div className={`premium-card p-6 relative overflow-hidden border border-[#222] bg-[#0f0f12] ${className}`}>
       {/* Decorative background glow */}
       <div className={`absolute -top-24 -right-24 w-60 h-60 rounded-full blur-3xl pointer-events-none transition-all duration-500 ${
         isAdvanceBlocked ? 'bg-red-500/10' : 'bg-[#00FF88]/10'
       }`} />
 
       {/* HEADER: Title, Date, Status Badge & Tab Filter Bar */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-4 mb-5 gap-4 relative z-10">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-[#222] pb-4 mb-5 gap-4 relative z-10">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
+          <div className={`w-10 h-10 flex items-center justify-center shrink-0 border transition-all ${
             isAdvanceBlocked 
               ? 'bg-red-500/15 border-red-500/40 text-red-400' 
               : 'bg-[#00FF88]/15 border-[#00FF88]/40 text-[#00FF88]'
@@ -390,12 +390,12 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
         </div>
 
         {/* Unified Tab Selector */}
-        <div className="flex items-center bg-[#18181c] p-1 rounded-xl border border-white/10 text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 w-full lg:w-auto overflow-x-auto">
+        <div className="flex items-center bg-[#18181c] p-1 border border-[#222] text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 w-full lg:w-auto overflow-x-auto">
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'ALL'
-                ? 'bg-[#00FF88] text-black font-black shadow-md'
+                ? 'bg-[#00FF88] text-black font-black '
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -404,9 +404,9 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
 
           <button
             onClick={() => setActiveTab('SCHEDULE')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'SCHEDULE'
-                ? 'bg-[#00FF88] text-black font-black shadow-md'
+                ? 'bg-[#00FF88] text-black font-black '
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -415,9 +415,9 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
 
           <button
             onClick={() => setActiveTab('MAIL')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer relative whitespace-nowrap ${
+            className={`px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer relative whitespace-nowrap ${
               activeTab === 'MAIL'
-                ? 'bg-[#00FF88] text-black font-black shadow-md'
+                ? 'bg-[#00FF88] text-black font-black '
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -434,9 +434,9 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
           {pendingDecisions.length > 0 && (
             <button
               onClick={() => setActiveTab('DECISIONS')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer animate-pulse whitespace-nowrap ${
+              className={`px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer animate-pulse whitespace-nowrap ${
                 activeTab === 'DECISIONS'
-                  ? 'bg-red-500 text-white font-black shadow-lg shadow-red-500/30'
+                  ? 'bg-red-500 text-white font-black '
                   : 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
               }`}
             >
@@ -451,7 +451,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
         <div className="space-y-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Card 1: Today's Schedule & Fixture Preparation */}
-            <div className="bg-[#141418] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-white/20 transition-all">
+            <div className="bg-[#141418] border border-[#222] p-4 flex flex-col justify-between hover:border-[#333] transition-all">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[#00FF88] text-[9px] font-mono font-black uppercase tracking-widest flex items-center gap-1">
@@ -461,7 +461,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                 </div>
 
                 {isMatchday && todaysFixture ? (
-                  <div className="bg-[#1a1a20] border border-[#00FF88]/30 rounded-lg p-3 my-1">
+                  <div className="bg-[#1a1a20] border border-[#00FF88]/30 p-3 my-1">
                     <div className="text-[10px] text-[#00FF88] font-mono font-bold uppercase mb-1">
                       ⚽ MATCHDAY FIXTURE READY
                     </div>
@@ -490,7 +490,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                 )}
               </div>
 
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+              <div className="pt-3 border-t border-[#111] flex items-center justify-between text-[10px] font-mono">
                 <span className="text-white/40">Next: <strong className="text-white">{nextDay}, {nextDateStr}</strong></span>
                 <button
                   onClick={() => setActiveTab('SCHEDULE')}
@@ -502,7 +502,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
             </div>
 
             {/* Card 2: Contract & Agent Updates with Direct Action */}
-            <div className="bg-[#141418] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-white/20 transition-all">
+            <div className="bg-[#141418] border border-[#222] p-4 flex flex-col justify-between hover:border-[#333] transition-all">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-amber-400 text-[9px] font-mono font-black uppercase tracking-widest flex items-center gap-1">
@@ -519,7 +519,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                       <div 
                         key={msg.id}
                         onClick={() => setScreen('INBOX', true)}
-                        className="p-2.5 rounded-lg bg-[#1c1c22] border border-amber-500/20 hover:border-amber-500/50 cursor-pointer transition-all flex items-center justify-between gap-2 group"
+                        className="p-2.5 bg-[#1c1c22] border border-amber-500/20 hover:border-amber-500/50 cursor-pointer transition-all flex items-center justify-between gap-2 group"
                       >
                         <div className="truncate flex-1 min-w-0">
                           <div className="text-[9px] text-amber-400 font-mono font-bold uppercase truncate">{resolveSenderIdentity(state, msg.sender, msg.id)}</div>
@@ -539,7 +539,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                 )}
               </div>
 
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+              <div className="pt-3 border-t border-[#111] flex items-center justify-between text-[10px] font-mono">
                 <span className="text-white/40">Agent Desk</span>
                 <button
                   onClick={() => setScreen('AGENT', true)}
@@ -551,10 +551,10 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
             </div>
 
             {/* Card 3: Unread Mail & Decision Status with Direct Action */}
-            <div className={`border rounded-xl p-4 flex flex-col justify-between transition-all ${
+            <div className={`border p-4 flex flex-col justify-between transition-all ${
               isAdvanceBlocked 
                 ? 'bg-red-500/10 border-red-500/50 text-red-400' 
-                : 'bg-[#141418] border-white/10 text-white'
+                : 'bg-[#141418] border-[#222] text-white'
             }`}>
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -577,7 +577,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                     <div className="text-red-400 font-black text-xs uppercase tracking-wide flex items-center gap-1.5">
                       <AlertTriangle size={14} className="shrink-0 animate-bounce" /> {pendingDecisions.length} Decision(s) Required
                     </div>
-                    <div className="p-2.5 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-between gap-2">
+                    <div className="p-2.5 bg-red-500/15 border border-red-500/30 flex items-center justify-between gap-2">
                       <div className="truncate flex-1 min-w-0">
                         <div className="text-white text-xs font-bold truncate">{pendingDecisions[0]?.subject}</div>
                         <div className="text-red-300 text-[9px] font-mono truncate">{resolveSenderIdentity(state, pendingDecisions[0]?.sender, pendingDecisions[0]?.id)}</div>
@@ -590,7 +590,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                     <div className="text-[#00FF88] font-black text-xs uppercase tracking-wide">
                       ⚡ Latest Unread Mail
                     </div>
-                    <div className="p-2.5 rounded-lg bg-[#1a1a20] border border-white/10 flex items-center justify-between gap-2">
+                    <div className="p-2.5 bg-[#1a1a20] border border-[#222] flex items-center justify-between gap-2">
                       <div className="truncate flex-1 min-w-0">
                         <div className="text-white text-xs font-bold truncate">{unreadItems[0]?.subject}</div>
                         <div className="text-[#00FF88] text-[9px] font-mono truncate">{resolveSenderIdentity(state, unreadItems[0]?.sender, unreadItems[0]?.id)}</div>
@@ -610,11 +610,11 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                 )}
               </div>
 
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+              <div className="pt-3 border-t border-[#111] flex items-center justify-between text-[10px] font-mono">
                 {isAdvanceBlocked ? (
                   <button
                     onClick={() => setActiveTab('DECISIONS')}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded font-black uppercase tracking-widest w-full transition-all cursor-pointer shadow-md shadow-red-500/20 text-center"
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded font-black uppercase tracking-widest w-full transition-all cursor-pointer text-center"
                   >
                     View All Decisions &rarr;
                   </button>
@@ -631,8 +631,8 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
           </div>
 
           {/* Quick Action Inbox Feed Section */}
-          <div className="bg-[#141418] border border-white/10 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+          <div className="bg-[#141418] border border-[#222] p-4">
+            <div className="flex items-center justify-between mb-3 border-b border-[#111] pb-2">
               <span className="text-white text-xs font-black uppercase font-mono tracking-wider flex items-center gap-2">
                 <Zap size={14} className="text-[#00FF88]" /> Direct Action Mail Stream
               </span>
@@ -651,12 +651,12 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                   <div 
                     key={msg.id}
                     onClick={() => setScreen('INBOX', true)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group ${
+                    className={`p-3 border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group ${
                       isPending 
                         ? 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20' 
                         : !msg.read 
                         ? 'bg-[#181820] border-[#00FF88]/40 hover:border-[#00FF88] text-white' 
-                        : 'bg-[#121216] border-white/5 hover:border-white/20 text-white/70'
+                        : 'bg-[#121216] border-[#111] hover:border-[#333] text-white/70'
                     }`}
                   >
                     <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
@@ -692,10 +692,10 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
             {upcomingSchedule.map((item: any, idx: number) => (
               <div 
                 key={idx} 
-                className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+                className={`p-3.5 border flex flex-col justify-between ${
                   item.week === currentWeek && item.day === currentDay
                     ? 'bg-[#00FF88]/10 border-[#00FF88]/50 text-white'
-                    : 'bg-[#141418] border-white/10 text-white/70'
+                    : 'bg-[#141418] border-[#222] text-white/70'
                 }`}
               >
                 <div>
@@ -715,7 +715,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                   </p>
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-white/5 text-[9px] font-mono text-white/40">
+                <div className="mt-3 pt-2 border-t border-[#111] text-[9px] font-mono text-white/40">
                   {item.week === currentWeek && item.day === currentDay ? 'CURRENT DAY' : 'UPCOMING'}
                 </div>
               </div>
@@ -723,7 +723,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
           </div>
 
           {/* Match Preparations & Scouting Mail Integration with Direct Actions */}
-          <div className="bg-[#141418] border border-white/10 rounded-xl p-4">
+          <div className="bg-[#141418] border border-[#222] p-4">
             <h4 className="text-white text-xs font-black uppercase font-mono tracking-wider mb-3 flex items-center gap-2">
               <Stethoscope size={14} className="text-[#00FF88]" /> Match Preparation & Scouting Feed
             </h4>
@@ -734,7 +734,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                   <div 
                     key={msg.id}
                     onClick={() => setScreen('INBOX', true)}
-                    className="p-3 rounded-lg bg-[#1a1a20] border border-white/5 hover:border-[#00FF88]/40 transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group"
+                    className="p-3 bg-[#1a1a20] border border-[#111] hover:border-[#00FF88]/40 transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group"
                   >
                     <div className="truncate min-w-0 flex-1">
                       <div className="text-[9px] font-mono text-[#00FF88] uppercase font-bold">{resolveSenderIdentity(state, msg.sender, msg.id)}</div>
@@ -756,7 +756,7 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
       {/* TAB 3: INBOX COMMUNICATIONS WITH DIRECT ACTIONS */}
       {activeTab === 'MAIL' && (
         <div className="space-y-3 relative z-10">
-          <div className="flex items-center justify-between text-[10px] font-mono uppercase text-white/50 border-b border-white/5 pb-2">
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase text-white/50 border-b border-[#111] pb-2">
             <span>Mail Stream ({inbox.length} Messages total, {unreadItems.length} unread)</span>
             <button 
               onClick={() => setScreen('INBOX', true)}
@@ -773,12 +773,12 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                 <div 
                   key={msg.id}
                   onClick={() => setScreen('INBOX', true)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group ${
+                  className={`p-3 border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group ${
                     isPending 
                       ? 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20' 
                       : !msg.read 
                       ? 'bg-[#181820] border-[#00FF88]/40 hover:border-[#00FF88] text-white' 
-                      : 'bg-[#121216] border-white/5 hover:border-white/20 text-white/60'
+                      : 'bg-[#121216] border-[#111] hover:border-[#333] text-white/60'
                   }`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
@@ -809,15 +809,15 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
       {/* TAB 4: DECISION REQUIRED */}
       {activeTab === 'DECISIONS' && (
         <div className="space-y-3 relative z-10">
-          <div className="bg-red-500/15 border border-red-500/40 rounded-xl p-3 text-red-400 text-xs font-mono font-bold flex items-center gap-2">
+          <div className="bg-red-500/15 border border-red-500/40 p-3 text-red-400 text-xs font-mono font-bold flex items-center gap-2">
             <AlertTriangle size={16} className="shrink-0 animate-bounce" />
             <span>The following critical decision items require your input before the day can advance:</span>
           </div>
 
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
             {pendingDecisions.map((msg: any) => (
-              <div key={msg.id} className="bg-[#181820] border-2 border-red-500/60 rounded-xl p-4 flex flex-col gap-3 shadow-lg">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <div key={msg.id} className="bg-[#181820] border-2 border-red-500/60 p-4 flex flex-col gap-3 ">
+                <div className="flex items-center justify-between border-b border-[#222] pb-2">
                   <span className="text-red-400 text-[9px] font-mono font-black uppercase tracking-widest">
                     🚨 {resolveSenderIdentity(state, msg.sender, msg.id).toUpperCase()} &bull; {msg.priority || 'CRITICAL'}
                   </span>
@@ -829,12 +829,12 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
                   <p className="text-white/70 text-[11px] font-mono leading-relaxed line-clamp-3">{msg.body}</p>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 flex-wrap">
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#111] flex-wrap">
                   <DirectActionButton msg={msg} onOpenFullInbox={onOpenFullInbox} />
 
                   <button
                     onClick={() => setScreen('INBOX', true)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-[10px] font-mono font-black uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 shadow-md shadow-red-500/20"
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-[10px] font-mono font-black uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 "
                   >
                     Resolve In Full Inbox <ArrowRight size={12} />
                   </button>
@@ -846,15 +846,15 @@ export function InboxDigest({ onOpenFullInbox, onAdvanceDay, className = '' }: I
       )}
 
       {/* FOOTER: ADVANCE DAY MASTER BAR */}
-      <div className="mt-5 pt-4 border-t border-white/10 relative z-10 flex flex-col items-center">
+      <div className="mt-5 pt-4 border-t border-[#222] relative z-10 flex flex-col items-center">
         <button
           onClick={handleAdvance}
-          className={`w-full py-4 px-8 rounded-xl font-black uppercase tracking-widest text-xs flex flex-col items-center justify-center gap-1 transition-all duration-300 shadow-2xl cursor-pointer ${
+          className={`w-full py-4 px-8 font-black uppercase tracking-widest text-xs flex flex-col items-center justify-center gap-1 transition-all duration-300 cursor-pointer ${
             isAdvanceBlocked
-              ? 'bg-gradient-to-r from-red-600/30 via-red-500/20 to-red-600/30 border-2 border-red-500 text-red-400 hover:bg-red-500/30 hover:border-red-400 shadow-red-500/20 animate-pulse ring-2 ring-red-500/40'
+              ? 'border-2 border-red-500 text-red-400 hover:bg-red-500/30 hover:border-red-400 animate-pulse ring-2 ring-red-500/40'
               : shouldPulseAdvance
-              ? 'bg-gradient-to-r from-[#00FF88]/25 via-[#00FF88]/15 to-[#00FF88]/25 border-2 border-[#00FF88] text-[#00FF88] hover:bg-[#00FF88]/35 shadow-[0_0_30px_rgba(0,255,136,0.4)] animate-pulse ring-2 ring-[#00FF88]/40'
-              : 'bg-gradient-to-r from-[#00FF88]/20 via-[#00FF88]/10 to-[#00FF88]/20 border-2 border-[#00FF88]/70 text-[#00FF88] hover:bg-[#00FF88]/30 hover:shadow-[0_0_25px_rgba(0,255,136,0.35)]'
+              ? '/25 /15 /25 border-2 border-[#00FF88] text-[#00FF88] hover:bg-[#00FF88]/35 shadow-[0_0_30px_rgba(0,255,136,0.4)] animate-pulse ring-2 ring-[#00FF88]/40'
+              : '/20 /10 /20 border-2 border-[#00FF88]/70 text-[#00FF88] hover:bg-[#00FF88]/30 hover:shadow-[0_0_25px_rgba(0,255,136,0.35)]'
           }`}
         >
           <div className="flex items-center gap-3 text-sm">

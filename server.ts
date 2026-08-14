@@ -259,6 +259,102 @@ async function startServer() {
     }
   });
 
+  // Contextual Event-Aware Live Match Commentary Endpoint via Gemini API
+  app.post("/api/match-commentary", async (req, res) => {
+    try {
+      const {
+        eventType = "KEY_MOMENT",
+        minute = 1,
+        playerName = "The Player",
+        playerPosition = "ST",
+        playerReputation = {},
+        userClub = { name: "Home Club", symbol: "HOM", ovr: 75 },
+        oppClub = { name: "Away Club", symbol: "AWY", ovr: 75 },
+        score = { userScore: 0, oppScore: 0 },
+        decisionText,
+        decisionOutcome,
+        tacticalName
+      } = req.body;
+
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      const worldRep = playerReputation.world || playerReputation.global || 30;
+      const leagueRep = playerReputation.league || 40;
+      const clubRep = playerReputation.club || 50;
+
+      if (!apiKey) {
+        let fallback = `Minute ${minute}': High-octane action on the pitch involving ${playerName}!`;
+        if (eventType === 'GOAL_USER') {
+          fallback = `GOAL! ${playerName} produces a moment of pure magic for ${userClub.name} in minute ${minute}'!`;
+        } else if (eventType === 'GOAL_OPP') {
+          fallback = `GOAL! ${oppClub.name} break through in minute ${minute}' to score!`;
+        } else if (eventType === 'KEY_DECISION') {
+          fallback = `HIGH LEVERAGE MOMENT: ${playerName} makes a pivotal decision in minute ${minute}'! ${decisionOutcome || ''}`;
+        }
+        return res.json({
+          success: true,
+          commentary: fallback,
+          isAiGenerated: false
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      const prompt = `You are a world-class television football match commentator (in the style of Martin Tyler or Peter Drury).
+Deliver a thrilling, high-energy 1 to 2 sentence commentary call for a live football match moment.
+
+MATCH CONTEXT:
+- Minute: ${minute}'
+- Event: ${eventType}
+- Key Player: ${playerName} (${playerPosition})
+- Player Reputation & Fame Status: World Fame ${worldRep}/100, League Reputation ${leagueRep}/100, Club Respect ${clubRep}/100.
+- User/Home Club: ${userClub.name} (Club OVR/Prestige Rating: ${userClub.ovr || 75})
+- Opponent Club: ${oppClub.name} (Club OVR/Prestige Rating: ${oppClub.ovr || 75})
+- Scoreboard: ${userClub.name} ${score.userScore ?? 0} - ${score.oppScore ?? 0} ${oppClub.name}
+${decisionText ? `- Decision Moment Choice: "${decisionText}"` : ''}
+${decisionOutcome ? `- Outcome: ${decisionOutcome}` : ''}
+${tacticalName ? `- Tactical Switch: ${tacticalName}` : ''}
+
+CRITICAL BROADCAST REQUIREMENTS:
+1. Write 1 to 2 electrifying sentences that fit a top-tier European television broadcast.
+2. EXPLICITLY incorporate the player's reputation level (e.g., if worldRep > 70, reference their global icon stature / superstar legacy; if lower, reference their rising wonderkid potential or raw drive) and the prestige of the clubs involved.
+3. Match the drama to the scoreline and minute (e.g. late goal, high-leverage decision, tactical shift).
+4. Do NOT use emojis. Do NOT wrap in quotes. Return ONLY the raw commentary sentence(s).`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt,
+        config: {
+          temperature: 0.85,
+        }
+      });
+
+      const commentary = response.text?.trim() || `Minute ${minute}': High intensity on the pitch as ${playerName} leads ${userClub.name}!`;
+
+      return res.json({
+        success: true,
+        commentary,
+        isAiGenerated: true,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Match Commentary API Error:", error?.message || error);
+      let fallback = `Minute ${req.body?.minute || 1}': Action continues on the pitch as ${req.body?.playerName || 'the player'} steps up for ${req.body?.userClub?.name || 'the team'}.`;
+      return res.json({
+        success: true,
+        commentary: fallback,
+        isAiGenerated: false
+      });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

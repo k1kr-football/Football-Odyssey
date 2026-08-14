@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.props.onReset();
               }
             }}
-            className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-lg rounded shadow-xl hover:bg-gray-200 transition-colors"
+            className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-lg rounded hover:bg-gray-200 transition-colors"
           >
             Return to Home
           </button>

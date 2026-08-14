@@ -136,7 +136,7 @@ export function TeamFormD3Chart({ player }: TeamFormD3ChartProps) {
   const avgRating10 = chartData.reduce((acc, d) => acc + d.rating, 0) / (chartData.length || 1);
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl text-slate-100 backdrop-blur-md">
+    <div className="bg-slate-900/90 border border-slate-800 p-4 text-slate-100 ">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export function TeamFormD3Chart({ player }: TeamFormD3ChartProps) {
       </div>
 
       {/* 4-Stat Summary Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5 p-2.5 bg-slate-950/70 border border-slate-800/80 rounded-lg">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5 p-2.5 bg-slate-950/70 border border-slate-800/80 ">
         <div className="flex flex-col">
           <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400">Win Rate</span>
           <div className="flex items-baseline gap-1.5 mt-0.5">
@@ -300,7 +300,7 @@ export function TeamFormD3Chart({ player }: TeamFormD3ChartProps) {
 
         {/* Interactive Tooltip Card */}
         {hoveredPoint && (
-          <div className="absolute top-2 right-2 bg-slate-800 border border-slate-700 p-2.5 rounded-lg shadow-xl text-xs z-20 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-2 right-2 bg-slate-800 border border-slate-700 p-2.5 text-xs z-20 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between gap-3 mb-1">
               <span className="font-bold text-white">Game #{hoveredPoint.index} ({hoveredPoint.label})</span>
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${

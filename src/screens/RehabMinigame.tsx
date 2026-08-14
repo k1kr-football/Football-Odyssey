@@ -124,7 +124,7 @@ export function RehabMinigame() {
  <div className="flex flex-col h-full bg-[#0a0b0c] p-8 select-none font-sans">
   
   {/* Header Panel */}
-  <div className="flex justify-between items-center pb-6 border-b border-white/10 shrink-0">
+  <div className="flex justify-between items-center pb-6 border-b border-[#222] shrink-0">
   <div>
    <h2 className="text-[#38bdf8] text-xs font-bold uppercase tracking-widest font-mono">Therapy Protocol v3.0</h2>
    <h1 className="text-white text-3xl font-black uppercase tracking-tight font-display mt-1">First-Team Rehabilitation Clinic</h1>
@@ -253,10 +253,10 @@ export function RehabMinigame() {
    {/* Right panel: Live Logs */}
    <div className="flex-1 premium-card p-6 flex flex-col justify-between">
    <div>
-    <h3 className="text-white text-xs font-display uppercase tracking-widest pb-3 border-b border-white/10 mb-4">Therapeutic Clinical Log</h3>
+    <h3 className="text-white text-xs font-display uppercase tracking-widest pb-3 border-b border-[#222] mb-4">Therapeutic Clinical Log</h3>
     <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2 hide-scrollbar">
     {logs.map((log, i) => (
-     <div key={i} className={`text-[11px] font-mono leading-relaxed pb-2 border-b border-white/10/15 last:border-0 
+     <div key={i} className={`text-[11px] font-mono leading-relaxed pb-2 border-b border-[#222]/15 last:border-0 
      ${log.startsWith('⚠') ? 'text-red-400' : log.startsWith('🏆') ? 'text-emerald-400' : 'text-white/50'}
      `}>
      {log}

@@ -8,7 +8,7 @@ import { getPositionGroup, PositionGroup } from "../utils/positionMatchDecisions
 import { DailyActionWidget } from "../components/DailyActionWidget";
 import { WeeklyBalanceIndicator } from "../components/WeeklyBalanceIndicator";
 import { ScheduleActivityModal } from "../components/ScheduleActivityModal";
-import { DailyActionType, getWeeklyActionTracker } from "../utils/dailyActionEngine";
+import { DailyActionType, getWeeklyActionTracker, isDayMandatory } from "../utils/dailyActionEngine";
 import {
   ArrowLeft,
   Award,
@@ -308,6 +308,7 @@ export function Training() {
   // Individual Minigame State
   const [activeDrill, setActiveDrill] = useState<DrillConfig | null>(null);
   const [drillIntensity, setDrillIntensity] = useState<'LIGHT' | 'STANDARD' | 'INTENSE'>('STANDARD');
+  const [activeHabit, setActiveHabit] = useState<string | null>(null);
   
   // Minigame Runtime States
   const [repIndex, setRepIndex] = useState<number>(1);
@@ -573,16 +574,16 @@ export function Training() {
 
     // Performance grade rating
     let grade = 'C';
-    let baseGain = 0.2;
+    let baseGain = 0.04;
     if (totalScore >= 25) {
       grade = 'A+';
-      baseGain = 0.6;
+      baseGain = 0.15;
     } else if (totalScore >= 18) {
       grade = 'A';
-      baseGain = 0.45;
+      baseGain = 0.11;
     } else if (totalScore >= 12) {
       grade = 'B';
-      baseGain = 0.3;
+      baseGain = 0.07;
     }
 
     // Calculate actual stat gains
@@ -619,6 +620,21 @@ export function Training() {
     };
     player.training.weeklySessions.individual = (player.training.weeklySessions.individual || 0) + 1;
 
+    // Apply Daily Habit Bonuses
+    if (activeHabit === 'EXTRA_YOGA') {
+      fatigueAdd = Math.max(0, fatigueAdd - 3);
+      player.sharpness = Math.min(100, (player.sharpness || 0) + 2);
+      deltas.push({ attr: 'Fatigue (Yoga)', gain: '-3%' });
+    } else if (activeHabit === 'FILM_STUDY') {
+      player.attributes.vision = Math.min(99, (player.attributes.vision || 50) + 0.1);
+      player.attributes.positioning = Math.min(99, (player.attributes.positioning || 50) + 0.1);
+      deltas.push({ attr: 'Vis/Pos (Film)', gain: '+0.1' });
+    } else if (activeHabit === 'DIET_DISCIPLINE') {
+      player.attributes.stamina = Math.min(99, (player.attributes.stamina || 50) + 0.1);
+      player.morale = Math.min(100, (player.morale || 50) + 2);
+      deltas.push({ attr: 'Stamina (Diet)', gain: '+0.1' });
+    }
+
     deltas.push({ attr: 'Drill Grade', gain: grade });
     deltas.push({ attr: 'Fatigue Load', gain: `+${fatigueAdd}%` });
     deltas.push({ attr: 'Match Sharpness', gain: `+${sharpnessAdd}%` });
@@ -626,32 +642,6 @@ export function Training() {
     setPlayer(player);
     setActiveDrill(null);
     setLastDeltas(deltas);
-    setShowPostResult(true);
-  };
-
-  // RECOVERY SESSION HANDLER
-  const handleRecoverySession = () => {
-    if (weeklySessions.individual >= 3) {
-      alert("You have reached your 3 individual training slots for this week!");
-      return;
-    }
-    setDailyAction('CONDITIONING');
-    const player = { ...state.player! };
-    player.fatigue = Math.max(0, (player.fatigue || 0) - 22);
-    player.sharpness = Math.min(100, (player.sharpness || 0) + 2);
-
-    player.training = player.training || {
-      weeklySessions: { clubOrganized: 0, individual: 0, recovery: 0, trainingMatch: 0 },
-      sessionHistory: [],
-      trainingMatchHistory: []
-    };
-    player.training.weeklySessions.individual = (player.training.weeklySessions.individual || 0) + 1;
-
-    setPlayer(player);
-    setLastDeltas([
-      { attr: 'Fatigue Restored', gain: '-22%' },
-      { attr: 'Condition Status', gain: 'Muscles Fully Refreshed' }
-    ]);
     setShowPostResult(true);
   };
 
@@ -705,26 +695,29 @@ export function Training() {
   };
 
   const todayEntry = state.seasonCalendar.find(c => c.week === state.currentWeek && c.day === state.currentDay);
+  const tracker = getWeeklyActionTracker(state.player, state.currentWeek);
+  const currentChoice = tracker.choices[state.currentDay];
+  const isMandatoryDay = isDayMandatory(todayEntry);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] text-white p-6 overflow-y-auto hide-scrollbar">
       {/* Top Navigation Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-white/10 mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-[#222] mb-6 gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => setScreen('HUB')} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 transition-colors border border-white/10">
+          <button onClick={() => setScreen('HUB')} className="p-2.5 bg-white/5 hover:bg-white/10 text-white/70 transition-colors border border-[#222]">
             <ArrowLeft size={18} />
           </button>
           <div>
             <h1 className="text-xl font-black uppercase tracking-wider text-white flex items-center gap-2">
-              Training Grounds & Daily Schedule
+              Daily Focus & Training Hub
             </h1>
-            <p className="text-xs text-white/50 font-mono mt-0.5">Manage daily focus, technical minigames, manager trust, and weekly physical balance.</p>
+            <p className="text-xs text-white/50 font-mono mt-0.5">Manage daily choices (Training, PR & Social, Conditioning, Rest) and individual attribute drills.</p>
           </div>
         </div>
 
         {/* Condition Badges & Session Slots */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-4 border border-white/10 bg-black/40">
+          <div className="glass-panel px-4 py-2 flex items-center gap-4 border border-[#222] bg-black/40">
             <div>
               <span className="text-[9px] font-mono text-white/40 uppercase block"><GlossaryTooltip term="Fatigue">Fatigue</GlossaryTooltip></span>
               <span className={`text-sm font-bold font-mono ${currentFatigue > 80 ? 'text-red-400' : currentFatigue > 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -767,11 +760,11 @@ export function Training() {
 
       {/* INTERACTIVE MINIGAME MODAL */}
       {activeDrill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 animate-fade-in">
-          <div className={`premium-card w-full max-w-xl border ${activeDrill.borderColor} rounded-2xl p-6 bg-[#0f1115] shadow-2xl flex flex-col items-center text-center relative overflow-hidden`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-fade-in">
+          <div className={`premium-card w-full max-w-xl border ${activeDrill.borderColor} p-6 bg-[#0f1115] flex flex-col items-center text-center relative overflow-hidden`}>
             
             {/* Header info */}
-            <div className="w-full flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+            <div className="w-full flex justify-between items-center border-b border-[#222] pb-3 mb-4">
               <div className="flex items-center gap-2 text-left">
                 <activeDrill.icon size={20} style={{ color: activeDrill.color }} />
                 <div>
@@ -788,7 +781,7 @@ export function Training() {
               </button>
             </div>
 
-            <p className="text-xs font-mono text-white/70 mb-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+            <p className="text-xs font-mono text-white/70 mb-4 bg-white/5 px-4 py-2 border border-[#111]">
               {activeDrill.instructions}
             </p>
 
@@ -796,7 +789,7 @@ export function Training() {
             {activeDrill.minigameType === 'TIMING' && (
               <div className="w-full my-6 flex flex-col items-center">
                 {/* Target Pitch Goal Visual */}
-                <div className="w-full h-36 bg-[#182a1e] border-2 border-white/20 rounded-xl relative overflow-hidden flex items-center justify-center mb-6 shadow-inner">
+                <div className="w-full h-36 bg-[#182a1e] border-2 border-[#333] relative overflow-hidden flex items-center justify-center mb-6 shadow-inner">
                   <div className="absolute inset-0 bg-[radial-gradient(#00FF88_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
                   
                   {/* Goal Frame */}
@@ -813,7 +806,7 @@ export function Training() {
                 </div>
 
                 {/* Oscillating Slider Bar */}
-                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-white/20 mb-6 p-1">
+                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-[#333] mb-6 p-1">
                   {/* Green Sweet Spot Zone */}
                   <div className="absolute top-0 bottom-0 left-[42%] right-[42%] bg-[#00FF88]/40 border-x-2 border-[#00FF88] flex items-center justify-center">
                     <span className="text-[8px] font-mono font-bold text-[#00FF88] uppercase tracking-tighter">SWEET SPOT</span>
@@ -829,7 +822,7 @@ export function Training() {
                 <button
                   onClick={handleTimingStrike}
                   disabled={!!repFeedback}
-                  className="w-full py-4 bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-lg shadow-[#00FF88]/20 active:scale-98"
+                  className="w-full py-4 bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black uppercase tracking-widest text-sm transition-all shadow-[#00FF88]/20 active:scale-98"
                 >
                   ⚡ STRIKE BALL!
                 </button>
@@ -839,7 +832,7 @@ export function Training() {
             {/* MINIGAME VIEW: 2. HOLD_RELEASE DRILL (Tackling) */}
             {activeDrill.minigameType === 'HOLD_RELEASE' && (
               <div className="w-full my-6 flex flex-col items-center">
-                <div className="w-full h-32 bg-[#201318] border-2 border-pink-500/30 rounded-xl relative flex items-center justify-center mb-6 overflow-hidden">
+                <div className="w-full h-32 bg-[#201318] border-2 border-pink-500/30 relative flex items-center justify-center mb-6 overflow-hidden">
                   <div className="text-center">
                     <Shield className="mx-auto text-pink-400 mb-1" size={32} />
                     <span className="text-xs font-mono font-bold text-white uppercase">Charging Attacker Approaching</span>
@@ -853,7 +846,7 @@ export function Training() {
                 </div>
 
                 {/* Power Gauge Bar */}
-                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-white/20 mb-6 p-1">
+                <div className="w-full h-8 bg-white/10 rounded-full relative overflow-hidden border border-[#333] mb-6 p-1">
                   {/* Ideal Slide Tackle Zone */}
                   <div className="absolute top-0 bottom-0 left-[68%] right-[16%] bg-pink-500/40 border-x-2 border-pink-400 flex items-center justify-center">
                     <span className="text-[8px] font-mono font-bold text-pink-300 uppercase tracking-tighter">PERFECT TIMING</span>
@@ -869,7 +862,7 @@ export function Training() {
                 <button
                   onClick={handleTackleRelease}
                   disabled={!!repFeedback}
-                  className="w-full py-4 bg-pink-500 hover:bg-pink-400 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-lg shadow-pink-500/20 active:scale-98"
+                  className="w-full py-4 bg-pink-500 hover:bg-pink-400 text-white font-black uppercase tracking-widest text-sm transition-all active:scale-98"
                 >
                   🛡️ EXECUTE SLIDE TACKLE!
                 </button>
@@ -898,10 +891,10 @@ export function Training() {
                     return (
                       <div 
                         key={idx}
-                        className={`w-12 h-12 rounded-xl border flex items-center justify-center font-bold transition-all ${
+                        className={`w-12 h-12 border flex items-center justify-center font-bold transition-all ${
                           isDone 
                             ? 'bg-blue-500/30 border-blue-400 text-blue-400 scale-105' 
-                            : 'bg-white/5 border-white/20 text-white/40'
+                            : 'bg-white/5 border-[#333] text-white/40'
                         }`}
                       >
                         {dir === 'UP' && <ChevronUp size={24} />}
@@ -919,7 +912,7 @@ export function Training() {
                   <button 
                     onClick={() => handleSequenceInput('UP')}
                     disabled={!!repFeedback}
-                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 border border-[#333] flex items-center justify-center text-white"
                   >
                     <ChevronUp size={24} />
                   </button>
@@ -928,21 +921,21 @@ export function Training() {
                   <button 
                     onClick={() => handleSequenceInput('LEFT')}
                     disabled={!!repFeedback}
-                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 border border-[#333] flex items-center justify-center text-white"
                   >
                     <ChevronLeft size={24} />
                   </button>
                   <button 
                     onClick={() => handleSequenceInput('DOWN')}
                     disabled={!!repFeedback}
-                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 border border-[#333] flex items-center justify-center text-white"
                   >
                     <ChevronDown size={24} />
                   </button>
                   <button 
                     onClick={() => handleSequenceInput('RIGHT')}
                     disabled={!!repFeedback}
-                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 rounded-xl border border-white/20 flex items-center justify-center text-white"
+                    className="p-3 bg-white/10 hover:bg-blue-500/30 active:scale-95 border border-[#333] flex items-center justify-center text-white"
                   >
                     <ChevronRight size={24} />
                   </button>
@@ -959,16 +952,16 @@ export function Training() {
                 </div>
 
                 {/* Field Slalom View */}
-                <div className="w-full h-40 bg-[#1f2316] border-2 border-amber-500/30 rounded-xl relative overflow-hidden grid grid-cols-3 p-2 gap-2 mb-6">
+                <div className="w-full h-40 bg-[#1f2316] border-2 border-amber-500/30 relative overflow-hidden grid grid-cols-3 p-2 gap-2 mb-6">
                   {(['LEFT', 'CENTER', 'RIGHT'] as const).map((lane) => {
                     const isTarget = targetLane === lane;
                     return (
                       <div 
                         key={lane}
-                        className={`h-full rounded-lg border border-dashed flex flex-col items-center justify-between p-2 transition-all ${
+                        className={`h-full border border-dashed flex flex-col items-center justify-between p-2 transition-all ${
                           isTarget 
                             ? 'bg-amber-500/20 border-amber-400' 
-                            : 'bg-black/20 border-white/10'
+                            : 'bg-black/20 border-[#222]'
                         }`}
                       >
                         <span className="text-[9px] font-mono text-white/40">{lane}</span>
@@ -991,21 +984,21 @@ export function Training() {
                   <button
                     onClick={() => handleDodgeChoice('LEFT')}
                     disabled={!!repFeedback}
-                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 border border-[#333] font-mono text-xs font-bold text-white uppercase"
                   >
                     ⬅️ Dodge Left
                   </button>
                   <button
                     onClick={() => handleDodgeChoice('CENTER')}
                     disabled={!!repFeedback}
-                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 border border-[#333] font-mono text-xs font-bold text-white uppercase"
                   >
                     ⬆️ Burst Straight
                   </button>
                   <button
                     onClick={() => handleDodgeChoice('RIGHT')}
                     disabled={!!repFeedback}
-                    className="py-3 bg-white/10 hover:bg-amber-500/30 rounded-xl border border-white/20 font-mono text-xs font-bold text-white uppercase"
+                    className="py-3 bg-white/10 hover:bg-amber-500/30 border border-[#333] font-mono text-xs font-bold text-white uppercase"
                   >
                     ➡️ Dodge Right
                   </button>
@@ -1015,7 +1008,7 @@ export function Training() {
 
             {/* Rep Feedback Banner */}
             {repFeedback && (
-              <div className="mt-4 p-3 rounded-xl bg-white/10 border border-white/20 text-xs font-mono font-bold text-[#00FF88] animate-bounce">
+              <div className="mt-4 p-3 bg-white/10 border border-[#333] text-xs font-mono font-bold text-[#00FF88] animate-bounce">
                 {repFeedback}
               </div>
             )}
@@ -1025,8 +1018,8 @@ export function Training() {
 
       {/* GROUP TRAINING SESSION MODAL */}
       {isGroupSessionActive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-          <div className="premium-card w-full max-w-lg border border-blue-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl flex flex-col items-center text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-lg border border-blue-500/30 p-6 bg-[#121216] flex flex-col items-center text-center">
             <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 mb-1">
               Mandatory Group Session &bull; Drill {groupStep} of 3
             </span>
@@ -1038,19 +1031,19 @@ export function Training() {
             <div className="grid grid-cols-1 gap-3 w-full">
               <button
                 onClick={() => handleGroupStepAction(3)}
-                className="w-full p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-left text-xs font-mono font-bold text-white transition-all"
+                className="w-full p-4 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-left text-xs font-mono font-bold text-white transition-all"
               >
                 🚀 Execute high-tempo tactical press and recover
               </button>
               <button
                 onClick={() => handleGroupStepAction(2)}
-                className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
+                className="w-full p-4 border border-[#222] bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
               >
                 🛡️ Maintain defensive shape and positional discipline
               </button>
               <button
                 onClick={() => handleGroupStepAction(1)}
-                className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
+                className="w-full p-4 border border-[#222] bg-white/5 hover:bg-white/10 text-left text-xs font-mono font-bold text-white transition-all"
               >
                 🚶 Play conservative short passes to keep safe
               </button>
@@ -1061,18 +1054,18 @@ export function Training() {
 
       {/* POST SESSION RESULT MODAL */}
       {showPostResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-          <div className="premium-card w-full max-w-md border border-[#00FF88]/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-md border border-[#00FF88]/30 p-6 bg-[#121216] text-center">
             <div className="w-12 h-12 rounded-full bg-[#00FF88]/20 border border-[#00FF88]/40 flex items-center justify-center mx-auto mb-4 text-[#00FF88]">
               <Award size={24} />
             </div>
             <h3 className="text-lg font-black uppercase tracking-wider text-white mb-1">Session Summary</h3>
             <p className="text-xs text-white/50 font-mono mb-6">Your training drill was processed into player progression.</p>
 
-            <div className="space-y-2.5 mb-6 text-left bg-white/5 p-4 rounded-xl border border-white/10">
+            <div className="space-y-2.5 mb-6 text-left bg-white/5 p-4 border border-[#222]">
               <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest block mb-2">Attribute & Condition Impact</span>
               {lastDeltas.map((d, idx) => (
-                <div key={idx} className="flex justify-between items-center text-xs font-mono border-b border-white/5 pb-1 last:border-0">
+                <div key={idx} className="flex justify-between items-center text-xs font-mono border-b border-[#111] pb-1 last:border-0">
                   <span className="text-white/70 uppercase">{d.attr}</span>
                   <span className="text-[#00FF88] font-bold">{d.gain}</span>
                 </div>
@@ -1081,7 +1074,7 @@ export function Training() {
 
             <button
               onClick={() => setShowPostResult(false)}
-              className="w-full bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg"
+              className="w-full bg-[#00FF88] hover:bg-[#00FF88]/80 text-black font-black py-3 text-xs uppercase tracking-widest transition-all "
             >
               Continue
             </button>
@@ -1091,8 +1084,8 @@ export function Training() {
 
       {/* STORY INCIDENT MODAL */}
       {activeIncident && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-          <div className="premium-card w-full max-w-lg border border-amber-500/30 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-lg border border-amber-500/30 p-6 bg-[#121216] text-left">
             <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 block mb-1">Training Ground Incident</span>
             <h3 className="text-lg font-black uppercase tracking-wider text-white mb-2">{activeIncident.title}</h3>
             <p className="text-xs text-white/70 font-mono leading-relaxed mb-6">{activeIncident.description}</p>
@@ -1105,7 +1098,7 @@ export function Training() {
                     setPlayer(res.player);
                     setActiveIncident(null);
                   }}
-                  className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-amber-500/15 hover:border-amber-500/40 text-left transition-all"
+                  className="w-full p-4 border border-[#222] bg-white/5 hover:bg-amber-500/15 hover:border-amber-500/40 text-left transition-all"
                 >
                   <div className="text-xs font-bold text-white mb-0.5">{choice.text}</div>
                   <div className="text-[10px] text-white/50">{choice.description}</div>
@@ -1117,10 +1110,111 @@ export function Training() {
       )}
 
       {/* MAIN DASHBOARD LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Individual Minigame Training Drills */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex justify-between items-center border-b border-white/10 pb-3">
+      {!currentChoice && !isMandatoryDay && (
+        <div className="flex flex-col items-center justify-center p-12 bg-[#121216] border border-[#222] text-center">
+          <Sparkles size={32} className="text-[#00FF88] mb-4" />
+          <h3 className="text-xl font-black uppercase text-white mb-2">Awaiting Daily Focus</h3>
+          <p className="text-white/50 text-sm font-mono max-w-md mx-auto">
+            Select your primary focus for today using the options above. Your choice will dictate available activities and impact your physical and mental conditioning.
+          </p>
+        </div>
+      )}
+
+      {currentChoice === 'REST' && (
+        <div className="flex flex-col items-center justify-center p-12 bg-purple-500/5 border border-purple-500/20 text-center">
+          <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-400">
+            <span className="text-3xl">🛋️</span>
+          </div>
+          <h3 className="text-xl font-black uppercase text-white mb-2">Rest & Recovery</h3>
+          <p className="text-white/50 text-sm font-mono max-w-md mx-auto">
+            You spent the day resting. Mental fatigue and physical stress have been significantly reduced.
+          </p>
+        </div>
+      )}
+
+      {currentChoice === 'SOCIAL' && (
+        <div className="flex flex-col items-center justify-center p-12 bg-cyan-500/5 border border-cyan-500/20 text-center">
+          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4 text-cyan-400">
+            <span className="text-3xl">📱</span>
+          </div>
+          <h3 className="text-xl font-black uppercase text-white mb-2">PR & Social Media</h3>
+          <p className="text-white/50 text-sm font-mono max-w-md mx-auto">
+            You spent the day on PR events and team bonding. Squad chemistry and media perception have improved.
+          </p>
+        </div>
+      )}
+
+      {currentChoice === 'CONDITIONING' && (
+        <div className="flex flex-col items-center justify-center p-12 bg-blue-500/5 border border-blue-500/20 text-center">
+          <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 text-blue-400">
+            <span className="text-3xl">🧊</span>
+          </div>
+          <h3 className="text-xl font-black uppercase text-white mb-2">Conditioning & Physio</h3>
+          <p className="text-white/50 text-sm font-mono max-w-md mx-auto">
+            You spent the day in cryotherapy and physio sessions. Recovery debt has been cleared and injury risk reduced.
+          </p>
+        </div>
+      )}
+
+      {(currentChoice === 'TRAINING' || isMandatoryDay) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left 2 Cols: Individual Minigame Training Drills */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Daily Habits Module */}
+            <div className="bg-[#050505] border border-[#222] p-5 animate-fade-in">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles size={18} className="text-purple-400" />
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Pre-Training Habit</h3>
+              </div>
+              <p className="text-[11px] font-mono text-white/50 mb-4">Choose a focused activity to perform before your daily drill to gain minor, situational stat boosts.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button 
+                  onClick={() => setActiveHabit('EXTRA_YOGA')}
+                  className={`p-3 border transition-all text-left flex flex-col gap-2 ${activeHabit === 'EXTRA_YOGA' ? 'bg-purple-500/20 border-purple-400' : 'bg-white/5 border-[#222] hover:border-white/30'}`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <span className="text-xl">🧘</span>
+                    {activeHabit === 'EXTRA_YOGA' && <CheckCircle2 size={16} className="text-purple-400" />}
+                  </div>
+                  <div>
+                    <h4 className={`text-xs font-bold uppercase tracking-wider ${activeHabit === 'EXTRA_YOGA' ? 'text-purple-400' : 'text-white'}`}>Extra Yoga</h4>
+                    <p className="text-[9px] font-mono text-white/60 mt-1">-3% Drill Fatigue<br/>+2% Sharpness</p>
+                  </div>
+                </button>
+                
+                <button 
+                  onClick={() => setActiveHabit('FILM_STUDY')}
+                  className={`p-3 border transition-all text-left flex flex-col gap-2 ${activeHabit === 'FILM_STUDY' ? 'bg-blue-500/20 border-blue-400' : 'bg-white/5 border-[#222] hover:border-white/30'}`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <span className="text-xl">📺</span>
+                    {activeHabit === 'FILM_STUDY' && <CheckCircle2 size={16} className="text-blue-400" />}
+                  </div>
+                  <div>
+                    <h4 className={`text-xs font-bold uppercase tracking-wider ${activeHabit === 'FILM_STUDY' ? 'text-blue-400' : 'text-white'}`}>Film Study</h4>
+                    <p className="text-[9px] font-mono text-white/60 mt-1">+0.1 Vision<br/>+0.1 Positioning</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => setActiveHabit('DIET_DISCIPLINE')}
+                  className={`p-3 border transition-all text-left flex flex-col gap-2 ${activeHabit === 'DIET_DISCIPLINE' ? 'bg-emerald-500/20 border-emerald-400' : 'bg-white/5 border-[#222] hover:border-white/30'}`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <span className="text-xl">🥗</span>
+                    {activeHabit === 'DIET_DISCIPLINE' && <CheckCircle2 size={16} className="text-emerald-400" />}
+                  </div>
+                  <div>
+                    <h4 className={`text-xs font-bold uppercase tracking-wider ${activeHabit === 'DIET_DISCIPLINE' ? 'text-emerald-400' : 'text-white'}`}>Diet Discipline</h4>
+                    <p className="text-[9px] font-mono text-white/60 mt-1">+0.1 Stamina<br/>+2 Morale</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+          <div className="flex justify-between items-center border-b border-[#222] pb-3 mt-6">
             <div>
               <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
                 <Dumbbell size={18} className="text-[#00FF88]" />
@@ -1130,12 +1224,12 @@ export function Training() {
             </div>
 
             {/* Drill Intensity Selector */}
-            <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10">
+            <div className="flex items-center gap-1.5 bg-white/5 p-1 border border-[#222]">
               {(['LIGHT', 'STANDARD', 'INTENSE'] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setDrillIntensity(mode)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase transition-all ${
+                  className={`px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition-all ${
                     drillIntensity === mode
                       ? 'bg-[#00FF88] text-black shadow'
                       : 'text-white/50 hover:text-white'
@@ -1156,9 +1250,9 @@ export function Training() {
             const fatigueColor = projectedFatigue > 85 ? 'text-red-400 bg-red-500/10 border-red-500/30' : projectedFatigue > 65 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
 
             return (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+              <div className="bg-white/5 border border-[#222] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
                 <div className="flex items-center gap-3.5">
-                  <div className={`p-3 rounded-xl border ${fatigueColor} flex items-center justify-center`}>
+                  <div className={`p-3 border ${fatigueColor} flex items-center justify-center`}>
                     <Zap size={20} />
                   </div>
                   <div>
@@ -1174,7 +1268,7 @@ export function Training() {
                   </div>
                 </div>
 
-                <div className="w-full sm:w-56 flex flex-col gap-1.5 bg-black/40 p-3 rounded-xl border border-white/10">
+                <div className="w-full sm:w-56 flex flex-col gap-1.5 bg-black/40 p-3 border border-[#222]">
                   <div className="flex justify-between items-center text-[10px] font-mono">
                     <span className="text-white/50">Projected Fatigue:</span>
                     <span className={`font-bold ${projectedFatigue > 85 ? 'text-red-400' : projectedFatigue > 65 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -1210,14 +1304,14 @@ export function Training() {
               return (
                 <div 
                   key={drill.id}
-                  className={`premium-card p-5 rounded-2xl border ${drill.borderColor} flex flex-col justify-between hover:border-[#00FF88]/50 transition-all group`}
+                  className={`premium-card p-5 border ${drill.borderColor} flex flex-col justify-between hover:border-[#00FF88]/50 transition-all group`}
                 >
                   <div>
                     <div className="flex justify-between items-start mb-3">
-                      <div className={`p-2.5 rounded-xl ${drill.accentBg} border ${drill.borderColor}`}>
+                      <div className={`p-2.5 ${drill.accentBg} border ${drill.borderColor}`}>
                         <Icon size={20} style={{ color: drill.color }} />
                       </div>
-                      <span className="text-[9px] font-mono text-white/40 uppercase bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                      <span className="text-[9px] font-mono text-white/40 uppercase bg-white/5 px-2 py-0.5 rounded border border-[#111]">
                         {drill.category}
                       </span>
                     </div>
@@ -1237,10 +1331,10 @@ export function Training() {
                   <button
                     onClick={() => startMinigame(drill)}
                     disabled={weeklySessions.individual >= 3}
-                    className={`w-full py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+                    className={`w-full py-3 font-mono text-xs font-bold uppercase tracking-widest transition-all ${
                       weeklySessions.individual >= 3
                         ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                        : 'bg-[#00FF88] hover:bg-[#00FF88]/80 text-black shadow-lg shadow-[#00FF88]/15 group-hover:scale-[1.02]'
+                        : 'bg-[#00FF88] hover:bg-[#00FF88]/80 text-black shadow-[#00FF88]/15 group-hover:scale-[1.02]'
                     }`}
                   >
                     {weeklySessions.individual >= 3 ? 'Slots Depleted' : 'Play Minigame'}
@@ -1249,34 +1343,13 @@ export function Training() {
               );
             })}
           </div>
-
-          {/* Muscle Recovery Session Option */}
-          <div className="premium-card p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
-                <Heart size={20} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Hydrotherapy & Cryo Recovery</h3>
-                <p className="text-xs text-white/50 font-mono mt-0.5">Clears -22% Fatigue load to prevent matchday muscle fatigue.</p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleRecoverySession}
-              disabled={weeklySessions.individual >= 3}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg whitespace-nowrap disabled:opacity-40"
-            >
-              Start Recovery
-            </button>
-          </div>
         </div>
 
         {/* Right Col: Group Training & Story Events */}
         <div className="space-y-6">
           {/* Group Training Session Card */}
-          <div className="premium-card p-5 rounded-2xl border border-blue-500/30 flex flex-col gap-4">
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+          <div className="premium-card p-5 border border-blue-500/30 flex flex-col gap-4">
+            <div className="flex justify-between items-center border-b border-[#222] pb-3">
               <div>
                 <h2 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
                   <UserCheck size={16} className="text-blue-400" />
@@ -1296,10 +1369,10 @@ export function Training() {
             <button
               onClick={startGroupSession}
               disabled={weeklySessions.clubOrganized >= 1}
-              className={`w-full py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`w-full py-3 font-mono text-xs font-bold uppercase tracking-widest transition-all ${
                 weeklySessions.clubOrganized >= 1
                   ? "bg-white/5 text-white/30 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
+                  : "bg-blue-600 hover:bg-blue-500 text-white "
               }`}
             >
               {weeklySessions.clubOrganized >= 1 ? "Group Training Done" : "Start Group Session"}
@@ -1307,9 +1380,9 @@ export function Training() {
           </div>
 
           {/* Development Status */}
-          <div className="premium-card rounded-2xl p-5 border border-white/10 relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent">
+          <div className="premium-card p-5 border border-[#222] relative overflow-hidden from-white/5 to-transparent">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FF88]/5 rounded-full blur-2xl pointer-events-none"></div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00FF88] block mb-2 border-b border-white/10 pb-1">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00FF88] block mb-2 border-b border-[#222] pb-1">
               Development Phase
             </span>
             <div className="text-white font-bold text-sm mb-1">
@@ -1325,14 +1398,14 @@ export function Training() {
           </div>
 
           {/* Retrain Tactical Role */}
-          <div className="premium-card rounded-2xl p-5 border border-white/10">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-white/50 block mb-2 border-b border-white/10 pb-1">
+          <div className="premium-card p-5 border border-[#222]">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-white/50 block mb-2 border-b border-[#222] pb-1">
               Tactical Specialization
             </span>
             <p className="text-xs text-white/60 font-mono mb-4">Adapt your tactical role familiarity for your position (£1,500).</p>
             <button
               onClick={() => setShowRetrainModal(true)}
-              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all border border-white/10"
+              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 text-xs uppercase tracking-widest transition-all border border-[#222]"
             >
               Retrain Role
             </button>
@@ -1341,11 +1414,12 @@ export function Training() {
 
         </div>
       </div>
+      )}
 
       {/* RETRAIN MODAL */}
       {showRetrainModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-          <div className="premium-card w-full max-w-md border border-white/15 rounded-2xl p-6 bg-[#121216] shadow-2xl text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
+          <div className="premium-card w-full max-w-md border border-white/15 p-6 bg-[#121216] text-left">
             <h3 className="text-lg font-black uppercase tracking-widest text-white mb-2">Retrain Tactical Role</h3>
             <p className="text-xs text-white/50 mb-4 leading-relaxed">Select a new role for your position group. Retraining costs <strong className="text-white">£1,500</strong>.</p>
             
@@ -1375,7 +1449,7 @@ export function Training() {
                       setShowRetrainModal(false);
                     }}
                     className={`p-3 rounded border text-left cursor-pointer transition-all ${
-                      isCurrent ? 'border-[#00FF88] bg-[#00FF88]/15 opacity-80' : 'border-white/10 bg-white/5 hover:bg-white/10'
+                      isCurrent ? 'border-[#00FF88] bg-[#00FF88]/15 opacity-80' : 'border-[#222] bg-white/5 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
@@ -1387,7 +1461,7 @@ export function Training() {
                 );
               })}
             </div>
-            <button onClick={() => setShowRetrainModal(false)} className="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase">Cancel</button>
+            <button onClick={() => setShowRetrainModal(false)} className="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase">Cancel</button>
           </div>
         </div>
       )}

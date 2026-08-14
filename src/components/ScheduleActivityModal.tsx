@@ -63,15 +63,15 @@ export function ScheduleActivityModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 animate-fadeIn">
       <div 
-        className="bg-[#121418] border border-white/15 rounded-2xl sm:rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
+        className="bg-[#121418] border border-white/15 sm:max-w-2xl w-full overflow-hidden flex flex-col max-h-[95vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-3 sm:p-5 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-white/5 to-transparent">
+        <div className="p-3 sm:p-5 border-b border-[#222] flex items-center justify-between from-white/5 to-transparent">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-[#00FF88]/10 text-[#00FF88] border border-[#00FF88]/20">
+            <div className="p-2 sm:p-3 sm:bg-[#00FF88]/10 text-[#00FF88] border border-[#00FF88]/20">
               <Calendar size={18} />
             </div>
             <div>
@@ -93,7 +93,7 @@ export function ScheduleActivityModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 sm:p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 sm:p-2 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -102,7 +102,7 @@ export function ScheduleActivityModal({
         {/* Modal Body */}
         <div className="p-3 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4">
           {isMandatory ? (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
+            <div className="bg-amber-500/10 border border-amber-500/30 p-6 text-center">
               <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3 border border-amber-500/30">
                 <ShieldAlert size={24} />
               </div>
@@ -127,10 +127,10 @@ export function ScheduleActivityModal({
                     <div
                       key={option.id}
                       onClick={() => setSelected(option.id)}
-                      className={`p-4 rounded-2xl border cursor-pointer transition-all relative flex flex-col justify-between ${
+                      className={`p-4 border cursor-pointer transition-all relative flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-[#00FF88]/10 border-[#00FF88] text-white shadow-lg shadow-[#00FF88]/10 ring-1 ring-[#00FF88]'
-                          : 'bg-black/40 border-white/10 hover:border-white/30 text-white/80 hover:bg-black/60'
+                          ? 'bg-[#00FF88]/10 border-[#00FF88] text-white shadow-[#00FF88]/10 ring-1 ring-[#00FF88]'
+                          : 'bg-black/40 border-[#222] hover:border-white/30 text-white/80 hover:bg-black/60'
                       }`}
                     >
                       <div>
@@ -146,7 +146,7 @@ export function ScheduleActivityModal({
                           )}
                         </div>
 
-                        <span className="inline-block text-[9px] font-mono font-bold uppercase text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10 mb-2">
+                        <span className="inline-block text-[9px] font-mono font-bold uppercase text-white/50 bg-white/5 px-2 py-0.5 rounded border border-[#222] mb-2">
                           {option.category}
                         </span>
 
@@ -164,7 +164,7 @@ export function ScheduleActivityModal({
                         </div>
 
                         {/* Costs */}
-                        <div className="space-y-1 pt-2 border-t border-white/10">
+                        <div className="space-y-1 pt-2 border-t border-[#222]">
                           {option.costs.map((c, idx) => (
                             <div key={idx} className="text-[10px] font-mono text-white/40 flex items-center gap-1.5">
                               <span>•</span> {c}
@@ -181,10 +181,10 @@ export function ScheduleActivityModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-[#0d0f12] flex items-center justify-between">
+        <div className="p-4 border-t border-[#222] bg-[#0d0f12] flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-white/15 text-white/70 hover:text-white hover:bg-white/5 text-xs font-mono font-bold transition-colors"
+            className="px-4 py-2 border border-white/15 text-white/70 hover:text-white hover:bg-white/5 text-xs font-mono font-bold transition-colors"
           >
             Close
           </button>
@@ -192,7 +192,7 @@ export function ScheduleActivityModal({
           {!isMandatory && (
             <button
               onClick={handleConfirm}
-              className="px-6 py-2.5 rounded-xl bg-[#00FF88] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all flex items-center gap-2 shadow-lg shadow-[#00FF88]/20 cursor-pointer"
+              className="px-6 py-2.5 bg-[#00FF88] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all flex items-center gap-2 shadow-[#00FF88]/20 cursor-pointer"
             >
               <CheckCircle2 size={16} />
               Confirm {selected} Focus

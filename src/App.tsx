@@ -32,7 +32,7 @@ const OffSeasonScreen = lazy(() => import('./screens/OffSeasonScreen').then(modu
 
 const LoadingScreen = () => (
   <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] bg-transparent">
-    <div className="w-12 h-12 border-4 border-white/10 border-t-[#00FF88] rounded-full animate-spin mb-4"></div>
+    <div className="w-12 h-12 border-4 border-[#222] border-t-[#00FF88] rounded-full animate-spin mb-4"></div>
     <div className="text-[#00FF88] font-bold text-xs uppercase tracking-widest animate-pulse">Loading Asset...</div>
   </div>
 );
@@ -69,7 +69,7 @@ function GameRouter() {
 
   if (state.screen === 'MAIN_MENU') {
     return (
-      <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
+      <div className="h-screen w-screen overflow-hidden bg-black">
         <MainMenu />
       </div>
     );
@@ -133,7 +133,7 @@ function GameRouter() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#0E0E0E]">
+    <div className="h-screen w-screen overflow-hidden bg-black">
       <AudioManager />
       <MainLayout>
         <ErrorBoundary onReset={handleReset}>

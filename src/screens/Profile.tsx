@@ -17,10 +17,31 @@ import { getFormattedCalendarDate } from '../utils/careerSystems';
 import { BookOpen } from 'lucide-react';
 
 export function Profile() {
- const { state, setScreen, setPlayer, startLegacyContinuation } = useGame();
+ const { state, setScreen, setPlayer, setInbox, startLegacyContinuation } = useGame();
  
  const player = state.player;
  const isMatchDay = state.currentDay === 'FRI';
+
+ const triggerRetirement = (extraPlayerUpdates?: Partial<any>) => {
+  if (!player) return;
+  const updatedPlayer = {
+   ...player,
+   stateFlags: {
+    ...(player.stateFlags || {}),
+    retired: true
+   },
+   ...extraPlayerUpdates
+  };
+  setPlayer(updatedPlayer);
+  setIsRetired(true);
+
+  import('../utils/testimonialMatch').then(({ generateTestimonialProposal }) => {
+   const proposal = generateTestimonialProposal(updatedPlayer);
+   if (proposal) {
+    setInbox([proposal, ...state.inbox]);
+   }
+  });
+ };
 
  const [activeTab, setActiveTab] = useState<'ATTRIBUTES' | 'TIMELINE' | 'JOURNAL' | 'RIVALS' | 'TROPHIES' | 'RETIREMENT' | 'STORY' | 'MEDICAL'>('ATTRIBUTES');
  const [isRetired, setIsRetired] = useState(!!player?.stateFlags?.retired);
@@ -314,7 +335,7 @@ export function Profile() {
   
   {/* Main Identity Card */}
   <div className="premium-card p-6 ">
-   <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
+   <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#222]">
    <CharacterPortrait type="player" size={64} name={`${player.firstName} ${player.lastName}`} />
    <div>
     <h2 className="text-white font-bold text-lg uppercase tracking-wider">{player.firstName} {player.lastName}</h2>
@@ -392,7 +413,7 @@ export function Profile() {
     </div>
    </div>
 
-   <div className="mt-6 pt-6 border-t border-white/10">
+   <div className="mt-6 pt-6 border-t border-[#222]">
     <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Backstory</div>
     <div className="text-white font-bold uppercase tracking-wider mb-2">{player.backstory ? player.backstory.replace('_', ' ') : 'Pro Career'}</div>
     {player.backstoryDetails ? (
@@ -422,7 +443,7 @@ export function Profile() {
           </div>
         )}
         {player.backstoryDetails.coreWound && (
-          <div className="pt-2 border-t border-white/5 text-white/60 italic text-[11px]">
+          <div className="pt-2 border-t border-[#111] text-white/60 italic text-[11px]">
             "{player.backstoryDetails.coreWound.drivingQuestion}"
           </div>
         )}
@@ -438,14 +459,14 @@ export function Profile() {
     )}
    </div>
 
-   <div className="mt-6 pt-6 border-t border-white/10">
+   <div className="mt-6 pt-6 border-t border-[#222]">
     <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Personality</div>
    <div className="text-[#00FF88] font-bold text-xs tracking-wider uppercase bg-[#181818] px-3 py-2 w-fit rounded flex items-center gap-1.5">
     👤 {player.personality || 'Professional'}
    </div>
    </div>
 
-   <div className="mt-6 pt-6 border-t border-white/10">
+   <div className="mt-6 pt-6 border-t border-[#222]">
    <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">Traits ({player.traits?.length || 0}/3)</div>
    {player.traits && player.traits.length > 0 ? (
     <div className="flex flex-col gap-2">
@@ -468,7 +489,7 @@ export function Profile() {
   <div className="flex-1 flex flex-col gap-6 overflow-hidden">
   
   {/* Navigation Tabs */}
-  <div className="flex flex-wrap gap-2 border-b border-white/10 pb-0 shrink-0">
+  <div className="flex flex-wrap gap-2 border-b border-[#222] pb-0 shrink-0">
    <button 
    id="tab-attributes"
    onClick={() => setActiveTab('ATTRIBUTES')} 
@@ -605,7 +626,7 @@ export function Profile() {
         const ceiling = player.ceiling || 80;
         let categoryText = "At Their Natural Level";
         let categoryColor = "text-[#aaaaaa]";
-        let categoryBg = "bg-white/5 border-white/10";
+        let categoryBg = "bg-white/5 border-[#222]";
         
         if (ceiling >= 90) {
           categoryText = "Has Potential to be Special";
@@ -640,7 +661,7 @@ export function Profile() {
           <div className="space-y-4">
             <div>
               <div className="text-[10px] uppercase font-mono tracking-widest text-white/40 mb-1">Youth Status Category</div>
-              <div className={`p-3 rounded-lg border text-center text-xs font-black uppercase tracking-wider ${categoryBg} ${categoryColor}`}>
+              <div className={`p-3 border text-center text-xs font-black uppercase tracking-wider ${categoryBg} ${categoryColor}`}>
                 {categoryText}
               </div>
             </div>
@@ -664,7 +685,7 @@ export function Profile() {
    {/* Detailed Attributes Cards */}
    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
     <div className="premium-card p-6 ">
-    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-white/10">Technical</div>
+    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-[#222]">Technical</div>
     <div className="space-y-4">
      <ProgressBar label="Finishing" value={player.attributes.finishing} showValue={true} colorMode="default" height="h-2" />
      <ProgressBar label="Passing" value={player.attributes.passing} showValue={true} colorMode="default" height="h-2" />
@@ -675,7 +696,7 @@ export function Profile() {
     </div>
     
     <div className="premium-card p-6 ">
-    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-white/10">Mental</div>
+    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-[#222]">Mental</div>
     <div className="space-y-4">
      <ProgressBar label="Composure" value={player.attributes.composure} showValue={true} colorMode="default" height="h-2" />
      <ProgressBar label="Vision" value={player.attributes.vision} showValue={true} colorMode="default" height="h-2" />
@@ -687,7 +708,7 @@ export function Profile() {
     </div>
 
     <div className="premium-card p-6 ">
-    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-white/10">Physical</div>
+    <div className="text-[#00FF88] text-sm font-bold tracking-widest uppercase mb-6 pb-2 border-b border-[#222]">Physical</div>
     <div className="space-y-4">
      <ProgressBar label="Pace" value={player.attributes.pace} showValue={true} colorMode="default" height="h-2" />
      <ProgressBar label="Stamina" value={player.attributes.stamina} showValue={true} colorMode="default" height="h-2" />
@@ -720,7 +741,7 @@ export function Profile() {
 
   {activeTab === 'TIMELINE' && (
    <div className="flex-1 flex flex-col gap-4 premium-card p-6 overflow-hidden">
-   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10 shrink-0">
+   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222] shrink-0">
     <div>
     <h3 className="text-white text-base font-bold tracking-wider uppercase">Career Timeline Feed</h3>
     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Biographical milestones, injuries, and club transfers</p>
@@ -752,7 +773,7 @@ export function Profile() {
      className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border transition-all rounded-sm
      ${timelineFilter === f.val 
       ? 'bg-[#00FF88] text-white border-[#00FF88]' 
-      : `bg-[#131313] border-white/10 text-white/50 ${f.color}`}
+      : `bg-[#131313] border-[#222] text-white/50 ${f.color}`}
      `}
     >
      {f.label}
@@ -768,7 +789,7 @@ export function Profile() {
      <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2 leading-relaxed max-w-xs">Try adjusting your filter category or keywords</p>
     </div>
     ) : (
-    <div className="relative pl-6 border-l border-white/10 ml-4 space-y-6 py-2">
+    <div className="relative pl-6 border-l border-[#222] ml-4 space-y-6 py-2">
      {filteredTimeline.map((evt) => {
      let colorDot = 'bg-[#10b981] shadow-[0_0_8px_#10b981]';
      let labelColor = 'text-emerald-400 border-emerald-500/10 bg-emerald-500/5';
@@ -829,7 +850,7 @@ export function Profile() {
 
   {activeTab === 'JOURNAL' && (
    <div className="flex-1 flex flex-col gap-4 premium-card p-6 overflow-hidden animate-fadeIn">
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10 shrink-0">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222] shrink-0">
      <div>
       <h3 className="text-white text-base font-bold tracking-wider uppercase flex items-center gap-2">
        <BookOpen size={18} className="text-[#00FF88]" />
@@ -864,7 +885,7 @@ export function Profile() {
        className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border transition-all rounded-sm
        ${journalFilter === f.val 
         ? 'bg-[#00FF88] text-white border-[#00FF88]' 
-        : `bg-[#131313] border-white/10 text-white/50 ${f.color}`}
+        : `bg-[#131313] border-[#222] text-white/50 ${f.color}`}
        `}
       >
        {f.label}
@@ -881,7 +902,7 @@ export function Profile() {
        <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2 leading-relaxed max-w-xs">As you advance weeks, make career choices, and headline media moments, your memoir will automatically update here.</p>
       </div>
      ) : (
-      <div className="relative pl-6 border-l border-white/10 ml-4 space-y-6 py-2">
+      <div className="relative pl-6 border-l border-[#222] ml-4 space-y-6 py-2">
        {filteredJournalEntries.map((entry) => {
         let colorDot = 'bg-[#10b981] shadow-[0_0_8px_#10b981]';
         let labelColor = 'text-emerald-400 border-emerald-500/10 bg-emerald-500/5';
@@ -921,7 +942,7 @@ export function Profile() {
             </p>
 
             {entry.consequences && (
-             <div className="mt-3 inline-block bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] font-mono text-[#00FF88] uppercase tracking-wider">
+             <div className="mt-3 inline-block bg-white/5 border border-[#222] px-2.5 py-1 text-[10px] font-mono text-[#00FF88] uppercase tracking-wider">
               Impact: {entry.consequences}
              </div>
             )}
@@ -944,13 +965,13 @@ export function Profile() {
 
   {activeTab === 'RIVALS' && (
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar premium-card p-6 animate-fadeIn">
-   <div className="border-b border-white/10 pb-4">
+   <div className="border-b border-[#222] pb-4">
     <h3 className="text-white text-base font-bold tracking-wider uppercase">Positional Grudge & Rivals</h3>
     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Direct comparisons and competitive narratives maintained by local media</p>
    </div>
    
    {!player.rivals || player.rivals.length === 0 ? (
-    <div className="flex-1 flex flex-col items-center justify-center text-center py-12 border border-dashed border-white/10">
+    <div className="flex-1 flex flex-col items-center justify-center text-center py-12 border border-dashed border-[#222]">
     <span className="text-[#444] text-xs font-black uppercase tracking-widest">No Active Rivals</span>
     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2 leading-relaxed max-w-xs">Play matches and increase your reputation to ignite fierce individual rivalries.</p>
     </div>
@@ -970,7 +991,7 @@ export function Profile() {
        </div>
        <span className="text-white text-xs font-mono px-2 py-0.5 bg-white/10 font-black uppercase tracking-widest">{player.currentClubSymbol}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 font-mono text-xs">
+      <div className="grid grid-cols-2 gap-4 border-t border-[#222] pt-4 font-mono text-xs">
        <div>
        <span className="text-white/40 block uppercase text-[10px]">Current OVR</span>
        <span className="text-white text-xl font-bold">{player.ovr}</span>
@@ -1001,7 +1022,7 @@ export function Profile() {
        </div>
        <span className="text-white text-xs font-mono px-2 py-0.5 bg-white/10 font-black uppercase tracking-widest">{rival.club}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 font-mono text-xs">
+      <div className="grid grid-cols-2 gap-4 border-t border-[#222] pt-4 font-mono text-xs">
        <div>
        <span className="text-white/40 block uppercase text-[10px]">Current OVR</span>
        <span className="text-white text-xl font-bold">{player.ovr + 1}</span>
@@ -1042,7 +1063,7 @@ export function Profile() {
       ) : (
       <div className="space-y-2 font-mono text-xs">
        {rival.headToHead.map((h2h, hIdx) => (
-       <div key={hIdx} className="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
+       <div key={hIdx} className="flex justify-between items-center py-2 border-b border-[#222] last:border-0">
         <span className="text-white/50">{h2h.date}</span>
         <div className="flex items-center gap-4">
         <span className="text-white font-bold">{player.currentClubSymbol} {h2h.yourGoals} - {h2h.theirGoals} {rival.club}</span>
@@ -1065,13 +1086,13 @@ export function Profile() {
 
   {activeTab === 'TROPHIES' && (
    <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar premium-card p-6 animate-fadeIn">
-   <div className="border-b border-white/10 pb-4">
+   <div className="border-b border-[#222] pb-4">
     <h3 className="text-white text-base font-bold tracking-wider uppercase">Trophy Hall & Historic Chronicles</h3>
     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">A physical testament to your competitive achievements and historical dominance</p>
    </div>
    
    {!player.trophies || player.trophies.length === 0 ? (
-    <div className="flex-1 flex flex-col items-center justify-center text-center py-16 border border-dashed border-white/10">
+    <div className="flex-1 flex flex-col items-center justify-center text-center py-16 border border-dashed border-[#222]">
     <div className="text-[#333] text-5xl mb-4">🏆</div>
     <span className="text-[#444] text-xs font-black uppercase tracking-widest">Trophy Cabinet is Empty</span>
     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2 leading-relaxed max-w-xs">Fight for domestic silverware, championship promotions, or cup runs to immortalize your name.</p>
@@ -1103,7 +1124,7 @@ export function Profile() {
 
 
   {activeTab === 'STORY' && (
-   <div className="premium-card p-6 rounded-xl animate-fade-in space-y-6">
+   <div className="premium-card p-6 animate-fade-in space-y-6">
     <div className="flex items-center gap-3 mb-4">
      <div className="w-1.5 h-6 bg-[#00FF88]"></div>
      <h3 className="text-white font-black text-lg tracking-wider uppercase">Career Story Journal</h3>
@@ -1123,7 +1144,7 @@ export function Profile() {
               {scene.date}
             </div>
             <h4 className="text-lg font-black uppercase tracking-wider mb-4 text-white">{scene.title}</h4>
-            <div className="space-y-3 pl-4 border-l-2 border-white/10">
+            <div className="space-y-3 pl-4 border-l-2 border-[#222]">
               {scene.lines?.map((line: any, lIdx: number) => (
                 <div key={lIdx} className="text-white/70 text-sm font-serif leading-relaxed">
                   {line.speaker && <span className="font-bold font-sans text-xs uppercase tracking-widest text-white/50 mr-2">{line.speaker}:</span>}
@@ -1196,7 +1217,7 @@ export function Profile() {
      <div className="flex justify-between"><span className="text-white/40">World Reputation Power (x20):</span><span className="text-white">+{player.reputation.world * 20}</span></div>
      <div className="flex justify-between"><span className="text-white/40">Longevity appearances (x15):</span><span className="text-white">+{(player.stats?.apps || 0) * 15}</span></div>
      <div className="flex justify-between"><span className="text-white/40">One-Club Loyalty Bonus:</span><span className="text-white">+{player.currentClubSymbol === player.startingClubSymbol ? 500 : 100}</span></div>
-     <div className="border-t border-white/10 pt-2 flex justify-between font-black"><span className="text-white uppercase tracking-wider">GRAND LEGACY SCORE:</span><span className="text-amber-500">{calculateLegacyScore(player).legacyScore} PTS</span></div>
+     <div className="border-t border-[#222] pt-2 flex justify-between font-black"><span className="text-white uppercase tracking-wider">GRAND LEGACY SCORE:</span><span className="text-amber-500">{calculateLegacyScore(player).legacyScore} PTS</span></div>
      </div>
     </div>
 
@@ -1217,7 +1238,7 @@ export function Profile() {
      </div>
    ) : (
     <div className="space-y-6">
-     <div className="border-b border-white/10 pb-4 flex justify-between items-center">
+     <div className="border-b border-[#222] pb-4 flex justify-between items-center">
       <div>
        <h3 className="text-white text-base font-bold tracking-wider uppercase">Retire & Legacy Tracker</h3>
        <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Review your standing on the immortal historical record and declare retirement</p>
@@ -1269,7 +1290,7 @@ export function Profile() {
      {/* Transition Decision Dialogue System (Unlocks at Age 33+) */}
      {player.age >= 33 ? (
       <div className="border border-[#00FF88]/30 bg-[#00FF88]/5 p-6 rounded-sm space-y-6">
-       <div className="flex justify-between items-center border-b border-white/5 pb-3">
+       <div className="flex justify-between items-center border-b border-[#111] pb-3">
         <h4 className="text-white text-sm font-bold uppercase tracking-widest flex items-center gap-2">
          💼 Twilight Board Room: Career Decisions (Age {player.age})
         </h4>
@@ -1368,7 +1389,7 @@ export function Profile() {
           </button>
          </div>
 
-         <div className="flex justify-end gap-3 pt-3 border-t border-white/5">
+         <div className="flex justify-end gap-3 pt-3 border-t border-[#111]">
           <button
            onClick={() => setRetirementStep('MENU')}
            className="px-4 py-2 text-xs font-mono font-bold uppercase text-white/50 hover:text-white transition-colors"
@@ -1377,12 +1398,7 @@ export function Profile() {
           </button>
           <button
            onClick={() => {
-            setPlayer({
-             ...player,
-             stateFlags: {
-              ...(player.stateFlags || {}),
-              retired: true
-             },
+            triggerRetirement({
              timeline: [
               ...player.timeline,
               {
@@ -1395,7 +1411,6 @@ export function Profile() {
               }
              ]
             });
-            setIsRetired(true);
            }}
            className="px-6 py-2 bg-cyan-500 text-black text-xs font-mono font-bold uppercase tracking-wider hover:bg-cyan-400 transition-colors"
           >
@@ -1440,7 +1455,7 @@ export function Profile() {
           </button>
          </div>
 
-         <div className="flex justify-end gap-3 pt-3 border-t border-white/5">
+         <div className="flex justify-end gap-3 pt-3 border-t border-[#111]">
           <button
            onClick={() => setRetirementStep('MENU')}
            className="px-4 py-2 text-xs font-mono font-bold uppercase text-white/50 hover:text-white transition-colors"
@@ -1482,14 +1497,14 @@ export function Profile() {
        )}
 
         {retirementStep === 'HOMECOMING' && (
-         <div className="bg-[#111] border border-white/10 p-5 rounded-sm">
+         <div className="bg-[#111] border border-[#222] p-5 rounded-sm">
          <h4 className="text-[#00FF88] text-sm font-bold uppercase tracking-wider mb-2">The Homecoming Tour</h4>
          <p className="text-[#aaa] text-xs leading-relaxed mb-6">
           You will formally instruct your agent to orchestrate a move back to <strong>{player.hometownClubSymbol || player.startingClubSymbol}</strong> regardless of wages. 
           Your final season will be treated as a Farewell Tour, culminating in a Testimonial Match with your oldest teammates.
          </p>
          
-         <div className="flex justify-end gap-3 pt-3 border-t border-white/5">
+         <div className="flex justify-end gap-3 pt-3 border-t border-[#111]">
           <button
            onClick={() => setRetirementStep('MENU')}
            className="px-4 py-2 text-xs font-mono font-bold uppercase text-white/50 hover:text-white transition-colors"
@@ -1541,7 +1556,7 @@ export function Profile() {
           </p>
          </div>
 
-         <div className="flex justify-end gap-3 pt-3 border-t border-white/5">
+         <div className="flex justify-end gap-3 pt-3 border-t border-[#111]">
           <button
            onClick={() => setRetirementStep('MENU')}
            className="px-4 py-2 text-xs font-mono font-bold uppercase text-white/50 hover:text-white transition-colors"
@@ -1550,14 +1565,7 @@ export function Profile() {
           </button>
           <button
            onClick={() => {
-            setPlayer({
-             ...player,
-             stateFlags: {
-              ...(player.stateFlags || {}),
-              retired: true
-             }
-            });
-            setIsRetired(true);
+            triggerRetirement();
            }}
            className="px-6 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-mono font-bold uppercase tracking-wider transition-colors animate-pulse"
           >
@@ -1579,14 +1587,7 @@ export function Profile() {
        </p>
        <button
         onClick={() => {
-         setPlayer({
-          ...player,
-          stateFlags: {
-           ...(player.stateFlags || {}),
-           retired: true
-          }
-         });
-         setIsRetired(true);
+         triggerRetirement();
         }}
         className="px-6 py-3 border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs font-mono font-black uppercase tracking-widest"
        >
@@ -1600,8 +1601,8 @@ export function Profile() {
   )}
 
   {activeTab === 'MEDICAL' && (
-   <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar premium-card p-6 rounded-xl animate-fade-in">
-    <div className="border-b border-white/10 pb-4">
+   <div className="flex-1 flex flex-col gap-6 overflow-y-auto no-scrollbar premium-card p-6 animate-fade-in">
+    <div className="border-b border-[#222] pb-4">
      <h3 className="text-white text-base font-bold tracking-wider uppercase flex items-center gap-2">
       🏥 Medical History & Injury Logs
      </h3>
@@ -1612,7 +1613,7 @@ export function Profile() {
 
     {/* Physical Vitals Overview */}
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-     <div className="bg-[#101010] p-4 border border-white/5 rounded-sm">
+     <div className="bg-[#101010] p-4 border border-[#111] rounded-sm">
       <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest font-mono">Current Status</div>
       <div className={`text-sm font-black mt-1 uppercase font-display ${player.isInjured ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
        {player.isInjured ? '🔴 RESTRICTED REHAB' : '🟢 CLEARED'}
@@ -1622,7 +1623,7 @@ export function Profile() {
       </div>
      </div>
 
-     <div className="bg-[#101010] p-4 border border-white/5 rounded-sm">
+     <div className="bg-[#101010] p-4 border border-[#111] rounded-sm">
       <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest font-mono">Injury Risk Coefficient</div>
       <div className="text-white text-lg font-bold font-mono mt-1">
        {Math.max(5, 100 - Math.floor((player.attributes.stamina * 0.5) + (player.attributes.strength * 0.3) + (100 - (player.fatigue || 0)) * 0.2))}%
@@ -1630,7 +1631,7 @@ export function Profile() {
       <div className="text-[10px] text-white/50 mt-1">Based on Stamina, Strength & Fatigue.</div>
      </div>
 
-     <div className="bg-[#101010] p-4 border border-white/5 rounded-sm">
+     <div className="bg-[#101010] p-4 border border-[#111] rounded-sm">
       <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest font-mono">Physiological Fatigue</div>
       <div className="text-white text-lg font-bold font-mono mt-1">{player.fatigue} / 100</div>
       <div className="w-full bg-white/10 h-1.5 mt-2 rounded-sm overflow-hidden">
@@ -1641,12 +1642,12 @@ export function Profile() {
 
     {/* Medical Logs Table */}
     <div className="space-y-4">
-     <h4 className="text-white text-xs font-bold uppercase tracking-widest border-b border-white/5 pb-2">Diagnostic Timeline Logs</h4>
+     <h4 className="text-white text-xs font-bold uppercase tracking-widest border-b border-[#111] pb-2">Diagnostic Timeline Logs</h4>
      
      <div className="space-y-4">
       {parsedInjuries.map((inj, idx) => (
-       <div key={idx} className="bg-[#0c0c0c] border border-white/5 p-5 rounded-sm hover:border-red-500/20 transition-all">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 border-b border-white/5 pb-3">
+       <div key={idx} className="bg-[#0c0c0c] border border-[#111] p-5 rounded-sm hover:border-red-500/20 transition-all">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 border-b border-[#111] pb-3">
          <div className="flex items-center gap-2.5">
           <span className="text-2xl">{inj.icon}</span>
           <div>

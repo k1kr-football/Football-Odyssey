@@ -18,10 +18,10 @@ export function APHeaderWidget({ apState }: APHeaderWidgetProps) {
         onClick={() => setShowTooltip(!showTooltip)}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all ${
+        className={`flex items-center gap-2 px-3 py-1.5 border cursor-pointer transition-all ${
           isStrained 
             ? 'bg-amber-500/10 border-amber-500/50 text-amber-400 animate-pulse'
-            : 'bg-neutral-900/80 border-white/10 text-emerald-400 hover:border-emerald-500/40'
+            : 'bg-[#0a0a0a] border-[#222] text-emerald-400 hover:border-emerald-500/40'
         }`}
       >
         {isStrained ? <AlertTriangle size={16} className="text-amber-400" /> : <Zap size={16} className="text-emerald-400" />}
@@ -40,8 +40,8 @@ export function APHeaderWidget({ apState }: APHeaderWidgetProps) {
 
       {/* Tooltip */}
       {showTooltip && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-neutral-900 border border-white/15 rounded-xl p-4 shadow-2xl z-50 text-xs space-y-2 text-white/80 animate-in fade-in zoom-in-95">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="absolute right-0 top-full mt-2 w-72 bg-[#0a0a0a] border border-white/15 p-4 z-50 text-xs space-y-2 text-white/80 animate-in fade-in zoom-in-95">
+          <div className="flex items-center justify-between border-b border-[#222] pb-2">
             <span className="font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
               <Info size={14} /> Action Points Status
             </span>
@@ -61,7 +61,7 @@ export function APHeaderWidget({ apState }: APHeaderWidgetProps) {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-white/10 space-y-1">
+          <div className="pt-2 border-t border-[#222] space-y-1">
             <div className="text-[10px] font-bold text-white/50 uppercase">Active Perks & Staff:</div>
             <div className="flex items-center gap-1.5 text-[11px] text-emerald-400">
               <ShieldCheck size={13} />

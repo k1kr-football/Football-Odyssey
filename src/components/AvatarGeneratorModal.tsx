@@ -208,13 +208,13 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
       : generateSvgDataUrl();
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#121318] border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-[#121318] border border-[#222] w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-teal-900/40 via-[#181a22] to-indigo-900/40">
+        <div className="p-5 border-b border-[#222] flex items-center justify-between ">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
+            <div className="w-10 h-10 bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
               <Camera size={20} />
             </div>
             <div>
@@ -231,7 +231,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
           </div>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors font-mono text-sm"
+            className="text-white/40 hover:text-white p-2 hover:bg-white/5 transition-colors font-mono text-sm"
           >
             ✕
           </button>
@@ -241,20 +241,20 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-y-auto flex-1">
           
           {/* Left Column: Live Card Preview & Career Details */}
-          <div className="md:col-span-5 flex flex-col items-center justify-start space-y-4 bg-[#181920] p-5 rounded-xl border border-white/5">
+          <div className="md:col-span-5 flex flex-col items-center justify-start space-y-4 bg-[#181920] p-5 border border-[#111]">
             <div className="text-xs font-mono text-teal-400 font-bold uppercase tracking-widest flex items-center gap-2">
               <Sparkles size={14} /> LIVE CHARACTER PREVIEW
             </div>
 
             {/* Avatar Card Container */}
-            <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-2xl overflow-hidden border-2 border-teal-500/50 shadow-2xl shadow-teal-500/20 group">
+            <div className="relative w-48 h-48 sm:w-56 sm:h-56 overflow-hidden border-2 border-teal-500/50 group">
               <img
                 src={previewUrl}
                 alt="Player Avatar Preview"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 from-black/80 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-3 left-3 right-3 text-center">
                 <div className="text-xs font-black text-white uppercase tracking-wider font-display truncate">
                   {player.firstName} {player.lastName}
@@ -266,12 +266,12 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
             </div>
 
             {/* Career Details Banner */}
-            <div className="w-full bg-[#121318] p-3 rounded-lg border border-white/5 space-y-2 text-xs font-mono">
+            <div className="w-full bg-[#121318] p-3 border border-[#111] space-y-2 text-xs font-mono">
               <div className="flex justify-between text-white/60">
                 <span>Club Colors:</span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full inline-block border border-white/20" style={{ backgroundColor: primaryColor }} />
-                  <span className="w-3 h-3 rounded-full inline-block border border-white/20" style={{ backgroundColor: secondaryColor }} />
+                  <span className="w-3 h-3 rounded-full inline-block border border-[#333]" style={{ backgroundColor: primaryColor }} />
+                  <span className="w-3 h-3 rounded-full inline-block border border-[#333]" style={{ backgroundColor: secondaryColor }} />
                 </span>
               </div>
               <div className="flex justify-between text-white/60">
@@ -293,12 +293,12 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
           <div className="md:col-span-7 space-y-5">
             
             {/* Mode Selection Tabs */}
-            <div className="flex rounded-lg bg-[#181920] p-1 border border-white/10">
+            <div className="flex bg-[#181920] p-1 border border-[#222]">
               <button
                 onClick={() => setSelectedType('PRESET')}
-                className={`flex-1 py-2 text-xs font-mono font-bold uppercase rounded-md transition-all ${
+                className={`flex-1 py-2 text-xs font-mono font-bold uppercase transition-all ${
                   selectedType === 'PRESET'
-                    ? 'bg-teal-500 text-black shadow-md'
+                    ? 'bg-teal-500 text-black '
                     : 'text-white/60 hover:text-white'
                 }`}
               >
@@ -306,9 +306,9 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
               </button>
               <button
                 onClick={() => setSelectedType('SVG_STUDIO')}
-                className={`flex-1 py-2 text-xs font-mono font-bold uppercase rounded-md transition-all ${
+                className={`flex-1 py-2 text-xs font-mono font-bold uppercase transition-all ${
                   selectedType === 'SVG_STUDIO'
-                    ? 'bg-teal-500 text-black shadow-md'
+                    ? 'bg-teal-500 text-black '
                     : 'text-white/60 hover:text-white'
                 }`}
               >
@@ -327,17 +327,17 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                     <div
                       key={preset.id}
                       onClick={() => setSelectedPresetUrl(preset.url)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${
+                      className={`p-3 border transition-all cursor-pointer flex items-center gap-4 ${
                         selectedPresetUrl === preset.url
                           ? 'bg-teal-500/10 border-teal-500 text-white'
-                          : 'bg-[#181920] border-white/5 text-white/70 hover:border-white/20'
+                          : 'bg-[#181920] border-[#111] text-white/70 hover:border-[#333]'
                       }`}
                     >
                       <img
                         src={preset.url}
                         alt={preset.name}
                         referrerPolicy="no-referrer"
-                        className="w-16 h-16 rounded-lg object-cover border border-white/10 shrink-0"
+                        className="w-16 h-16 object-cover border border-[#222] shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-bold font-display uppercase text-white flex items-center justify-between">
@@ -358,7 +358,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
 
             {/* Mode B: Vector Studio Controls */}
             {selectedType === 'SVG_STUDIO' && (
-              <div className="space-y-4 bg-[#181920] p-4 rounded-xl border border-white/5">
+              <div className="space-y-4 bg-[#181920] p-4 border border-[#111]">
                 
                 {/* Hair Style */}
                 <div>
@@ -373,7 +373,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                         className={`py-1.5 px-2 text-[10px] font-mono font-bold uppercase rounded border transition-all ${
                           hairStyle === style
                             ? 'bg-teal-500/20 border-teal-500 text-teal-400'
-                            : 'bg-[#121318] border-white/5 text-white/50 hover:text-white'
+                            : 'bg-[#121318] border-[#111] text-white/50 hover:text-white'
                         }`}
                       >
                         {style}
@@ -395,7 +395,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                         className={`py-1.5 px-2 text-[10px] font-mono font-bold uppercase rounded border transition-all ${
                           facialHair === style
                             ? 'bg-teal-500/20 border-teal-500 text-teal-400'
-                            : 'bg-[#121318] border-white/5 text-white/50 hover:text-white'
+                            : 'bg-[#121318] border-[#111] text-white/50 hover:text-white'
                         }`}
                       >
                         {style}
@@ -415,7 +415,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                         key={tone}
                         onClick={() => setSkinTone(tone)}
                         className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          skinTone === tone ? 'border-teal-400 scale-110 shadow-lg' : 'border-white/10'
+                          skinTone === tone ? 'border-teal-400 scale-110 ' : 'border-[#222]'
                         }`}
                         style={{ backgroundColor: tone }}
                       />
@@ -436,7 +436,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                         className={`py-1.5 px-2 text-[10px] font-mono font-bold uppercase rounded border transition-all ${
                           kitStyle === k
                             ? 'bg-teal-500/20 border-teal-500 text-teal-400'
-                            : 'bg-[#121318] border-white/5 text-white/50 hover:text-white'
+                            : 'bg-[#121318] border-[#111] text-white/50 hover:text-white'
                         }`}
                       >
                         {k}
@@ -458,7 +458,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                         className={`py-1.5 px-2 text-[10px] font-mono font-bold uppercase rounded border transition-all ${
                           bgStyle === bg
                             ? 'bg-teal-500/20 border-teal-500 text-teal-400'
-                            : 'bg-[#121318] border-white/5 text-white/50 hover:text-white'
+                            : 'bg-[#121318] border-[#111] text-white/50 hover:text-white'
                         }`}
                       >
                         {bg}
@@ -468,14 +468,14 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
                 </div>
 
                 {/* Armband Toggle */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between pt-2 border-t border-[#111]">
                   <span className="text-xs font-mono text-white/70 font-bold">Captain Armband Flair</span>
                   <button
                     onClick={() => setShowArmband(!showArmband)}
                     className={`px-3 py-1 text-xs font-mono font-bold uppercase rounded border transition-all ${
                       showArmband
                         ? 'bg-amber-500/20 border-amber-500 text-amber-400'
-                        : 'bg-[#121318] border-white/10 text-white/40'
+                        : 'bg-[#121318] border-[#222] text-white/40'
                     }`}
                   >
                     {showArmband ? 'ENABLED' : 'OFF'}
@@ -489,7 +489,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-[#181920] flex items-center justify-between">
+        <div className="p-4 border-t border-[#222] bg-[#181920] flex items-center justify-between">
           <button
             onClick={handleResetAvatar}
             className="px-4 py-2 text-xs font-mono text-red-400 hover:text-red-300 font-bold uppercase transition-colors"
@@ -505,7 +505,7 @@ export const AvatarGeneratorModal: React.FC<AvatarGeneratorModalProps> = ({ isOp
             </button>
             <button
               onClick={handleSaveAvatar}
-              className="px-6 py-2.5 bg-teal-500 hover:bg-teal-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer font-display"
+              className="px-6 py-2.5 bg-teal-500 hover:bg-teal-400 text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer font-display"
             >
               <Check size={16} /> SAVE PROFILE PICTURE
             </button>

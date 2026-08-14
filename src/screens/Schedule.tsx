@@ -204,7 +204,7 @@ export function Schedule() {
  <div className="flex h-full gap-6">
   <div className="flex-1 flex flex-col gap-4">
   <h2 className="text-[#00FF88] text-xs font-bold tracking-widest uppercase">Season Calendar</h2>
-  <div className="premium-card p-6 flex-1 overflow-y-auto hide-scrollbar rounded-md">
+  <div className="premium-card p-6 flex-1 overflow-y-auto hide-scrollbar ">
    
    <WeeklyBalanceIndicator
      player={state.player}
@@ -222,9 +222,9 @@ export function Schedule() {
        const tracker = getWeeklyActionTracker(state.player, state.currentWeek);
        const todayChoice = tracker.choices[state.currentDay];
        return (
-         <div className="mb-4 p-3 bg-gradient-to-r from-[#00FF88]/15 via-emerald-950/40 to-black border border-[#00FF88]/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+         <div className="mb-4 p-3 /15 to-black border border-[#00FF88]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ">
            <div className="flex items-center gap-2.5">
-             <div className="p-2 rounded-lg bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/30">
+             <div className="p-2 bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/30">
                <Sliders size={18} />
              </div>
              <div>
@@ -245,7 +245,7 @@ export function Schedule() {
            </div>
            <button
              onClick={() => openModalForDay(state.currentDay)}
-             className="px-3 py-1.5 rounded-lg bg-[#00FF88] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all shrink-0 cursor-pointer shadow-md"
+             className="px-3 py-1.5 bg-[#00FF88] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#00FF88]/90 transition-all shrink-0 cursor-pointer "
            >
              Configure Focus
            </button>
@@ -260,7 +260,7 @@ export function Schedule() {
     <div key={month.id} className=" rounded overflow-hidden">
      <button 
      onClick={() => toggleMonth(month.id)}
-     className={`w-full flex items-center justify-between p-4 bg-[#181818] hover:glass-panel transition-colors border-b border-white/10 ${state.currentWeek >= month.start && state.currentWeek <= month.end ? 'border-l-4 border-[#00FF88]' : ''}`}
+     className={`w-full flex items-center justify-between p-4 bg-[#181818] hover:glass-panel transition-colors border-b border-[#222] ${state.currentWeek >= month.start && state.currentWeek <= month.end ? 'border-l-4 border-[#00FF88]' : ''}`}
      >
      <div className="flex items-center gap-4">
       {expandedMonths[month.id] ? <ChevronDown size={14} className="text-white/50" /> : <ChevronRight size={14} className="text-white/50" />}
@@ -298,12 +298,12 @@ export function Schedule() {
           ${isGrudge ? 'bg-orange-950/10 border-l-2 border-l-orange-500 border-y border-y-orange-950/40' : ''}
          `}>
           {isDerby && (
-           <div className="absolute top-0 right-0 h-full bg-gradient-to-l from-red-500/10 to-transparent pointer-events-none w-24 flex items-center justify-end pr-2">
+           <div className="absolute top-0 right-0 h-full to-transparent pointer-events-none w-24 flex items-center justify-end pr-2">
             <span className="text-[7px] text-red-500/60 font-bold tracking-widest uppercase">DERBY</span>
            </div>
           )}
           {isGrudge && (
-           <div className="absolute top-0 right-0 h-full bg-gradient-to-l from-orange-500/10 to-transparent pointer-events-none w-24 flex items-center justify-end pr-2">
+           <div className="absolute top-0 right-0 h-full to-transparent pointer-events-none w-24 flex items-center justify-end pr-2">
             <span className="text-[7px] text-orange-500/60 font-bold tracking-widest uppercase font-mono">GRUDGE</span>
            </div>
           )}
@@ -317,7 +317,7 @@ export function Schedule() {
          </div>
          <div className="flex-1 flex items-center gap-2 font-mono uppercase text-white truncate max-w-[140px] px-2">
           {(() => {
-          const oppClub = CLUBS.find(c => c.symbol === data.opp);
+          const oppClub = CLUBS.find(c => c.symbol === data.opp?.replace(' U18', '')?.replace(' U19', ''));
           if (oppClub) {
            return (
            <>
@@ -359,7 +359,7 @@ export function Schedule() {
   </div>
   
   <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-  <div className="flex justify-between items-center premium-card p-2 rounded-md">
+  <div className="flex justify-between items-center premium-card p-2 ">
    <h2 className="text-white text-xs font-bold tracking-widest uppercase ml-2">
    {activeTab === 'TABLE' ? `League Table · ${leagueName}` : 'Match Squad Sheet 📋'}
    </h2>
@@ -400,7 +400,7 @@ export function Schedule() {
    </div>
   </div>
 
-  <div className="premium-card p-4 flex flex-col flex-1 rounded-md overflow-hidden relative">
+  <div className="premium-card p-4 flex flex-col flex-1 overflow-hidden relative">
    {activeTab === 'TABLE' ? (
    <>
     <div className="mb-4 glass-panel rounded px-3 py-2 text-[10px] text-[#aaa] font-mono flex flex-col gap-1">
@@ -420,7 +420,7 @@ export function Schedule() {
     <div className="overflow-y-auto hide-scrollbar flex-1 pr-1 rounded bg-[#0a0a0a]">
     <table className="w-full text-left border-collapse">
      <thead className="sticky top-0 bg-[#0a0a0a] z-10 shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-     <tr className="text-white/40 border-b border-white/10 text-[9px] uppercase tracking-widest font-bold">
+     <tr className="text-white/40 border-b border-[#222] text-[9px] uppercase tracking-widest font-bold">
       <th className="py-2 px-2 w-10 text-center">Pos</th>
       <th className="py-2 px-2">Club</th>
       <th className="py-2 px-2 text-center w-8">P</th>
@@ -436,7 +436,7 @@ export function Schedule() {
      {table.map((r, i) => {
       const zoneClass = getRowClass(r.pos);
       return (
-      <tr key={i} className={`border-b border-white/10 last:border-0 hover:glass-panel transition-colors
+      <tr key={i} className={`border-b border-[#222] last:border-0 hover:glass-panel transition-colors
       ${r.isPlayer ? 'glass-panel' : ''}
       `}>
       <td className={`py-2 text-center text-xs font-bold text-white/50 ${zoneClass}`}>{r.pos}</td>
@@ -484,10 +484,10 @@ export function Schedule() {
     {state.nextMatch?.squadList ? (
     <div className="flex-1 flex flex-col overflow-y-auto hide-scrollbar">
      {/* Match Info Header */}
-     <div className="bg-[#181818] border border-[#252525] p-4 rounded-md mb-4 flex justify-between items-center">
+     <div className="bg-[#181818] border border-[#222] p-4 mb-4 flex justify-between items-center">
      <div className="flex items-center gap-3">
       {(() => {
-      const oppClub = CLUBS.find(c => c.symbol === state.nextMatch?.opponentSymbol);
+      const oppClub = CLUBS.find(c => c.symbol === state.nextMatch?.opponentSymbol?.replace(' U18', '')?.replace(' U19', ''));
       return oppClub ? (
        <>
        <TeamLogo
@@ -570,7 +570,7 @@ export function Schedule() {
      <div className="grid grid-cols-3 gap-3 flex-1">
      {/* Starting XI Column */}
      <div className="bg-[#151515] p-3 rounded flex flex-col">
-      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center">
+      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-[#222] pb-1.5 mb-2 flex justify-between items-center">
       <span>Starting XI</span>
       <span className="text-[#00FF88] font-mono text-[9px]">11 Players</span>
       </div>
@@ -583,7 +583,7 @@ export function Schedule() {
         className={`p-2 rounded text-[11px] tracking-wide flex items-center gap-2 border ${
         isUser
          ? "bg-[#00FF88]/10 border-[#00FF88]/40 text-[#00FF88] font-extrabold"
-         : "bg-[#181818] border-[#252525] text-white/90"
+         : "bg-[#181818] border-[#222] text-white/90"
         }`}
        >
         <span className="text-[9px] font-mono text-white/40">{idx + 1}</span>
@@ -596,7 +596,7 @@ export function Schedule() {
 
      {/* Substitutes Column */}
      <div className="bg-[#151515] p-3 rounded flex flex-col">
-      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center">
+      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-[#222] pb-1.5 mb-2 flex justify-between items-center">
       <span>Substitutes</span>
       <span className="text-amber-400 font-mono text-[9px]">7 Players</span>
       </div>
@@ -609,7 +609,7 @@ export function Schedule() {
         className={`p-2 rounded text-[11px] tracking-wide flex items-center gap-2 border ${
         isUser
          ? "bg-amber-400/10 border-amber-400/40 text-amber-400 font-extrabold"
-         : "bg-[#181818] border-[#252525] text-white/90"
+         : "bg-[#181818] border-[#222] text-white/90"
         }`}
        >
         <span className="text-[9px] font-mono text-white/40">SUB</span>
@@ -622,7 +622,7 @@ export function Schedule() {
 
      {/* Unused Substitutes Column */}
      <div className="bg-[#151515] p-3 rounded flex flex-col">
-      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center">
+      <div className="text-white font-bold text-[10px] uppercase tracking-widest border-b border-[#222] pb-1.5 mb-2 flex justify-between items-center">
       <span>Unselected / Out</span>
       <span className="text-red-400 font-mono text-[9px]">Reserves</span>
       </div>
@@ -635,7 +635,7 @@ export function Schedule() {
         className={`p-2 rounded text-[11px] tracking-wide flex items-center gap-2 border ${
         isUser
          ? "bg-red-400/10 border-red-400/40 text-red-400 font-extrabold animate-pulse"
-         : "bg-[#181818] border-[#252525] text-white/40"
+         : "bg-[#181818] border-[#222] text-white/40"
         }`}
        >
         <span className="text-[9px] font-mono text-white/20">OUT</span>
@@ -648,7 +648,7 @@ export function Schedule() {
      </div>
     </div>
     ) : (
-    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md">
+    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] ">
      <div className="w-12 h-12 rounded-full bg-[#00FF88]/10 flex items-center justify-center mb-4 text-[#00FF88] border border-[#00FF88]/20">
      <Info size={24} />
      </div>
@@ -662,7 +662,7 @@ export function Schedule() {
    ) : activeTab === 'TOTW' ? (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
      {!state.totwHistory || state.totwHistory.length === 0 ? (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md border border-white/10">
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] border border-[#222]">
        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 text-amber-400 border border-amber-500/20">
         <Sparkles size={24} />
        </div>
@@ -678,7 +678,7 @@ export function Schedule() {
        return (
         <div className="flex flex-col gap-4">
          {/* Week Selector Dropdown / Pills */}
-         <div className="flex items-center justify-between bg-[#121418] p-3 rounded-lg border border-white/10 flex-wrap gap-2">
+         <div className="flex items-center justify-between bg-[#121418] p-3 border border-[#222] flex-wrap gap-2">
           <div className="flex items-center gap-2">
            <Sparkles className="text-amber-400" size={18} />
            <span className="text-xs font-bold text-white uppercase tracking-wider">
@@ -693,7 +693,7 @@ export function Schedule() {
              onClick={() => setSelectedTOTWIndex(idx)}
              className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold transition-all ${
               selectedTOTWIndex === idx
-               ? 'bg-amber-400 text-black shadow-md scale-105'
+               ? 'bg-amber-400 text-black scale-105'
                : t.userSelected
                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                : 'bg-white/5 text-white/50 hover:bg-white/10'
@@ -706,7 +706,7 @@ export function Schedule() {
          </div>
 
          {currentTOTW.userSelected && (
-          <div className="p-3 bg-emerald-500/15 border border-emerald-500/40 rounded-xl flex items-center gap-2.5 text-emerald-300 text-xs font-bold">
+          <div className="p-3 bg-emerald-500/15 border border-emerald-500/40 flex items-center gap-2.5 text-emerald-300 text-xs font-bold">
            <Star size={18} className="text-amber-400 fill-amber-400 shrink-0 animate-bounce" />
            <span>YOU ARE FEATURED IN THIS TEAM OF THE WEEK! (Rating: {currentTOTW.userPlayerDetails?.matchRating || 8.2})</span>
           </div>
@@ -717,10 +717,10 @@ export function Schedule() {
           {currentTOTW.squad.map((p, pIdx) => (
            <div
             key={pIdx}
-            className={`p-3 rounded-xl border flex flex-col items-center text-center relative transition-all ${
+            className={`p-3 border flex flex-col items-center text-center relative transition-all ${
              p.isUserPlayer
               ? 'border-emerald-400 bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105'
-              : 'border-white/10 bg-[#121418] hover:border-white/20'
+              : 'border-[#222] bg-[#121418] hover:border-[#333]'
             }`}
            >
             <div className="flex items-center justify-between w-full text-[9px] font-mono mb-1">
@@ -751,7 +751,7 @@ export function Schedule() {
    ) : activeTab === 'POTM' ? (
     <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
      {!state.potmHistory || state.potmHistory.length === 0 ? (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] rounded-md border border-white/10">
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a] border border-[#222]">
        <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4 text-yellow-400 border border-yellow-500/20">
         <Trophy size={24} />
        </div>
@@ -765,13 +765,13 @@ export function Schedule() {
        {state.potmHistory.map((potm, idx) => (
         <div
          key={potm.id || idx}
-         className={`p-5 rounded-2xl border flex flex-col relative overflow-hidden ${
+         className={`p-5 border flex flex-col relative overflow-hidden ${
           potm.isUserPlayer
-           ? 'border-yellow-400/80 bg-gradient-to-br from-yellow-500/20 via-[#14161b] to-[#0f1115] shadow-[0_0_25px_rgba(234,179,8,0.2)]'
-           : 'border-white/10 bg-[#121418]'
+           ? 'border-yellow-400/80 shadow-[0_0_25px_rgba(234,179,8,0.2)]'
+           : 'border-[#222] bg-[#121418]'
          }`}
         >
-         <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+         <div className="flex items-center justify-between mb-3 border-b border-[#222] pb-2">
           <span className="text-[10px] font-mono text-yellow-400 uppercase tracking-widest font-bold">
            Month {potm.month} &bull; Season {potm.season}
           </span>
@@ -793,7 +793,7 @@ export function Schedule() {
          </div>
 
          {potm.runnerUps && potm.runnerUps.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/5 text-[11px] text-white/50">
+          <div className="mt-3 pt-3 border-t border-[#111] text-[11px] text-white/50">
            <span className="font-bold text-white/70">Runner Ups: </span>
            {potm.runnerUps.map(r => `${r.name} (${r.clubSymbol})`).join(', ')}
           </div>
